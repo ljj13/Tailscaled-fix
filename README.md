@@ -8,8 +8,8 @@
 Miuix 风格 WebUI，以及 Android 默认设备名初始化。
 
 相关文档：[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.1.md)、
-[DNS 审计与真机测试](DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
-[设备名初始化](docs/ANDROID_HOSTNAME.md)。
+[DNS 审计与真机测试](docs/dns/DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
+[设备名初始化](docs/ANDROID_HOSTNAME.md)、[文档索引](docs/README.md)。
 
 本模块在已 ROOT 的 Android 设备上运行独立的 `tailscaled`，通过内核网络接口
 让浏览器和其他应用访问 Tailnet，以及其他节点通告的子网。
@@ -260,7 +260,7 @@ Android 的 netd 通常将默认路由保存在每个网络的独立路由表中
 osrouter 的规则优先级为 5210–5270，位于 netd 的 11000 之前。
 它将 Tailnet 前缀和已接受的子网路由安装到 table 52，无需手工管理常规路由。
 
-Android DNS 缺失或误选 VPN DNS 的处理细节见 [DNS 修复文档](DNS_FIX.md)。
+Android DNS 缺失或误选 VPN DNS 的处理细节见 [DNS 修复文档](docs/dns/DNS_FIX.md)。
 
 ## 支持范围与限制
 
@@ -270,6 +270,8 @@ Android DNS 缺失或误选 VPN DNS 的处理细节见 [DNS 修复文档](DNS_FI
 - 二进制不使用 UPX 压缩。部分 ROM / SELinux 策略不允许 UPX 所需的可执行匿名内存映射。
 
 ## 仓库结构
+
+完整目录职责与开发命令见 [开发说明](docs/DEVELOPMENT.md)。
 
 ```text
 META-INF/                 安装器

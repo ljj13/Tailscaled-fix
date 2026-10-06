@@ -7,9 +7,10 @@ Maintained by **FogPurification**. Current release:
 It combines the Redmi-verified Android DNS fixes, a Miuix-inspired WebUI and
 one-time Android device-name initialization on the pinned Tailscale `v1.102.5` base.
 See [release notes](docs/releases/v1.102.5-dnsfix.2-webui.1.md),
-[DNS audit and device tests](DNS_FIX.md),
-[WebUI design and tests](docs/WEBUI_MIUIX.md) and
-[hostname initialization](docs/ANDROID_HOSTNAME.md).
+[DNS audit and device tests](docs/dns/DNS_FIX.md),
+[WebUI design and tests](docs/WEBUI_MIUIX.md),
+[hostname initialization](docs/ANDROID_HOSTNAME.md) and
+[documentation index](docs/README.md).
 
 A self-contained module that runs `tailscaled` on a rooted Android device and
 lets browsers and apps reach the tailnet and a peer's advertised subnets.
@@ -306,6 +307,9 @@ required, and it does not fix the inbound direction.
 ---
 
 ## Layout
+
+See the [development guide](docs/DEVELOPMENT.md) for directory responsibilities
+and test commands (in Chinese).
 
 ```
 META-INF/                 installer

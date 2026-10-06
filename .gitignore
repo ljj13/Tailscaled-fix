@@ -1,5 +1,18 @@
+# Local build outputs and downloaded binaries
 build/
 dist/
 files/
+
+# Python caches and virtual environments
 __pycache__/
 *.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Local browser-test dependencies
+node_modules/
+
+# OS metadata
+.DS_Store
+Thumbs.db
