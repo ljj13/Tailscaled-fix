@@ -1,7 +1,25 @@
-# Local verification — 2026-10-06
+# Verification and device acceptance — 2026-10-06
 
 Tested on Windows with Ubuntu 24.04 WSL and Go 1.26.6. dnsfix.2 also tested over
 ADB on rooted Redmi Note 8 Pro `pnq47xf6899t4huc`.
+
+Final dnsfix.2 device acceptance was confirmed by the device owner on
+2026-10-06. The acceptance results below are owner-reported; the earlier ADB
+measurements remain recorded separately. No functional code changed after the
+accepted build at `23e9caa3ae98061ee1c70db9345065f5a6e1e680`.
+
+## Final Redmi Note 8 Pro acceptance — PASS
+
+| Scenario | Result |
+| --- | --- |
+| Mobile data + FlClash OFF | PASS |
+| Mobile data + FlClash ON | PASS |
+| VPN ON→OFF | PASS |
+| Wi-Fi + FlClash ON | PASS — device owner confirmed |
+
+Across these accepted scenarios, Android underlying network selection, DNS,
+main marked route, table52, exemptions, tailscale ping, and kernel ping all
+passed. Wi-Fi + FlClash ON is now device-validated, rather than fixture-only.
 
 ## dnsfix.2 verification
 
@@ -22,7 +40,7 @@ ADB on rooted Redmi Note 8 Pro `pnq47xf6899t4huc`.
 | Device coexistence | Running, tailscale0, table52 four routes, exemptions pre/out/nat OK; tailscale ping and kernel ping both succeeded |
 | Device identity/config | Tailnet IP remains100.118.66.106; settings/routes SHA256 unchanged; no login/logout performed |
 | Device injected failure (isolated state directory) | All candidates failed for an .invalid test name; reachable=false/retained=true; verified source/list unchanged; bootstrap SHA256 identical before/after |
-| Not device-tested | Wi-Fi switching, CLAT-only access, other OEM dump formats, full ZIP cover-install/reboot; covered by fixtures where applicable |
+| Remaining coverage limits | CLAT-only access and other OEM dump formats remain fixture-only; root-manager cover-install/reboot was not independently rerun by the assistant |
 
 The resolver integration initially failed because its two immediate replacements
 received exactly the same kernel mtime (confirmed by logging identical nanosecond
@@ -32,10 +50,14 @@ refreshes are separated by at least 15 seconds; retained failed refreshes do not
 rewrite the resolver. First-boot and byte-preservation tests execute the real
 compiled helper with isolated OEM-style dumpsys commands.
 
-Phone verification uses updated helper/service plus the existing dnsfix.1 daemon
-(the daemon networking patches are unchanged in dnsfix.2). The installable ZIP
-contains the dnsfix.2 stamped rebuilt daemon; full root-manager cover-install is
-not claimed as device-tested.
+The earlier assistant-run ADB verification used updated helper/service plus
+the existing dnsfix.1 daemon (the daemon networking patches are unchanged in
+dnsfix.2). The subsequent owner-confirmed dnsfix.2 acceptance is recorded above.
+The release reuses the accepted dnsfix.2 ZIP without rebuilding or changing its
+binaries; embedded build provenance remains the functional commit `23e9caa`.
+
+Release artifact: `tailscaled-v1.102.5-dnsfix.2-arm64.zip`.
+SHA256: `c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae`.
 
 ## Historical dnsfix.1 verification
 
@@ -72,6 +94,6 @@ gateway and direct-device defaults. The offline startup fixture verifies that
 disabled public fallback leaves a retry worker which starts the daemon when
 Android DNS becomes available.
 
-These checks do not prove live Redmi/KernelSU/Magisk/SELinux, Android Private DNS,
-network switching or Clash/Mihomo traffic behavior. Use the minimal device
-checks in [DNS_FIX.md](DNS_FIX.md) to complete that acceptance testing.
+These historical local-only dnsfix.1 checks did not establish live Android or
+proxy behavior. Current dnsfix.2 Redmi acceptance is recorded above; it does not
+extend coverage to other devices, all root managers, or Android Private DNS modes.

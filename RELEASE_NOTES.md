@@ -6,10 +6,16 @@ verified DNS through failed transient probes, isolate discovery/probe deadlines,
 and expose network-selection/marked-route diagnostics. Preserve existing node
 identity, fwmark, table52 and proxy exemptions. Includes CLAT and multi-VPN tests.
 
-Redmi mobile-data tests passed with FlClash OFF→ON, both ping paths and unchanged
-bootstrap bytes during an injected probe failure. Wi-Fi switching and full ZIP
-installation still require device validation. Cover-install the ZIP without
-uninstalling the old module. See [DNS_FIX_2.md](DNS_FIX_2.md).
+Final Redmi Note 8 Pro acceptance was confirmed by the device owner on
+2026-10-06: mobile data + FlClash OFF/ON, VPN ON→OFF, and Wi-Fi + FlClash ON all
+PASS. Underlying network, DNS, main marked route, table52, exemptions, tailscale
+ping, and kernel ping all passed. Earlier ADB tests also verified unchanged
+bootstrap bytes during an injected probe failure.
+
+This stable release reuses the accepted dnsfix.2 ZIP and binaries built from
+`23e9caa`; finalization changes documentation only. Cover-install the ZIP without
+uninstalling the old module. See [DNS_FIX_2.md](DNS_FIX_2.md) and
+[TEST_RESULTS.md](TEST_RESULTS.md) for attribution and coverage limits.
 
 # v1.102.5-dnsfix.1
 

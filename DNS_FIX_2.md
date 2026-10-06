@@ -64,7 +64,7 @@ Tailscale state、身份、settings、routes、osrouter、fwmark 常量、table 
 ## 最少真机验证
 
 覆盖安装 `tailscaled-v1.102.5-dnsfix.2-arm64.zip`，不要先卸载旧模块。
-手机已经热更新测试 helper/service；完整模块仍需覆盖安装新 ZIP。
+Redmi Note 8 Pro 的 dnsfix.2 真机验收已完成；后续安装请直接覆盖现有模块。
 FlClash 开启和关闭各保持至少 30 秒，再执行一次：
 
 ```powershell
@@ -76,9 +76,21 @@ adb -s pnq47xf6899t4huc shell "su -c 'tailscaled.service dns; tailscaled.service
 `dns_reachable=true`、marked route 为物理接口；BackendState Running，
 `default in main: ok`、三处 exemption OK，两种 ping 均成功。
 
-本次已实测移动数据 + FlClash OFF→ON；Wi-Fi 切换、其他 OEM 输出和
-完整 KernelSU/Magisk ZIP 覆盖安装尚未在真机执行。Wi-Fi 与 CLAT 路径有
-fixture 回归测试。完整证据见 `TEST_RESULTS.md`。
+2026-10-06，用户确认 Redmi Note 8 Pro 的最终 dnsfix.2 验收全部 PASS：
+
+| 场景 | 真机结果 |
+| --- | --- |
+| 移动数据 + FlClash OFF | PASS |
+| 移动数据 + FlClash ON | PASS |
+| VPN ON→OFF | PASS |
+| Wi-Fi + FlClash ON | PASS |
+
+underlying network、DNS、main marked route、table52、exemptions、
+tailscale ping、kernel ping 均正常。以上最终验收由用户确认；此前的
+ADB 观测与本地测试分别保留在 `TEST_RESULTS.md`。其他 OEM、CLAT-only
+网络和助手独立执行的完整覆盖安装/重启仍不在本次真机验证范围内。
+
+正式 release 复用已验收的 dnsfix.2 ZIP，功能代码和二进制均不再修改。
 
 Android underlying 语义来源：
 [AOSP NetworkCapabilities](https://android.googlesource.com/platform/packages/modules/Connectivity/+/bed26e8f00/framework/src/android/net/NetworkCapabilities.java)、
