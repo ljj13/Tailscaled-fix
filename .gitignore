@@ -1,3 +1,5 @@
 build/
 dist/
 files/
+__pycache__/
+*.pyc

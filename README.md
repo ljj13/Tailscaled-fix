@@ -1,5 +1,8 @@
 # Tailscale for Android (KernelSU / Magisk module)
 
+This branch fixes Android DNS bootstrapping on the pinned `v1.102.5` base.
+See [DNS_FIX.md](DNS_FIX.md) for the audit, design, tests, and device verification.
+
 A self-contained module that runs `tailscaled` on a rooted Android device and
 lets browsers and apps reach the tailnet and a peer's advertised subnets.
 
@@ -269,12 +272,12 @@ survive module updates.
 
 ## Building
 
-Pushing a tag / running the **Build tailscale for Android** workflow compiles
-`tailscale/tailscale` for `GOOS=linux GOARCH=arm64` with tags
-`ts_include_cli,ts_omit_ssh`, and applies `linuxfw-mark.patch` (the fwmark move
-described above). The workflow asserts that `osrouter` **is** linked in and that
-`0x1e020000` is present before packaging, so a silently wrong build cannot be
-released. It then publishes a release plus an updated `update.json`.
+Run `sh scripts/build.sh` under Linux/WSL with Go 1.26.6 and Python 3. The build
+pins Tailscale v1.102.5, applies the existing fwmark patch and Android DNS patches,
+runs the relevant tests, and packages `dist/tailscaled-v1.102.5-dnsfix.1-arm64.zip`.
+The branch workflow produces an artifact; it does not change main or publish a
+release automatically. The module does not subscribe to upstream's updater,
+which could replace this DNS fix with another build.
 
 ---
 

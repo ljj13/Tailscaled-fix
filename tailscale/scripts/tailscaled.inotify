@@ -1,6 +1,6 @@
 #!/system/bin/sh
 DIR=${0%/*}
-source $DIR/../settings.ini
+. "${DIR}/../settings.ini"
 
 events="$1"
 monitor_dir="$2"
@@ -10,10 +10,10 @@ service_control() {
   if [ "${monitor_file}" = "disable" ]; then
     if [ "${events}" = "d" ]; then
       echo "${current_time} [Info]: ✔ Starting tailscaled service" >> "${tailscaled_service_log}"
-      "${tailscaled_service}" start 2>&1 >> "${tailscaled_service_log}"
+      "${tailscaled_service}" start >> "${tailscaled_service_log}" 2>&1
     elif [ "${events}" = "n" ]; then
       echo "${current_time} [Info]: ✘ Stopping tailscaled service" >> "${tailscaled_service_log}"
-      "${tailscaled_service}" stop 2>&1 >> "${tailscaled_service_log}"
+      "${tailscaled_service}" stop >> "${tailscaled_service_log}" 2>&1
     fi
   fi
 }

@@ -1,148 +1,34 @@
-name: Build tailscale for Android
+name: Build Android DNS fix
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Tailscale version tag to build (default: latest stable)'
-        required: false
-        default: ''
-  # Dispatch is unreliable on forks, so a build can also be forced by pushing a
-  # change to the 'trigger-build' file:
-  #     date > trigger-build && git commit -am build && git push
   push:
-    branches: [ main ]
-    paths:
-      - 'trigger-build'
-  schedule:
-    - cron: '0 3 * * *'
+    branches: ['fix/**']
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Resolve Tailscale version
-        id: ver
-        env:
-          GH_TOKEN: ${{ github.token }}
-          WANTED: ${{ inputs.version }}
-        run: |
-          v="$WANTED"
-          if [ -z "$v" ]; then
-            v=$(curl -fsSL https://api.github.com/repos/tailscale/tailscale/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4)
-          fi
-          [ -n "$v" ] || { echo "could not resolve a version" >&2; exit 1; }
-          echo "version=$v" >> "$GITHUB_OUTPUT"
-          echo "Resolved version: $v"
-
-      - name: Skip if this release already exists
-        id: exists
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh release view "${{ steps.ver.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Checkout Tailscale
-        if: steps.exists.outputs.exists == 'false'
-        uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          repository: tailscale/tailscale
-          path: tailscale-build
-          ref: ${{ steps.ver.outputs.version }}
-
-      - name: Setup Go
-        if: steps.exists.outputs.exists == 'false'
-        uses: actions/setup-go@v5
-        with:
-          go-version: 'stable'
+          go-version: '1.26.6'
           cache: false
-
-      - name: Build (GOOS=linux, pure Go)
-        if: steps.exists.outputs.exists == 'false'
-        env:
-          GOOS: linux
-          GOARCH: arm64
-          CGO_ENABLED: '0'
-          # ts_include_cli builds one binary that serves as both tailscaled and
-          # the tailscale CLI.
-          TAGS: ts_include_cli,ts_omit_ssh
+      - name: Script and upgrade tests
         run: |
-          set -e
-          cd tailscale-build
-
-          # GOOS=android is NOT usable for a standalone daemon: wgengine/router
-          # takes its implementation from HookNewUserspaceRouter, which only
-          # osrouter's platform files register, and router_linux.go is
-          # "//go:build !android". With GOOS=android the hook stays empty and
-          # NewUserspaceEngine fails with `creating router: unsupported OS
-          # "android"` (only the official app avoids this by registering a
-          # VpnService-based router of its own). So we build for linux.
-          #
-          # The patch moves Tailscale's packet marks out of the bits Android's
-          # netd uses for its own fwmark layout; the stock values collide with
-          # the "permission" field and misroute the daemon's control traffic.
-          git apply --verbose ../linuxfw-mark.patch
-          grep -nE 'LinuxFwmarkMask |LinuxSubnetRouteMark |LinuxBypassMark ' tsconst/linuxfw.go
-
-          # Android has no usable /etc/resolv.conf; point the Go resolver at a
-          # path the module creates.
-          sed -i 's|/etc/resolv.conf|/data/adb/tailscale/resolv.conf|g' net/dns/resolvconfpath_default.go
-          sed -i 's|/etc/resolv.pre-tailscale-backup.conf|/data/adb/tailscale/resolv.pre-tailscale-backup.conf|g' net/dns/resolvconfpath_default.go
-          grep -n 'resolvConf' net/dns/resolvconfpath_default.go
-
-          eval "$(CGO_ENABLED=0 GOOS=$(go env GOHOSTOS) GOARCH=$(go env GOHOSTARCH) go run ./cmd/mkversion)"
-          echo "building ${VERSION_SHORT} (${VERSION_LONG})"
-
-          mkdir -p ../files
-          go build -trimpath -tags "$TAGS" \
-            -ldflags "-X tailscale.com/version.longStamp=${VERSION_LONG} -X tailscale.com/version.shortStamp=${VERSION_SHORT} -s -w" \
-            -o ../files/tailscale.combined ./cmd/tailscaled
-
-          # Sanity check: this is a linux target, so osrouter must be linked in
-          # (it is what installs table 52 and the ip rules), and the mark patch
-          # must have taken effect.
-          grep -aq 'ts-postrouting' ../files/tailscale.combined \
-            || { echo "ERROR: binary has no osrouter code - wrong GOOS?" >&2; exit 1; }
-          grep -aq '0x1e020000' ../files/tailscale.combined \
-            || { echo "ERROR: mark patch did not take effect" >&2; exit 1; }
-          echo "verified: osrouter present and fwmark patch applied"
-
-          ls -l ../files/tailscale.combined
-          od -A x -t x1z -N 20 ../files/tailscale.combined | head -2
-
-      - name: Build module zip
-        if: steps.exists.outputs.exists == 'false'
-        env:
-          V: ${{ steps.ver.outputs.version }}
-        run: |
-          set -e
-          # major*1000000 + minor*1000 + patch, so 1.102.4 -> 1102004
-          VC=$(echo "$V" | sed 's/^v//' | awk -F. '{printf "%d", $1*1000000 + $2*1000 + $3}')
-          sed -i -e "s/^version=.*/version=$V/" -e "s/^versionCode=.*/versionCode=$VC/" module.prop
-          awk -F'=' '/^description=/ { print "  ", $2 }' module.prop
-
-          mkdir -p dist
-          FILES="META-INF customize.sh service.sh system tailscale webroot uninstall.sh module.prop"
-          zip -9 -r "dist/tailscaled-$V.zip" $FILES files -x '*.DS_Store'
-          ls -l dist/
-
-      - name: Publish release
-        if: steps.exists.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          V: ${{ steps.ver.outputs.version }}
-        run: |
-          set -e
-          gh release create "$V" "dist/tailscaled-$V.zip" \
-            --title "Tailscale $V (Android)" \
-            --notes-file RELEASE_NOTES.md
+          python3 -m unittest discover -s tests -p 'test_dns_build.py' -v
+          python3 tests/test_shell.py
+          python3 tests/test_dns_helper.py
+          shellcheck -s sh -S warning -e SC1090,SC1091,SC2034,SC2086,SC2154 customize.sh service.sh uninstall.sh tailscale/scripts/* system/bin/* scripts/build.sh
+      - name: Build pinned v1.102.5 and package
+        run: sh scripts/build.sh
+      - name: Go resolver reload integration
+        run: python3 tests/test_resolver.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tailscaled-v1.102.5-dnsfix.2-arm64
+          path: dist/*
+          if-no-files-found: error

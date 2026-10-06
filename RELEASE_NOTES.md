@@ -1,3 +1,38 @@
+# v1.102.5-dnsfix.2
+
+Follow Android VPN underlying networks instead of treating FlClash tun0 as the
+physical default. Repair main from physical LinkProperties, retain same-network
+verified DNS through failed transient probes, isolate discovery/probe deadlines,
+and expose network-selection/marked-route diagnostics. Preserve existing node
+identity, fwmark, table52 and proxy exemptions. Includes CLAT and multi-VPN tests.
+
+Final Redmi Note 8 Pro acceptance was confirmed by the device owner on
+2026-10-06: mobile data + FlClash OFF/ON, VPN ON→OFF, and Wi-Fi + FlClash ON all
+PASS. Underlying network, DNS, main marked route, table52, exemptions, tailscale
+ping, and kernel ping all passed. Earlier ADB tests also verified unchanged
+bootstrap bytes during an injected probe failure.
+
+This stable release reuses the accepted dnsfix.2 ZIP and binaries built from
+`23e9caa`; finalization changes documentation only. Cover-install the ZIP without
+uninstalling the old module. See [DNS_FIX_2.md](DNS_FIX_2.md) and
+[TEST_RESULTS.md](TEST_RESULTS.md) for attribution and coverage limits.
+
+# v1.102.5-dnsfix.1
+
+Fixes standalone Linux tailscaled DNS bootstrapping on rooted Android without
+requiring `/etc/resolv.conf` or a loopback DNS listener. Discovers current Android
+network DNS, validates it using the daemon's bypass mark, and uses configurable
+public fallback when necessary. Refreshes on the routing watchdog; preserves
+state and user configuration on upgrade. Adds DNS diagnostics and WebUI status.
+
+See [DNS_FIX.md](DNS_FIX.md) and [TEST_RESULTS.md](TEST_RESULTS.md) for the design,
+audit, local verification, and minimum device checks. Install the ZIP directly
+over the existing module; do not uninstall first.
+
+The original v1.102.5 release notes are retained below.
+
+---
+
 Self-contained KernelSU / Magisk / APatch module running `tailscaled` on a rooted Android device, with the routing it needs so browsers and apps can reach the tailnet and a peer's advertised subnets.
 
 ## Fixed: the daemon would not start

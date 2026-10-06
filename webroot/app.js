@@ -55,13 +55,14 @@ async function refreshStatus({ announce = false } = {}) {
   state.status = s;
 
   const running = s.daemon === '1';
+  const waitingDNS = s.dns_start_pending === '1';
   const backend = s.backend || '';
   const mainBad = s.osrouter === '1' && s.main_default !== 'ok';
 
   $('dot').className = `dot ${
     !running ? 'bad' : mainBad ? 'warn' : (backend === 'Running' ? 'good' : 'warn')
   }`;
-  setText('status-main', running ? (backend || 'running') : 'stopped');
+  setText('status-main', running ? (backend || 'running') : waitingDNS ? 'waiting for DNS' : 'stopped');
   setText('status-sub', running
     ? `${s.ip4 || 'no address'}${s.user ? ` · ${s.user}` : ''}`
     : 'tailscaled is not running');
@@ -89,7 +90,16 @@ async function refreshStatus({ announce = false } = {}) {
     ex ? '' : 'warn');
 
   const problems = [];
-  if (!running) problems.push('tailscaled is not running — press Start, then check the Log tab.');
+  setText('v-dns-source', `${s.dns_source || '?'} (${s.dns_iface || 'offline'})`);
+  setText('v-dns-servers', s.dns_servers || '?');
+  setText('v-dns-network', s.dns_network || '?');
+  setText('v-dns-underlying', `${s.dns_underlying || 'system default'} (VPN ${s.dns_active_vpn || 'none'})`);
+  setText('v-dns-iface', `${s.dns_iface || '?'} / ${s.dns_transport || '?'}`);
+  setText('v-dns-selection', s.dns_selection_reason || '?');
+  setText('v-dns-retained', s.dns_retained === 'true' ? `yes; last verified ${s.dns_last_verified || '?'}` : 'no');
+  setText('v-dns-check', `${s.dns_reachable === 'true' ? 'OK' : 'FAILED'} · ${s.dns_checked || 'unchecked'}`, s.dns_reachable === 'true' ? '' : 'warn');
+  if (running && s.dns_reachable !== 'true') problems.push('Bootstrap DNS query failed; check Diagnostics.');
+  if (!running) problems.push(waitingDNS ? 'Waiting for Android DNS; startup will retry automatically.' : 'tailscaled is not running — press Start, then check the Log tab.');
   if (running && s.daemon_current === '0') problems.push('The running daemon was started before this module was installed, so the old binary is still executing — press Restart.');
   if (running && mainBad) problems.push('The main routing table has no default route, so the control plane cannot connect. Press Restart; if it persists, send me the Log.');
   if (running && backend && backend !== 'Running' && backend !== 'NeedsLogin') problems.push(`Backend state is "${backend}".`);
