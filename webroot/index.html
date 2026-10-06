@@ -293,6 +293,28 @@
           </div>
           <h2 class="group-title">当前底层网络</h2>
           <div class="card preference-group" id="network-fields"></div>
+          <h2 class="group-title">Tailscale 连接诊断</h2>
+          <p class="page-note" id="netdiag-note" role="status">进入本页时按需采集，不参与 watchdog。</p>
+          <div class="card preference-group">
+            <button class="preference navigation-row root-action" id="netdiag-refresh"><span class="preference-copy"><span class="preference-title">刷新网络诊断</span><span class="summary">status、netcheck、endpoint 与只读 marked route</span></span><svg class="icon chevron"><use href="#i-chevron" /></svg></button>
+            <button class="preference navigation-row" id="netdiag-raw"><span class="preference-copy"><span class="preference-title">查看 / 复制原始输出</span><span class="summary">保留 JSON、UDP listener、路由规则及命令错误</span></span><svg class="icon chevron"><use href="#i-chevron" /></svg></button>
+          </div>
+          <h2 class="group-title">本机节点</h2>
+          <div class="card preference-group" id="netdiag-self"></div>
+          <h2 class="group-title">发布的 endpoints</h2>
+          <p class="page-note" id="netdiag-empty-endpoints">未发布或未取得 endpoints。</p>
+          <div class="card preference-group" id="netdiag-endpoints"></div>
+          <h2 class="group-title">Tailnet 节点</h2>
+          <p class="page-note" id="netdiag-empty-peers">未取得 peer 数据。</p>
+          <div class="card preference-group" id="netdiag-peers"></div>
+          <h2 class="group-title">UDP 与 NAT 探测</h2>
+          <div class="card preference-group" id="netdiag-netcheck"></div>
+          <h2 class="group-title">Daemon UDP listener</h2>
+          <p class="page-note" id="netdiag-empty-udp">未取得 daemon listener；请核对原始 ss 输出与权限。</p>
+          <div class="card preference-group" id="netdiag-udp"></div>
+          <h2 class="group-title">Outer route</h2>
+          <div class="card preference-group" id="netdiag-outer"></div>
+          <p class="page-note" id="netdiag-notes"></p>
           <h2 class="group-title">诊断工具</h2>
           <div class="card preference-group">
             <button

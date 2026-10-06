@@ -126,6 +126,24 @@ export function createDemo(initial) {
     async exec(command) {
       await new Promise((resolve) => setTimeout(resolve, 80));
       if (command === "tailscaled.service webstatus") return result(kv(status));
+      if (command === "tailscaled.service netdiag") {
+        const stopped = name === "stopped", failed = name === "failure";
+        const ipv6 = name === "cellular";
+        return result(JSON.stringify({
+          schema: 1, checked: new Date().toISOString(), outer_mark: "0x10020000",
+          self: { hostname: prefs.hostname || "redmi-note-8-pro", os: "linux", ipv4: stopped ? [] : ["100.101.23.8"], ipv6: ipv6 ? ["fd7a:115c:a1e0::1234"] : [], relay: { code: stopped ? "" : "hkg", name: stopped ? "" : "Hong Kong" } },
+          peers: stopped ? [] : [
+            { hostname: "eaidk-310", online: true, active: true, path: ipv6 ? "direct" : "derp", current_endpoint: ipv6 ? "[2001:db8::310]:41641" : "", ipv4: ["100.72.239.86"], relay: {code:"hkg", name:"Hong Kong"} },
+            { hostname: "offline-laptop", online: false, path: "offline", relay: {code:"hkg", name:"Hong Kong"} },
+          ],
+          endpoints: stopped ? [] : [{address: ipv6 ? "[2001:db8::8]:51975" : "192.168.1.8:53276", family: ipv6 ? "IPv6" : "IPv4", scope: ipv6 ? "Public" : "Private", interface: status.dns_iface, interface_source: "exact local address"}],
+          udp_listeners: stopped ? [] : [{address:"0.0.0.0:53276", family:"IPv4", port:53276}, {address:"[::]:51975", family:"IPv6", port:51975}],
+          netcheck: stopped || failed ? {} : {udp:true, ipv4:true, ipv6, mapping_varies_by_dest_ip:false, port_mapping:{UPnP:false,PMP:false,PCP:false}, nearest_derp:{code:"hkg",name:"Hong Kong"}},
+          errors: failed ? ["netcheck: timeout"] : [],
+          raw: {status:{stdout:"demo status --json"},netcheck:failed ? {timeout:true,error:"deadline exceeded"} : {stdout:"demo netcheck --format=json"},outer_ipv4:{stdout:`1.1.1.1 dev ${status.dns_iface} mark 0x10020000`},outer_ipv6:ipv6 ? {stdout:"2606:4700:4700::1111 dev ccmni1 mark 0x10020000"} : {error:"Network is unreachable"}},
+          notes:["Mock data; Relay is home DERP. STUN does not prove daemon UDP reachability."],
+        }));
+      }
       if (command === "tailscaled.service prefs") return result(kv(prefs));
       if (command === "tailscale status --json")
         return result(

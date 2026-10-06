@@ -767,3 +767,5 @@ body.modal-open {
     transition: none !important;
   }
 }
+
+#netdiag-notes { white-space: pre-line; }

@@ -11,6 +11,9 @@ Miuix 风格 WebUI，以及 Android 默认设备名初始化。
 [DNS 审计与真机测试](docs/dns/DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
 [设备名初始化](docs/ANDROID_HOSTNAME.md)、[文档索引](docs/README.md)。
 
+main 另包含[尚未发布的网络诊断增强](docs/NETWORK_DIAGNOSTICS.md)：endpoint、DERP 地区、
+peer 路径、UDP / NAT 与 outer route，集中展示在 WebUI 网络详情页。
+
 本模块在已 ROOT 的 Android 设备上运行独立的 `tailscaled`，通过内核网络接口
 让浏览器和其他应用访问 Tailnet，以及其他节点通告的子网。
 模块采用 `GOOS=linux` 构建，并针对 Android 的 DNS、路由和 fwmark 做了适配。
@@ -95,6 +98,8 @@ tailscaled.service diag              # 完整诊断信息
 tailscaled.service dns               # DNS 来源与可达性
 tailscaled.service dns-refresh       # 重新获取 Android DNS
 tailscaled.service selftest          # 构建、DNS、路由与 ping 诊断
+tailscaled.service selftest <peer-ip> # 可选：指定要验证的节点
+tailscaled.service netdiag           # 结构化网络诊断 JSON（main 新增）
 tailscaled.service webstatus         # WebUI 使用的机器可读状态
 tailscaled.service prefs             # 机器可读的 Tailscale 偏好
 tailscaled.service log {runs|service|tailscaled|diag}
@@ -139,7 +144,8 @@ DNS 问题可进一步查看 `tailscaled.service dns`，或在 WebUI 中打开 D
 │   ├── tailscaled.orig    二进制保护机制使用的已知可用副本
 │   ├── tailscaled.sha256
 │   ├── android-dns        物理网络 / DNS 发现 helper
-│   └── android-hostname   一次性设备名初始化 helper
+│   ├── android-hostname   一次性设备名初始化 helper
+│   └── android-netdiag    只读网络诊断 helper（main 新增）
 ├── scripts/               start.sh、tailscaled.service、tailscaled.inotify
 └── run/                   state 与日志
     ├── tailscaled.state   节点身份与 Tailscale 偏好（包含登录状态）
@@ -294,13 +300,16 @@ uninstall.sh              停止 daemon 并移除模块路由
 模块不接入上游自动更新，避免其他构建替换本模块的 DNS 修复。
 
 已发布的 WebUI 1 ZIP 复用经过验收的 dnsfix.2 daemon 和 DNS helper 二进制。
+严格复现已发布版本时请使用对应 tag；当前 main 还包含尚未发布的诊断增强。
 如需复现该打包流程，先将已验收的发布 ZIP 放入 `dist/`，再在 Linux / WSL 中执行，
 并确保 Go 1.26.6 位于 PATH：
 
 ```sh
 python3 scripts/build-hostname.py
+python3 scripts/build-netdiag.py
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 node tests/webui-command.test.cjs
+node tests/network-ui.test.cjs
 node tests/webui.test.cjs
 python3 scripts/package-webui.py --release
 ```

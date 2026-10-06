@@ -12,6 +12,7 @@
 | `tailscale/` | 首次安装的配置模板与持久服务脚本。 |
 | `webroot/` | 纯 HTML / CSS / JS WebUI 和本地 demo 数据。 |
 | `tools/android-dns/` | Android 网络 / DNS 发现 helper 与 Go 测试。 |
+| `tools/android-netdiag/` | 独立只读网络诊断 helper。 |
 | `tools/android-hostname/` | 默认设备名初始化 helper。 |
 | `patches/` | Tailscale / Go DNS 与 fwmark 构建补丁。 |
 | `scripts/` | 固定版本构建、测试准备和 ZIP 打包。 |
@@ -49,6 +50,7 @@ sh scripts/build.sh
 
 ```sh
 python3 scripts/build-hostname.py
+python3 scripts/build-netdiag.py
 python3 scripts/package-webui.py --release
 ```
 
@@ -71,6 +73,7 @@ WebUI 测试先安装本地测试工具，然后执行：
 ```sh
 npm install --prefix build/browser-tools playwright@1.63.0 acorn@8.15.0 --no-audit --no-fund
 node tests/webui-command.test.cjs
+node tests/network-ui.test.cjs
 node tests/webui.test.cjs
 ```
 

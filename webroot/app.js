@@ -1,6 +1,7 @@
 import { exec, toast as nativeToast, bridgeAvailable } from "./ksu.js";
 import { createDemo, scenarios } from "./demo.js";
 import { nativeCommand } from "./commands.js";
+import { diagnosticRows } from "./network.js";
 
 const SVC = "tailscaled.service";
 const DAEMON_LOG = "/data/adb/tailscale/run/tailscaled.log";
@@ -23,6 +24,9 @@ const state = {
   prefsRequest: null,
   logRequest: null,
   routeRequest: null,
+  networkRequest: null,
+  networkReport: null,
+  networkRaw: "",
   depth: 0,
   scroll: {},
   modal: null,
@@ -469,6 +473,7 @@ async function refreshPage(announce = false) {
   if (state.page === "settings" || state.page === "home") await loadPrefs();
   if (state.page === "logs") await loadOutput();
   if (state.page === "routing") await loadRoutes();
+  if (state.page === "network") await loadNetwork();
 }
 
 // Hash/history navigation with a modal entry, so Back dismisses overlays first.
@@ -489,6 +494,7 @@ function showPage(name, focus = true) {
   if (name === "settings") loadPrefs();
   if (name === "logs") loadOutput();
   if (name === "routing") loadRoutes();
+  if (name === "network") loadNetwork();
 }
 function navigate(name) {
   if (state.modal || name === state.page) return;
@@ -720,6 +726,36 @@ async function probe(name) {
       failure,
     });
 }
+async function loadNetwork() {
+  if (state.networkRequest) return state.networkRequest;
+  const epoch = state.epoch;
+  text("netdiag-note", "正在采集只读诊断，最多约 15 秒…");
+  state.networkRequest = (async () => {
+    const result = await run(`${SVC} netdiag`, true);
+    if (epoch !== state.epoch) return;
+    state.networkRaw = rawOutput(result);
+    try {
+      if (result.errno !== 0) throw new Error(errorText(result));
+      const report = JSON.parse(result.stdout);
+      if (!report || report.schema !== 1) throw new Error("未识别的诊断 JSON");
+      state.networkReport = report;
+      const groups = diagnosticRows(report);
+      Object.keys(groups).forEach((key) => rows(`netdiag-${key}`, groups[key]));
+      const errors = Array.isArray(report.errors) ? report.errors.filter((v) => typeof v === "string") : [];
+      text("netdiag-note", `${report.checked || "未提供采集时间"}${errors.length ? " · 部分采集失败：" + errors.join("；") : " · 只读快照"}`);
+      $("netdiag-note").classList.toggle("warning", errors.length > 0);
+      $("netdiag-notes").textContent = Array.isArray(report.notes) ? report.notes.filter((v) => typeof v === "string").join("\n") : "";
+      $("netdiag-empty-endpoints").hidden = groups.endpoints.length > 0;
+      $("netdiag-empty-peers").hidden = groups.peers.length > 0;
+      $("netdiag-empty-udp").hidden = groups.udp.length > 0;
+    } catch (error) {
+      text("netdiag-note", `诊断读取失败：${String(error).slice(0, 180)}${state.networkReport ? "；保留上次快照，请核对采集时间。" : ""}`);
+      $("netdiag-note").classList.add("warning");
+    }
+  })();
+  try { await state.networkRequest; } finally { state.networkRequest = null; }
+}
+
 async function loadRoutes() {
   if (state.routeRequest) return state.routeRequest;
   const epoch = state.epoch;
@@ -810,6 +846,8 @@ async function selectDemo() {
     state.status = {};
     state.prefs = {};
     state.nodeName = "";
+    state.networkReport = null;
+    state.networkRaw = "";
     state.prefsReady = false;
     $("login-box").hidden = true;
     text("demo-name", scenarios[demo.name]);
@@ -844,6 +882,8 @@ function wire() {
   $("btn-logout").onclick = logout;
   $("btn-dns-refresh").onclick = () => probe("dns-refresh");
   $("routes-refresh").onclick = () => operation(loadRoutes);
+  $("netdiag-refresh").onclick = () => operation(loadNetwork);
+  $("netdiag-raw").onclick = () => openModal({ title: "网络诊断原始输出", summary: "包含命令 stdout / stderr、错误与超时信息，可复制。", output: state.networkRaw || "尚未采集" });
   $("btn-src-daemon").onclick = () => setSource("daemon");
   $("btn-src-diag").onclick = () => setSource("diag");
   $("btn-log-refresh").onclick = () => operation(loadOutput);

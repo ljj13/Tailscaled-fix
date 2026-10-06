@@ -2,6 +2,14 @@
 
 完整功能说明和验证范围见 [发布说明](releases/README.md)。
 
+## main · 尚未发布
+
+- 增加只读 Tailscale 网络诊断采集器，统一 selftest / diag 与 WebUI 网络详情。
+- 展示 endpoints、DERP 地区、peer 状态与路径、UDP listener、netcheck 和 outer route。
+- 区分 home DERP、实际路径和未知状态；补充 JSON 缺字段、离线、超时与私钥保护测试。
+
+[设计与用法](NETWORK_DIAGNOSTICS.md)
+
 ## v1.102.5-dnsfix.2-webui.1 · 2026-10-07
 
 - 重构 Miuix / HyperOS 风格 WebUI，提供七个页面、浅色 / 深色主题和本地 mock。

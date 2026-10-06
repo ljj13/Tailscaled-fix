@@ -816,6 +816,8 @@ show_diag() {
   echo ""
   show_hostname_init
   echo ""
+  network_diagnostics text
+  echo ""
   echo "daemon log (last 10 lines):"
   tail -n 10 "${tailscaled_log}" 2>/dev/null | sed 's/^/  /'
   echo ""
@@ -837,7 +839,7 @@ log_view() {
 }
 
 # One command that answers "is the right binary running, and where does it
-# break". Everything here is cheap, and it is meant to be pasted into a chat.
+# break". Network probes have bounded deadlines; output can be copied for diagnosis.
 selftest() {
   echo "===== tailscaled selftest ====="
   echo "module.prop      : $(awk -F'=' '/^id=/{printf $2" "} /^version=/{print $2}' "${module_prop}" 2>/dev/null)"
@@ -862,21 +864,25 @@ selftest() {
   show_hostname_init
 
   if [ -n "$(daemon_pid)" ] && [ -S "${tailscale_dir}/run/tailscaled.sock" ]; then
-    echo "client version   : $("${tailscale_bin}" ${tailscale_bin_param} version 2>&1 | head -n1)"
-    _json=$("${tailscale_bin}" ${tailscale_bin_param} status --json 2>/dev/null)
-    echo "backend state    : $(printf '%s' "${_json}" | grep -o '"BackendState": *"[^"]*"' | head -n1 | sed 's/.*"\([^"]*\)"$/\1/')"
-    echo "self tailnet ip  : $("${tailscale_bin}" ${tailscale_bin_param} ip -4 2>/dev/null | head -n1)"
-    echo "accept-routes    : $("${tailscale_bin}" ${tailscale_bin_param} debug prefs 2>/dev/null | grep -o '"RouteAll": *[a-z]*' | sed 's/.*: *//')"
-    echo "reported OS      : $(printf '%s' "${_json}" | grep -o '"OS": *"[^"]*"' | head -n1 | sed 's/.*"\([^"]*\)"$/\1/')   <- 'linux' = this module, 'android' = another one is running"
-    _peer=$("${tailscale_bin}" ${tailscale_bin_param} status 2>/dev/null | tail -n +2 | awk 'NF>2 {print $1; exit}')
-    if [ -n "${_peer}" ]; then
-      echo "tailscale ping   : $("${tailscale_bin}" ${tailscale_bin_param} ping --timeout=6s -c 3 "${_peer}" 2>&1 | tr '\n' ' ')"
-      echo "kernel ping      : $(ping -c 2 -W 3 "${_peer}" 2>&1 | tail -n 1)"
-    fi
+    network_diagnostics text "$1" --ping
   else
     echo "daemon           : NOT RUNNING (press Start first)"
   fi
   echo "===== end selftest ====="
+}
+
+network_diagnostics() {
+  _nd_format=${1:-json}
+  if [ -x "${tailscale_dir}/bin/android-netdiag" ]; then
+    "${tailscale_dir}/bin/android-netdiag" --cli "${tailscale_bin}" --dir "${tailscale_dir}" \
+      --pid "$(daemon_pid)" --format "${_nd_format}" --peer "${2:-}" ${3:-} -- ${tailscale_bin_param}
+  elif [ "${_nd_format}" = json ]; then
+    echo '{"schema":1,"errors":["android-netdiag helper unavailable; install an updated module"],"raw":{}}'
+  else
+    echo 'Network diagnostics: android-netdiag helper unavailable; install an updated module.'
+  fi
+  # A diagnostic failure must never fail service management or other selftests.
+  return 0
 }
 
 # ------------------------------------------------------------------ dispatch --
@@ -894,11 +900,12 @@ case "$1" in
   set-pref)   set_pref "$2" "$3" ;;
   logout)     logout_now ;;
   log)        log_view "$2" ;;
-  selftest)   selftest ;;
+  selftest)   selftest "$2" ;;
+  netdiag)    network_diagnostics json ;;
   dns)        check_dns ;;
   dns-refresh) refresh_dns ;;
   __watchdog) route_watchdog ;;
   *)
-    echo "usage: ${scripts_name} {start|stop|restart|status|routes|routes-reload|routes-sync|diag|dns|dns-refresh|webstatus|prefs|set-pref <key> <value>|logout|selftest|log{runs|service|tailscaled|diag}}"
+    echo "usage: ${scripts_name} {start|stop|restart|status|routes|routes-reload|routes-sync|diag|dns|dns-refresh|webstatus|prefs|set-pref <key> <value>|logout|selftest [peer-ip]|netdiag|log{runs|service|tailscaled|diag}}"
     ;;
 esac

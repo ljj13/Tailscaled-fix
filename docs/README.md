@@ -21,6 +21,7 @@
 | [dnsfix.2](dns/DNS_FIX_2.md) | VPN 底层网络、物理路由、verified DNS 缓存与诊断字段。 |
 | [Miuix WebUI](WEBUI_MIUIX.md) | 页面结构、组件、bridge、mock、浏览器测试和历史预览构建。 |
 | [Android 设备名](ANDROID_HOSTNAME.md) | 名称来源、规范化、手工命名保护和并发测试。 |
+| [网络诊断](NETWORK_DIAGNOSTICS.md) | main 尚未发布的 endpoint、DERP、UDP、NAT 与 marked route 诊断。 |
 | [开发与目录说明](DEVELOPMENT.md) | 源码职责、构建入口、测试命令及本地产物约定。 |
 
 ## 截图

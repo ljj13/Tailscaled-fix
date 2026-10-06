@@ -33,6 +33,7 @@ const ROOT = path.resolve(__dirname, "..");
     "routes",
     "diag",
     "selftest",
+    "netdiag",
   ].map((action) => "tailscaled.service " + action);
   commands.push("tailscale up --timeout=8s");
   commands.push("tailscale status --json");

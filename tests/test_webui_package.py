@@ -46,7 +46,7 @@ class WebUIPackageTests(unittest.TestCase):
             output = pathlib.Path(directory) / 'preview.zip'
             packager.package(packager.DEFAULT_BASE, output)
             with zipfile.ZipFile(packager.DEFAULT_BASE) as old, zipfile.ZipFile(output) as new:
-                for name in ('customize.sh', 'tailscale/scripts/tailscaled.service', 'system/bin/tailscale', 'files/android-hostname'):
+                for name in ('customize.sh', 'tailscale/scripts/tailscaled.service', 'system/bin/tailscale', 'files/android-hostname', 'files/android-netdiag'):
                     self.assertIn(name, new.namelist())
                     source = (ROOT / name).read_bytes()
                     self.assertEqual(new.read(name), source if name.startswith('files/') else source.replace(b'\r\n', b'\n'))

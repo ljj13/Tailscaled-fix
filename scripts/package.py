@@ -8,7 +8,7 @@ import subprocess
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-files = [ROOT / 'files/tailscale.combined', ROOT / 'files/android-dns', ROOT / 'files/android-hostname']
+files = [ROOT / 'files/tailscale.combined', ROOT / 'files/android-dns', ROOT / 'files/android-hostname', ROOT / 'files/android-netdiag']
 for path in files:
     data = path.read_bytes()
     if data[:4] != b'\x7fELF' or data[4] != 2 or struct.unpack('<H', data[18:20])[0] != 183:
@@ -45,7 +45,7 @@ with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
             continue
         name = path.relative_to(ROOT).as_posix()
         data = path.read_bytes()
-        executable = name.endswith('.sh') or name.startswith(('system/bin/', 'tailscale/scripts/')) or name.endswith('update-binary') or name.startswith('files/') and path.name in ('tailscale.combined', 'android-dns', 'android-hostname')
+        executable = name.endswith('.sh') or name.startswith(('system/bin/', 'tailscale/scripts/')) or name.endswith('update-binary') or name.startswith('files/') and path.name in ('tailscale.combined', 'android-dns', 'android-hostname', 'android-netdiag')
         if name.startswith(('system/', 'tailscale/', 'META-INF/')) or name.endswith('.sh'):
             data = data.replace(b'\r\n', b'\n')
         info = zipfile.ZipInfo(name, date_time=(2026, 10, 6, 0, 0, 0))
@@ -56,7 +56,7 @@ with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
 with zipfile.ZipFile(output) as z:
     if z.testzip() is not None:
         raise SystemExit('ZIP CRC check failed')
-    for required in ('META-INF/com/google/android/update-binary', 'customize.sh', 'files/android-dns', 'files/android-hostname', 'files/tailscale.combined'):
+    for required in ('META-INF/com/google/android/update-binary', 'customize.sh', 'files/android-dns', 'files/android-hostname', 'files/android-netdiag', 'files/tailscale.combined'):
         assert required in z.namelist(), required
 digest = hashlib.sha256(output.read_bytes()).hexdigest()
 output.with_suffix('.zip.sha256').write_text(f'{digest}  {output.name}\n', encoding='utf-8')

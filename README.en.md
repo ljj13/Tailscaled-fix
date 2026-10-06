@@ -12,6 +12,10 @@ See [release notes](docs/releases/v1.102.5-dnsfix.2-webui.1.md),
 [hostname initialization](docs/ANDROID_HOSTNAME.md) and
 [documentation index](docs/README.md).
 
+Main also contains [unreleased network diagnostics](docs/NETWORK_DIAGNOSTICS.md):
+endpoints, DERP regions, peer paths, UDP/NAT and marked outer routes, shown only
+on the WebUI network detail page. The published release remains unchanged.
+
 A self-contained module that runs `tailscaled` on a rooted Android device and
 lets browsers and apps reach the tailnet and a peer's advertised subnets.
 
@@ -114,7 +118,8 @@ replaces; the **state directory** holds everything that must survive an update.
 │   ├── tailscaled.orig  known-good copy for the binary guard
 │   ├── tailscaled.sha256
 │   ├── android-dns       physical network / DNS discovery helper
-│   └── android-hostname  one-time hostname preference helper
+│   ├── android-hostname  one-time hostname preference helper
+│   └── android-netdiag   read-only network diagnostics (unreleased main)
 ├── scripts/             start.sh, tailscaled.service, tailscaled.inotify
 └── run/                 state and logs
     ├── tailscaled.state     identity + Tailscale preferences (login lives here)
@@ -202,6 +207,8 @@ tailscaled.service diag              # full diagnostic dump
 tailscaled.service dns               # DNS source and reachability
 tailscaled.service dns-refresh       # rediscover Android DNS
 tailscaled.service selftest          # build, DNS, routing and ping diagnostics
+tailscaled.service selftest <peer-ip> # optionally select the peer to test
+tailscaled.service netdiag           # structured network diagnostic JSON (main)
 tailscaled.service webstatus         # machine-readable state (what the WebUI uses)
 tailscaled.service prefs             # machine-readable Tailscale preferences
 tailscaled.service log {runs|service|tailscaled|diag}
@@ -338,13 +345,16 @@ release automatically. The module does not subscribe to upstream's updater,
 which could replace this DNS fix with another build.
 
 The published WebUI 1 ZIP reuses the exact accepted dnsfix.2 daemon and DNS helper
-binaries. To reproduce that packaging path, obtain the accepted release ZIP in
+binaries. Use the release tag to reproduce the published version exactly;
+current main also includes unreleased diagnostics. To use that packaging path, obtain the accepted release ZIP in
 `dist/`, then run under Linux/WSL with Go 1.26.6 on PATH:
 
 ```sh
 python3 scripts/build-hostname.py
+python3 scripts/build-netdiag.py
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 node tests/webui-command.test.cjs
+node tests/network-ui.test.cjs
 node tests/webui.test.cjs
 python3 scripts/package-webui.py --release
 ```

@@ -21,27 +21,31 @@ SCRIPT_OVERLAYS = ('tailscale/scripts/tailscaled.service', 'system/bin/tailscale
 
 
 def hostname_payload():
-    binary = ROOT / 'files/android-hostname'
+    return helper_payload('android-hostname')
+
+
+def helper_payload(name):
+    binary = ROOT / 'files' / name
     data = binary.read_bytes()
     info = json.loads(binary.with_suffix('.build.json').read_bytes())
     if info['sha256'] != hashlib.sha256(data).hexdigest():
-        raise ValueError('Hostname helper hash mismatch; rebuild it')
-    sources = {p.relative_to(ROOT).as_posix() for p in (ROOT / 'tools/android-hostname').iterdir()
+        raise ValueError(f'{name} helper hash mismatch; rebuild it')
+    sources = {p.relative_to(ROOT).as_posix() for p in (ROOT / 'tools' / name).iterdir()
                if p.suffix == '.go' or p.name == 'go.mod'}
     if sources != set(info['sources_sha256']):
-        raise ValueError('Hostname helper source list changed; rebuild it')
+        raise ValueError(f'{name} helper source list changed; rebuild it')
     for name, digest in info['sources_sha256'].items():
         if hashlib.sha256((ROOT / name).read_bytes()).hexdigest() != digest:
-            raise ValueError('Hostname helper source changed; rebuild it')
+            raise ValueError(f'{name} helper source changed; rebuild it')
     if (info['go'], info['GOOS'], info['GOARCH'], info['CGO_ENABLED']) != ('go1.26.6', 'linux', 'arm64', '0'):
-        raise ValueError('Hostname helper toolchain mismatch')
+        raise ValueError(f'{name} helper toolchain mismatch')
     if data[:5] != b'\x7fELF\x02' or struct.unpack('<H', data[18:20])[0] != 183:
-        raise ValueError('Hostname helper must be Linux arm64 ELF')
+        raise ValueError(f'{name} helper must be Linux arm64 ELF')
     offset = struct.unpack('<Q', data[32:40])[0]
     size, count = struct.unpack('<HH', data[54:58])
     for i in range(count):
         if struct.unpack('<I', data[offset+i*size:offset+i*size+4])[0] in (2, 3):
-            raise ValueError('Hostname helper must be static')
+            raise ValueError(f'{name} helper must be static')
     return data, info
 
 
@@ -78,13 +82,14 @@ def package(base, output, release=False):
         if metadata(source) != source:
             raise ValueError('Release metadata does not match module.prop')
     helper, helper_info = hostname_payload()
-    payloads = {**scripts, 'files/android-hostname': helper}
+    netdiag, netdiag_info = helper_payload('android-netdiag')
+    payloads = {**scripts, 'files/android-hostname': helper, 'files/android-netdiag': netdiag}
     manifest = {'edition': 'Miuix WebUI 1' if release else 'Miuix WebUI Preview 4',
                 'module_version': RELEASE_TAG if release else 'v1.102.5-dnsfix.2',
                 'ui_revision': revision, 'module_author': MODULE_AUTHOR,
                 'base_zip': base.name, 'base_sha256': digest,
                 'module_script_sha256': {key: hashlib.sha256(value).hexdigest() for key, value in scripts.items()},
-                'hostname_helper': helper_info,
+                'hostname_helper': helper_info, 'network_diagnostics_helper': netdiag_info,
                 'ui_sha256': {key: hashlib.sha256(value).hexdigest() for key, value in ui.items()}}
     ui['webroot/ui-build.json'] = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -129,7 +134,7 @@ def package(base, output, release=False):
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     checksum.write_bytes(f'{digest}  {output.name}\n'.encode('ascii'))
     preserved = len(core - set(scripts) - {'module.prop'})
-    print(f'{output}\nSHA256 {digest}\nCore payload: {preserved} entries identical; 3 hostname script overlays and 1 isolated helper; module.prop author={MODULE_AUTHOR}; all modes preserved')
+    print(f'{output}\nSHA256 {digest}\nCore payload: {preserved} entries identical; 3 script overlays and 2 isolated helpers; module.prop author={MODULE_AUTHOR}; all modes preserved')
     return output
 
 

@@ -37,4 +37,5 @@ OVERLAY="$BUILD_DIR/overlay/overlay.json"
   CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags '-s -w' -o "$ROOT/files/android-dns" .
 )
 python3 "$ROOT/scripts/build-hostname.py"
+python3 "$ROOT/scripts/build-netdiag.py"
 python3 "$ROOT/scripts/package.py"

@@ -14,7 +14,7 @@ const acorn = require(
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
   }),
 );
-for (const name of ["app.js", "ksu.js", "demo.js", "commands.js"])
+for (const name of ["app.js", "ksu.js", "demo.js", "commands.js", "network.js"])
   acorn.parse(fs.readFileSync(path.join(ROOT, "webroot", name), "utf8"), {
     ecmaVersion: 2019,
     sourceType: "module",
@@ -366,6 +366,8 @@ const server = http.createServer((req, res) => {
       };
       window.failPref = false;
       window.failStatus = false;
+      window.netdiagMode = "normal";
+      window.fakeNetdiag = {schema:1,checked:"2026-10-07T00:00:00Z",self:{hostname:"native-phone",os:"linux",ipv4:["100.64.1.2"],relay:{code:"hkg",name:"Hong Kong"}},peers:[{hostname:"offline-peer",online:false,path:"offline"},{hostname:"idle-peer",online:true,path:"idle"}],endpoints:[{address:"[2001:db8::2]:41641",family:"IPv6",scope:"Public",interface:"wlan0",interface_source:"exact local address"}],netcheck:{udp:true,ipv4:false,ipv6:false},raw:{outer_ipv6:{timeout:true,error:"deadline exceeded"}},errors:[]};
       window.fakeSelf = {
         HostName: "localhost",
         DNSName: "localhost-0.demo-tailnet.ts.net.",
@@ -497,6 +499,10 @@ const server = http.createServer((req, res) => {
             }
           } else if (command === "tailscaled.service dns-refresh")
             stdout = "native discovery";
+          else if (command === "tailscaled.service netdiag") {
+            stdout = window.netdiagMode === "malformed" ? "bad JSON" : window.netdiagMode === "missing" ? '{"schema":1}' : JSON.stringify(window.fakeNetdiag);
+            if (window.netdiagMode === "timeout") { errno = 124; stdout = ""; stderr = "diagnostic timeout"; }
+          }
           else if (command === "tailscaled.service selftest")
             stdout = "native selftest";
           else if (command.startsWith("tail -n 250 "))
@@ -720,6 +726,37 @@ const server = http.createServer((req, res) => {
         "missing legacy command " + command,
       );
     assert.deepEqual(nativeErrors, []);
+    await native.evaluate(() => { window.failStatus = false; });
+    await native.locator('[data-nav="network"]').click();
+    await native.locator("#netdiag-self").filter({hasText:"native-phone"}).waitFor();
+    assert.match(await native.locator("#netdiag-self").innerText(), /Hong Kong/);
+    assert.match(await native.locator("#netdiag-peers").innerText(), /offline-peer.*离线/s);
+    assert.match(await native.locator("#netdiag-peers").innerText(), /idle-peer.*空闲/s);
+    assert.match(await native.locator("#netdiag-outer").innerText(), /超时/);
+    for (const mode of ["malformed", "timeout"]) {
+      await native.evaluate((mode) => { window.netdiagMode = mode; }, mode);
+      await native.locator("#netdiag-refresh").click();
+      await idle(native);
+      assert.match(await native.locator("#netdiag-note").innerText(), /失败.*保留上次快照/);
+      assert.match(await native.locator("#netdiag-self").innerText(), /native-phone/);
+      assert.equal(await native.locator("#status-main").innerText(), "已连接");
+    }
+    await native.locator("#netdiag-raw").click();
+    await native.locator("#dialog-output").filter({hasText:"exit 124"}).waitFor();
+    await native.locator("#dialog-cancel").click();
+    await native.locator("#overlay").waitFor({state:"hidden"});
+    await native.evaluate(() => { window.netdiagMode = "missing"; });
+    await native.locator("#netdiag-refresh").click();
+    await idle(native);
+    assert.match(await native.locator("#netdiag-netcheck").innerText(), /IPv6.*未知/s);
+    assert.equal(await native.locator("#netdiag-empty-peers").isVisible(), true);
+    await native.evaluate(() => { window.netdiagMode = "normal"; window.fakeNetdiag.endpoints[0].address = '<img src=x onerror=alert(1)>'; });
+    await native.locator("#netdiag-refresh").click();
+    await idle(native);
+    assert.equal(await native.locator("#netdiag-endpoints img").count(), 0);
+    assert.match(await native.locator("#netdiag-endpoints").innerText(), /onerror/);
+    assert.deepEqual(nativeErrors, []);
+    console.log("PASS network diagnostics native API, missing fields, offline/idle peers, no IPv6/DERP, timeouts, cached snapshot/raw output and HTML safety");
     // Empty Prefs.Hostname means use the system hostname. It is not a missing
     // device name: status.Self has the effective name, possibly deduplicated.
     await native.goto(base);
