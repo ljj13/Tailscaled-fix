@@ -1,243 +1,188 @@
-# Tailscale for Android (KernelSU / Magisk module)
+# Android Tailscale（KernelSU / Magisk 模块）
 
-Maintained by **FogPurification**. Current release:
-[v1.102.5-dnsfix.2-webui.1](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.1).
-It combines the Redmi-verified Android DNS fixes, a Miuix-inspired WebUI and
-one-time Android device-name initialization on the pinned Tailscale `v1.102.5` base.
-See [release notes](docs/releases/v1.102.5-dnsfix.2-webui.1.md),
-[DNS audit and device tests](DNS_FIX.md),
-[WebUI design and tests](docs/WEBUI_MIUIX.md) and
-[hostname initialization](docs/ANDROID_HOSTNAME.md).
+**简体中文** | [English](README.en.md)
 
-A self-contained module that runs `tailscaled` on a rooted Android device and
-lets browsers and apps reach the tailnet and a peer's advertised subnets.
+由 **FogPurification** 维护。当前发布版本：
+[v1.102.5-dnsfix.2-webui.1](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.1)。
+基于 Tailscale `v1.102.5`，包含已通过 Redmi 真机验收的 Android DNS 修复、
+Miuix 风格 WebUI，以及 Android 默认设备名初始化。
 
-It is built **`GOOS=linux`** on purpose — see below — and carries the three fixes
-that make a linux build survive Android.
+相关文档：[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.1.md)、
+[DNS 审计与真机测试](DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
+[设备名初始化](docs/ANDROID_HOSTNAME.md)。
 
-Forked from [mgksu/tailscaled](https://github.com/mgksu/tailscaled) (itself a
-fork of [anasfanani/Magisk-Tailscaled](https://github.com/anasfanani/Magisk-Tailscaled)).
+本模块在已 ROOT 的 Android 设备上运行独立的 `tailscaled`，通过内核网络接口
+让浏览器和其他应用访问 Tailnet，以及其他节点通告的子网。
+模块采用 `GOOS=linux` 构建，并针对 Android 的 DNS、路由和 fwmark 做了适配。
 
----
+项目沿用 [mgksu/tailscaled](https://github.com/mgksu/tailscaled) 的模块实现；
+该项目源自 [anasfanani/Magisk-Tailscaled](https://github.com/anasfanani/Magisk-Tailscaled)。
+本仓库使用的 `v1.102.5` 基线来自 [keweiya/tailscaled](https://github.com/keweiya/tailscaled)。
 
-## Why `GOOS=linux`, not `GOOS=android`
+## 安装与升级
 
-The obvious build for a phone is `GOOS=android`, and it is what most modules try.
-It **cannot work for a standalone daemon**. `wgengine/router` gets its
-implementation from `router.HookNewUserspaceRouter`, and that hook is only ever
-registered by `osrouter`'s platform files — while `osrouter/router_linux.go`
-carries `//go:build !android`. Build for android and the hook stays empty, so:
-
-```
-wgengine.NewUserspaceEngine(tun "tailscale0") error: creating router: unsupported OS "android"
-getLocalBackend error: createEngine: creating router: unsupported OS "android"
-```
-
-tailscaled exits immediately. (The official Android app only avoids this because
-it ships its own Java `VpnService` router and registers it on that hook.
-`--tun=userspace-networking` also starts, but then nothing is routed at the
-kernel level, so no browser or app could ever reach `192.168.100.1`.)
-
-So this module builds `GOOS=linux` and makes the linux build survive Android.
-
-### The one thing that breaks, and the fix
-
-With `GOOS=linux`, osrouter is active and tags tailscaled's own sockets with the
-**bypass mark**, routing them with `ip rule ... lookup main`. **Android's `main`
-table has no default route** — netd keeps its default in per-network tables such
-as `rmnet_data3` — so the daemon's own traffic to the control plane and DERP dies
-with `network is unreachable` and the node never comes up.
-
-The module therefore keeps a default route in `main` (plus a connected route for
-the source subnet) and re-asserts it whenever netd rewrites the tables.
-
-Two kernel-level collisions are handled too:
-
-| Problem | Fix |
-|---|---|
-| Stock marks `0x40000` / `0x80000` collide with the **"permission" bits (18–19)** of Android's `netd` fwmark layout, misrouting the control plane | build patch moves them to reserved bits: `0x8000000` and `0x10020000` (`linuxfw-mark.patch`) |
-| A TPROXY proxy (Surfing/Clash) jumps `DIVERT` at mangle `PREROUTING` rule 1 and hijacks the tunnel's TCP replies — ping works, the browser hangs | the module keeps `-i tailscale0 -j RETURN` at rule 1 of `PREROUTING`, `OUTPUT` and nat `OUTPUT`, re-asserted every 15 s |
-
-Everything else is osrouter's job, and it does it well: it installs its rules at
-preference 5210–5270 (ahead of netd's 11000) and puts the tailnet prefixes — plus
-**any subnet route you accept** — into table 52. So there is no route management
-to do by hand.
-
-## Install
-
-1. Download the latest `tailscaled-<version>.zip` from
-   [this repository's Releases](https://github.com/ljj13/Tailscaled-fix/releases).
-   The release also includes `<filename>.zip.sha256`; verify it before installing.
-2. Install it in KernelSU / Magisk / APatch and reboot.
-3. Log in:
+1. 从[本仓库 Releases](https://github.com/ljj13/Tailscaled-fix/releases)
+   下载 `tailscaled-<版本>.zip`。发布附件同时提供 `<文件名>.zip.sha256`，安装前请核对 SHA256。
+2. 在 KernelSU / Magisk / APatch 中安装 ZIP，然后重启设备。
+3. 通过 WebUI 登录，或执行：
 
 ```sh
 su -c 'tailscale login'
 ```
 
-Use the WebUI's MagicDNS switch to change the existing Tailscale DNS preference.
-The Android DNS bootstrap helper discovers physical-network resolvers, follows
-VPN underlying networks and excludes VPN/Tailscale interfaces. It uses private
-resolver files, so a missing `/etc/resolv.conf` or `[::1]:53` listener does not
-block daemon startup. This does not install a global Android/netd DNS override.
+升级时直接覆盖安装新 ZIP，再重启即可。安装器保留现有 Tailscale state、登录身份、
+`settings.ini`、手工路由和设备名保护标记，无需退出登录或删除节点。
 
-Upgrade by installing the new ZIP over the existing module, then rebooting.
-Existing Tailscale state/login identity, `settings.ini`, manual routes and
-hostname protection markers are retained. No logout or node deletion is needed.
-
----
-
-## Configuration: what lives where
-
-Two directories matter. The **module directory** is what the manager installs and
-replaces; the **state directory** holds everything that must survive an update.
-
-```
-/data/adb/modules/tailscaled/            module dir (replaced on update)
-├── module.prop                          id/name/version; description shows the run state
-├── system/bin/tailscale                 CLI wrapper (blocks `tailscale update`)
-├── system/bin/tailscaled                daemon wrapper
-├── system/bin/tailscaled.service        control-command wrapper
-└── META-INF/ customize.sh               installer only
-
-/data/adb/service.d/tailscaled_service.sh  boot entry (installed by customize.sh)
-
-/data/adb/tailscale/                     state dir (KEPT across module updates)
-├── settings.ini         <-- paths, TUN name, table id, rule priority
-├── routes               optional manual prefixes (osrouter handles the normal case)
-├── bin/
-│   ├── tailscale        combined binary (CLI)
-│   ├── tailscaled       combined binary (daemon)
-│   ├── tailscaled.orig  known-good copy for the binary guard
-│   ├── tailscaled.sha256
-│   ├── android-dns       physical network / DNS discovery helper
-│   └── android-hostname  one-time hostname preference helper
-├── scripts/             start.sh, tailscaled.service, tailscaled.inotify
-└── run/                 state and logs
-    ├── tailscaled.state     identity + Tailscale preferences (login lives here)
-    ├── tailscaled.sock
-    ├── tailscaled.log       daemon log
-    ├── diag.log             what the routing logic did, step by step
-    ├── runs.log / service.log
-    └── tailscaled.pid / watchdog.pid
-```
-
-`settings.ini` and `routes` are only copied **on first install**, so your edits
-survive module updates. Deleting them restores the defaults.
-
-| What you want to change | Where |
-|---|---|
-| Which networks go through the tunnel | `/data/adb/tailscale/routes`, then `tailscaled.service restart` |
-| TUN name / table id / rule priority (advanced) | `/data/adb/tailscale/settings.ini` |
-| MagicDNS, hostname, Shields up, advertised exit node, `--accept-routes` | Tailscale preferences, stored in `run/tailscaled.state`; use the WebUI or `tailscale set --hostname=...`, `tailscale set --accept-routes` |
-| Anything about a proxy | not in this module — see the coexistence section |
-
-`--accept-routes` lets osrouter install accepted subnet routes into table 52.
-The manual `routes` file is an optional fallback; it is not required for ordinary
-accepted subnet routes.
-
-When `Prefs.Hostname` is empty, the module initializes it once from Android's
-user device name, then marketname/model/device fallbacks. Names are normalized
-to a legal lowercase DNS label. Existing overrides are preserved, and manual
-hostname requests through the WebUI or module CLI permanently disable automatic
-initialization. The reported OS remains Linux because the daemon uses GOOS=linux.
+WebUI 的 MagicDNS 开关用于调整 Tailscale DNS 偏好。Android DNS helper 会获取
+物理网络的 DNS，追溯 VPN 的底层网络，并排除 VPN / Tailscale 接口。
+它使用独立的 resolver 文件，因此 `/etc/resolv.conf` 缺失、`[::1]:53` 没有监听
+不会阻止 daemon 启动，也不会替换 Android / netd 的全局 DNS 配置。
 
 ## WebUI
 
-The module ships a pure HTML/CSS/JS WebUI for KernelSU / APatch and compatible
-Magisk WebUI hosts. Open it from your manager's module card when WebUI is
-supported. The interface follows Miuix / HyperOS settings-page conventions:
-large titles, grouped rounded cards, preference rows, switches and secondary
-pages with Back navigation. It follows the system light/dark theme, supports
-safe areas and uses local resources and system fonts.
+模块提供纯 HTML / CSS / JavaScript WebUI，适用于 KernelSU / APatch，以及兼容的
+Magisk WebUI 宿主。支持 WebUI 的管理器可从模块卡片打开界面。
 
-| Page | What it does |
+界面参考 Miuix / HyperOS 设置页：大标题、圆角分组卡片、偏好设置行、开关和带返回按钮的
+二级页面。主题跟随系统浅色 / 深色模式，适配安全区域，所有资源和字体均使用本地资源或系统字体。
+
+| 页面 | 内容 |
 |---|---|
-| **Home / 首页** | Connection state, device/Tailnet/account information, start/stop/restart and login. |
-| **Settings / 设置** | Accept routes, MagicDNS, Shields up, advertised exit node, hostname and login/logout. |
-| **Network / 网络详情** | Physical interface, Android VPN underlying network, selftest and links to advanced details. |
-| **DNS diagnostics** | Resolver source, network/transport, selected/excluded interfaces, reachability and marked probes; all dnsfix.2 fields retained. |
-| **Routing details** | Main route, table 52, discovered/manual routes and proxy exemptions. |
-| **Logs / 日志** | Daemon and diagnostic output, refresh/copy/clear. |
-| **About / 关于** | Module version, author, build information and supported capabilities. |
+| 首页 | 连接状态、设备 / Tailnet / 账号信息、启动 / 停止 / 重启和登录。 |
+| 设置 | 接受子网路由、MagicDNS、Shields up、通告出口节点、设备名和登录 / 退出登录。 |
+| 网络详情 | 物理接口、Android VPN 底层网络、selftest 和高级诊断入口。 |
+| DNS 诊断 | DNS 来源、网络 / transport、选中与排除的接口、可达性和带 fwmark 的探测结果；保留全部 dnsfix.2 字段。 |
+| 路由详情 | main 默认路由、table 52、自动发现 / 手工路由和代理豁免状态。 |
+| 日志 | Daemon 与诊断日志，支持刷新、复制和清空。 |
+| 关于 | 模块版本、作者、构建信息和功能说明。 |
 
-Native actions retain the existing service/CLI API. The bridge uses physical
-installed entry points and preserves socket settings, so it does not rely on
-system-overlay command discovery. Status polling pauses while the page is hidden.
+WebUI 保留现有 service / CLI API。Bridge 使用实际安装路径调用命令，并保留自定义 socket
+设置，不依赖系统 overlay 中的命令查找。页面隐藏时暂停状态轮询。
 
-The screenshots below are **desktop browser mock data**, not phone captures.
-See the [complete screenshot gallery](docs/screenshots/webui/README.md).
+以下截图使用**桌面浏览器 mock 数据**，不是手机实拍。
+截图保留中文界面，中英文 README 使用相同图片。
+更多页面见[完整截图库](docs/screenshots/webui/README.md)。
 
-| Home · light | Home · dark | Settings |
+| 首页 · 浅色 | 首页 · 深色 | 设置 |
 |---|---|---|
-| <img src="docs/screenshots/webui/light-home.png" width="260" alt="Home, light theme, mock Wi-Fi and FlClash"> | <img src="docs/screenshots/webui/dark-home.png" width="260" alt="Home, dark theme, mock Wi-Fi and FlClash"> | <img src="docs/screenshots/webui/light-settings.png" width="260" alt="Settings, light theme"> |
+| <img src="docs/screenshots/webui/light-home.png" width="260" alt="中文首页，浅色主题，模拟 Wi-Fi 与 FlClash"> | <img src="docs/screenshots/webui/dark-home.png" width="260" alt="中文首页，深色主题，模拟 Wi-Fi 与 FlClash"> | <img src="docs/screenshots/webui/light-settings.png" width="260" alt="中文设置页，浅色主题"> |
 
-| Network | DNS diagnostics | Routing |
+| 网络详情 | DNS 诊断 | 路由详情 |
 |---|---|---|
-| <img src="docs/screenshots/webui/light-network.png" width="260" alt="Network details"> | <img src="docs/screenshots/webui/light-dns.png" width="260" alt="DNS diagnostics"> | <img src="docs/screenshots/webui/light-routing.png" width="260" alt="Routing details"> |
+| <img src="docs/screenshots/webui/light-network.png" width="260" alt="中文网络详情页"> | <img src="docs/screenshots/webui/light-dns.png" width="260" alt="中文 DNS 诊断页"> | <img src="docs/screenshots/webui/light-routing.png" width="260" alt="中文路由详情页"> |
 
-To preview without a phone:
+无需连接手机也可以预览：
 
 ```sh
 python -m http.server 8765 --bind 127.0.0.1 --directory webroot
 ```
 
-Open `http://127.0.0.1:8765/?demo=wifi`. Other scenarios are `cellular`,
-`needs-login`, `failure` and `stopped`. Forced demo mode never calls the native
-root bridge.
+打开 `http://127.0.0.1:8765/?demo=wifi`。
+其他模拟场景为 `cellular`、`needs-login`、`failure` 和 `stopped`。
+强制 demo 模式不会调用 native root bridge。
 
-## Commands
+## 常用命令与诊断
+
+以下命令需在 root shell 中运行，也可通过 `su -c '命令'` 调用。
 
 ```sh
-# service
+# 服务管理
 tailscaled.service start|stop|restart|status
-tailscaled.service routes            # routing that is installed (manual + discovered)
-tailscaled.service routes-reload     # re-read the route files and apply
-tailscaled.service routes-sync       # discover tailnet subnets and apply them
-tailscaled.service diag              # full diagnostic dump
-tailscaled.service dns               # DNS source and reachability
-tailscaled.service dns-refresh       # rediscover Android DNS
-tailscaled.service selftest          # build, DNS, routing and ping diagnostics
-tailscaled.service webstatus         # machine-readable state (what the WebUI uses)
-tailscaled.service prefs             # machine-readable Tailscale preferences
+tailscaled.service routes            # 已安装路由（手工 + 自动发现）
+tailscaled.service routes-reload     # 重新读取路由文件并应用
+tailscaled.service routes-sync       # 自动发现 Tailnet 子网并应用
+tailscaled.service diag              # 完整诊断信息
+tailscaled.service dns               # DNS 来源与可达性
+tailscaled.service dns-refresh       # 重新获取 Android DNS
+tailscaled.service selftest          # 构建、DNS、路由与 ping 诊断
+tailscaled.service webstatus         # WebUI 使用的机器可读状态
+tailscaled.service prefs             # 机器可读的 Tailscale 偏好
 tailscaled.service log {runs|service|tailscaled|diag}
 
-# preferences (whitelisted: accept-routes, accept-dns, shields-up,
-# advertise-exit-node, advertise-routes, hostname, auto-update)
+# 偏好设置白名单：accept-routes、accept-dns、shields-up、
+# advertise-exit-node、advertise-routes、hostname、auto-update
 tailscaled.service set-pref accept-routes on
 tailscaled.service set-pref accept-dns off
 tailscaled.service set-pref advertise-routes 192.168.1.0/24
 tailscaled.service logout
 
-# the CLI, as usual
+# Tailscale CLI
 tailscale status
 tailscale ip
 tailscale ping <peer>
 ```
 
-`tailscaled.service diag` prints the binary hash vs. the expected one, the daemon
-and watchdog PIDs, the installed routes and rules, whether a proxy's `DIVERT`
-jump is present, and the tail of the logs. **Start there when something is off.**
+遇到异常时先运行 `tailscaled.service diag`。它会显示实际 / 预期二进制 hash、daemon 和
+watchdog PID、已安装路由与规则、代理的 `DIVERT` 跳转，以及近期日志。
+DNS 问题可进一步查看 `tailscaled.service dns`，或在 WebUI 中打开 DNS 诊断页。
 
----
+## 配置与数据目录
 
-## Reaching a peer's advertised subnet
+模块目录由管理器安装，升级时会替换；持久数据目录保存配置和节点身份，升级时保留。
 
-Nothing to configure by hand. osrouter installs accepted subnet routes into
-table 52 for you, so it is two steps:
+```text
+/data/adb/modules/tailscaled/              模块目录（升级时替换）
+├── module.prop                            id / 名称 / 版本；描述显示运行状态
+├── system/bin/tailscale                   CLI 包装器（阻止 tailscale update）
+├── system/bin/tailscaled                  daemon 包装器
+├── system/bin/tailscaled.service          服务命令包装器
+└── META-INF/ customize.sh                 安装器
+
+/data/adb/service.d/tailscaled_service.sh  开机入口（由 customize.sh 安装）
+
+/data/adb/tailscale/                       持久数据目录（升级时保留）
+├── settings.ini           路径、TUN 名称、路由表和规则优先级
+├── routes                 可选手工前缀（常规路由由 osrouter 管理）
+├── bin/
+│   ├── tailscale          合并二进制（CLI）
+│   ├── tailscaled         合并二进制（daemon）
+│   ├── tailscaled.orig    二进制保护机制使用的已知可用副本
+│   ├── tailscaled.sha256
+│   ├── android-dns        物理网络 / DNS 发现 helper
+│   └── android-hostname   一次性设备名初始化 helper
+├── scripts/               start.sh、tailscaled.service、tailscaled.inotify
+└── run/                   state 与日志
+    ├── tailscaled.state   节点身份与 Tailscale 偏好（包含登录状态）
+    ├── tailscaled.sock
+    ├── tailscaled.log     daemon 日志
+    ├── diag.log           路由操作诊断日志
+    ├── runs.log / service.log
+    └── tailscaled.pid / watchdog.pid
+```
+
+`settings.ini` 和 `routes` 仅在首次安装时复制，用户修改会在升级后保留。
+删除它们后，后续安装会恢复默认文件。
+
+| 要调整的内容 | 配置位置 |
+|---|---|
+| 手工指定进入隧道的网段 | `/data/adb/tailscale/routes`，修改后执行 `tailscaled.service restart`。 |
+| TUN 名称 / 路由表 / 规则优先级（高级） | `/data/adb/tailscale/settings.ini`。 |
+| MagicDNS、设备名、Shields up、通告出口节点、接受子网路由 | Tailscale 偏好保存在 `run/tailscaled.state`；通过 WebUI 或 `tailscale set` 修改，例如 `tailscale set --hostname=...`、`tailscale set --accept-routes`。 |
+| 代理设置 | 由代理自身管理，参见下方共存说明。 |
+
+启用 `--accept-routes` 后，osrouter 将已接受的子网路由写入 table 52。
+手工 `routes` 文件仅作为可选补充，普通子网访问无需手工添加路由。
+
+当 `Prefs.Hostname` 为空时，模块会一次性初始化设备名：优先使用 Android 用户设备名，
+其次尝试 marketname / model / device，并规范化为合法的小写 DNS label。
+已设置的名称会保留；用户通过 WebUI 或模块 CLI 手工设置设备名后，自动初始化永久停用。
+由于 daemon 使用 `GOOS=linux`，Tailscale 管理后台显示的系统仍为 Linux。
+
+## 访问其他节点通告的子网
+
+在本机启用接受子网路由：
 
 ```sh
 su -c 'tailscale set --accept-routes'
 ```
 
-and the peer's route must be approved in the admin console. Then
-`http://192.168.100.1` works in any browser.
+也可在 WebUI 中打开**设置 → 接受子网路由**。
+同时需要在 Tailscale 管理后台批准对端通告的路由。
+批准后，浏览器和其他应用即可访问对应子网，例如 `http://192.168.100.1`。
 
-The WebUI does the same thing: **Settings → Accept subnet routes**.
+osrouter 自动把这些路由安装到 table 52。运行 `tailscaled.service routes` 查看，例如：
 
-Check it with `tailscaled.service routes`, which prints table 52:
-
-```
+```text
 mode:                    osrouter (linux build) - tailscaled owns the routing
 default route in main:   default via 10.20.30.1 dev rmnet_data3
 tailnet in table 52:
@@ -245,94 +190,110 @@ tailnet in table 52:
   192.168.100.0/24 dev tailscale0
 ```
 
-`/data/adb/tailscale/routes` still exists as a manual fallback if you ever need
-to force a prefix into the tunnel, but you should not need it.
+以上地址和接口名仅为示例，实际输出取决于当前网络。
+如需手工补充前缀，仍可使用 `/data/adb/tailscale/routes`。
 
-## Coexisting with a proxy (Surfing / Clash / Mihomo / anything)
+## 与代理共存（Surfing / Clash / Mihomo 等）
 
-**You do not need to edit the proxy's configuration.** This module never marks or
-reroutes anything except the tailnet prefixes, so it does not compete with a proxy
-for traffic.
-
-What a proxy *can* do is intercept the tunnel itself. On every start — and every
-15 s afterwards — the module puts a `RETURN` for tunnel traffic at rule 1 of three
-chains:
+模块保留现有 Tailnet 路由和代理豁免逻辑。常规共存无需修改代理配置。
+模块在启动时、此后每 15 秒检查一次，确保以下三条规则位于相应链的第 1 条：
 
 ```sh
-iptables -t mangle -I PREROUTING 1 -i tailscale0 -j RETURN   # replies coming back
-iptables -t mangle -I OUTPUT     1 -o tailscale0 -j RETURN   # packets leaving
-iptables -t nat    -I OUTPUT     1 -o tailscale0 -j RETURN   # REDIRECT-style proxies
+iptables -t mangle -I PREROUTING 1 -i tailscale0 -j RETURN   # 隧道入站流量
+iptables -t mangle -I OUTPUT     1 -o tailscale0 -j RETURN   # 隧道出站流量
+iptables -t nat    -I OUTPUT     1 -o tailscale0 -j RETURN   # REDIRECT 类代理豁免
 ```
 
-These are harmless with no proxy installed (they simply return early for tunnel
-traffic) and they name **no proxy**, so **switching to a different proxy module
-needs no change here**. `tailscaled.service diag` shows whether each one is in
-place.
+规则只匹配隧道接口，不依赖特定代理名称。未安装代理时也可保留。
+`tailscaled.service diag` 可查看豁免是否到位。
 
-### Why the inbound rule matters
+### 为什么需要入站豁免
 
-Surfing's TPROXY inserts a `DIVERT` jump at mangle `PREROUTING` rule 1:
+Surfing 的 TPROXY 会在 mangle `PREROUTING` 第 1 条插入 `DIVERT` 跳转：
 
 ```sh
 iptables -t mangle -I PREROUTING -p tcp -m socket -j DIVERT
 ```
 
-It matches **TCP only** and has no interface condition. `DIVERT` marks
-(`0x1000000`) and `ACCEPT`s the packet, so the SYN-ACK of every TCP connection
-leaving through `tailscale0` is routed to the proxy's TPROXY port instead of the
-local socket and **the handshake never completes**. ICMP is never matched, which
-is why the symptom is the deceptive *"ping works, but the browser/curl hangs"*.
+这条规则只匹配 TCP，却没有接口条件。`DIVERT` 设置 `0x1000000` mark 并 `ACCEPT` 数据包，
+导致经 `tailscale0` 返回的 TCP SYN-ACK 被路由到代理的 TPROXY 端口，本地 socket 收不到回复，
+TCP 握手无法完成。ICMP 不匹配，所以可能出现“ping 正常，但浏览器 / curl 卡住”的现象。
 
-The exemption must be rule 1 **of `PREROUTING` itself**. Putting it inside
-`BOX_EXTERNAL` does nothing, because `DIVERT` is evaluated first.
+豁免必须放在 `PREROUTING` 链本身的第 1 条。只在 `BOX_EXTERNAL` 内添加无效，
+因为 `DIVERT` 已先执行。
 
-If you would rather do it in the proxy's own config, Surfing's
-`ignore_out_list=("tailscale0")` handles the outbound direction — but it is not
-required, and it does not fix the inbound direction.
+如果在代理配置中使用 Surfing 的 `ignore_out_list=("tailscale0")`，它只能处理出站方向，
+不能替代模块的入站豁免。
 
-## Notes and limitations
+## 为什么采用 GOOS=linux
 
-* **arm64 only.**
-* **No Tailscale SSH** — built with `ts_omit_ssh`.
-* **Using an exit node is not supported** (advertising this device as one is
-  supported). This release retains the existing service restriction on selecting
-  another exit node.
-* **No UPX.** The binary is shipped uncompressed; UPX needs executable anonymous
-  mappings, which some ROMs/SELinux policies refuse.
+本模块需要独立 daemon 和内核级路由。在当前使用的 Tailscale 基线中，
+`wgengine/router` 通过 `router.HookNewUserspaceRouter` 获取路由实现；
+`osrouter/router_linux.go` 带有 `//go:build !android`，因此 `GOOS=android`
+构建不会注册这个实现，独立 daemon 会报错退出：
 
----
-
-## Layout
-
-```
-META-INF/                 installer
-customize.sh              installs to /data/adb/tailscale, stores the binary guard
-service.sh                boot entry (waits for boot, then runs start.sh)
-system/bin/               tailscale / tailscaled / tailscaled.service wrappers
-webroot/                  KernelSU / APatch WebUI (index.html, app.js, ksu.js, style.css)
-tailscale/settings.ini    all paths, prefixes, table ids  -> /data/adb/tailscale/
-tailscale/routes          prefixes routed into the TUN     -> /data/adb/tailscale/
-tailscale/scripts/        start.sh, tailscaled.service, tailscaled.inotify
-uninstall.sh              stops the daemon and removes our routes
+```text
+wgengine.NewUserspaceEngine(tun "tailscale0") error: creating router: unsupported OS "android"
+getLocalBackend error: createEngine: creating router: unsupported OS "android"
 ```
 
-`settings.ini` and `routes` are only copied on first install, so your edits
-survive module updates.
+官方 Android App 通过自己的 Java `VpnService` 路由实现注册该 hook。
+`--tun=userspace-networking` 虽能启动独立 daemon，但不会提供本模块需要的内核路由，
+其他应用无法直接通过它访问 Tailnet 子网。
 
----
+因此，本模块采用 `GOOS=linux` 并对 Android 做以下适配。
 
-## Building
+### main 路由与 fwmark
 
-Run `sh scripts/build.sh` under Linux/WSL with Go 1.26.6 and Python 3. The build
-pins Tailscale v1.102.5, applies the existing fwmark patch and Android DNS patches,
-runs the relevant tests, and packages `dist/tailscaled-v1.102.5-dnsfix.2-webui.1-arm64.zip`.
-The branch workflow produces an artifact; it does not change main or publish a
-release automatically. The module does not subscribe to upstream's updater,
-which could replace this DNS fix with another build.
+Linux osrouter 为 tailscaled 自身的 socket 设置 bypass mark，规则将其导向 `lookup main`。
+Android 的 netd 通常将默认路由保存在每个网络的独立路由表中，`main` 没有默认路由时，
+控制平面和 DERP 流量会报 `network is unreachable`，节点无法连接。
 
-The published WebUI 1 ZIP reuses the exact accepted dnsfix.2 daemon and DNS helper
-binaries. To reproduce that packaging path, obtain the accepted release ZIP in
-`dist/`, then run under Linux/WSL with Go 1.26.6 on PATH:
+模块在 `main` 中维护默认路由及源子网的直连路由，并在 netd 改写路由表后重新检查。
+同时处理 fwmark 和代理规则冲突：
+
+| 问题 | 处理方式 |
+|---|---|
+| 原始 `0x40000` / `0x80000` mark 与 Android netd fwmark 的 permission 位（18 / 19）冲突。 | 构建时通过 `linuxfw-mark.patch` 改为 `0x8000000` 和 `0x10020000`。 |
+| TPROXY 的 `DIVERT` 抢先匹配隧道 TCP 回复，造成 ping 正常但浏览器卡住。 | 保持 mangle `PREROUTING` 的 `-i tailscale0 -j RETURN`，以及 mangle / nat `OUTPUT` 的 `-o tailscale0 -j RETURN` 为第 1 条，每 15 秒检查。 |
+
+osrouter 的规则优先级为 5210–5270，位于 netd 的 11000 之前。
+它将 Tailnet 前缀和已接受的子网路由安装到 table 52，无需手工管理常规路由。
+
+Android DNS 缺失或误选 VPN DNS 的处理细节见 [DNS 修复文档](DNS_FIX.md)。
+
+## 支持范围与限制
+
+- 仅提供 **arm64** 安装包。
+- 不支持 **Tailscale SSH**，构建使用 `ts_omit_ssh`。
+- 支持通告本机为出口节点；**不支持选择其他节点作为本机出口节点**，沿用现有服务限制。
+- 二进制不使用 UPX 压缩。部分 ROM / SELinux 策略不允许 UPX 所需的可执行匿名内存映射。
+
+## 仓库结构
+
+```text
+META-INF/                 安装器
+customize.sh              安装到 /data/adb/tailscale，并记录二进制保护信息
+service.sh                开机入口，等待启动完成后执行 start.sh
+system/bin/               tailscale / tailscaled / tailscaled.service 包装器
+webroot/                  KernelSU / APatch WebUI（HTML / CSS / JS）
+tailscale/settings.ini    路径、前缀和路由表配置，安装到 /data/adb/tailscale/
+tailscale/routes          可选手工路由，安装到 /data/adb/tailscale/
+tailscale/scripts/        start.sh、tailscaled.service、tailscaled.inotify
+uninstall.sh              停止 daemon 并移除模块路由
+```
+
+## 构建与测试
+
+在 Linux / WSL 中使用 Go 1.26.6 和 Python 3，运行 `sh scripts/build.sh`。
+构建固定使用 Tailscale `v1.102.5`，应用现有 fwmark 与 Android DNS 补丁，执行相关测试，
+并生成 `dist/tailscaled-v1.102.5-dnsfix.2-webui.1-arm64.zip`。
+分支构建工作流只生成 artifact，不会自动修改 main 或发布 Release。
+模块不接入上游自动更新，避免其他构建替换本模块的 DNS 修复。
+
+已发布的 WebUI 1 ZIP 复用经过验收的 dnsfix.2 daemon 和 DNS helper 二进制。
+如需复现该打包流程，先将已验收的发布 ZIP 放入 `dist/`，再在 Linux / WSL 中执行，
+并确保 Go 1.26.6 位于 PATH：
 
 ```sh
 python3 scripts/build-hostname.py
@@ -342,21 +303,17 @@ node tests/webui.test.cjs
 python3 scripts/package-webui.py --release
 ```
 
-The packager verifies the accepted ZIP hash, helper source/binary hashes,
-static arm64 ELF, Unix modes, module metadata and ZIP CRC. It writes a matching
-`.zip.sha256` sidecar and embeds UI/helper provenance.
+打包器检查已验收 ZIP 的 hash、helper 源码 / 二进制 hash、静态 arm64 ELF、Unix 权限、
+模块元数据和 ZIP CRC，并生成 `.zip.sha256` 校验文件，在包内记录 UI / helper 构建来源。
 
-Browser-test tooling is kept in ignored `build/browser-tools/`: install
-`playwright` and `acorn` there with npm before running the Node tests. Windows
-uses the installed Edge browser by default; on Linux set `WEBUI_BROWSER` to the
-absolute path of an installed Chromium-compatible browser. These dependencies
-are test tooling and are not shipped in the module.
+浏览器测试工具位于忽略提交的 `build/browser-tools/`。
+运行 Node 测试前，在该目录通过 npm 安装 `playwright` 和 `acorn`。
+Windows 默认使用已安装的 Edge；Linux 需通过 `WEBUI_BROWSER` 指定已安装的
+Chromium 兼容浏览器的绝对路径。这些工具仅用于测试，不随模块发布。
 
----
+## 致谢
 
-## Credits
-
-* [keweiya/tailscaled](https://github.com/keweiya/tailscaled) — the v1.102.5 module base
-* [anasfanani/Magisk-Tailscaled](https://github.com/anasfanani/Magisk-Tailscaled) — original module
-* [mgksu/tailscaled](https://github.com/mgksu/tailscaled) — the fork this is based on
-* [Tailscale](https://tailscale.com) — BSD-3-Clause
+- [keweiya/tailscaled](https://github.com/keweiya/tailscaled)：本模块的 v1.102.5 基线。
+- [anasfanani/Magisk-Tailscaled](https://github.com/anasfanani/Magisk-Tailscaled)：原始模块。
+- [mgksu/tailscaled](https://github.com/mgksu/tailscaled)：前身 fork。
+- [Tailscale](https://tailscale.com)：BSD-3-Clause。
