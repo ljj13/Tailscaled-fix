@@ -19,7 +19,7 @@ INSTALL_DIR="/data/adb/tailscale"
 INSTALL_BIN_DIR="$INSTALL_DIR/bin"
 
 # Refuse incomplete payloads before touching the running installation.
-for f in tailscale.combined android-dns; do
+for f in tailscale.combined android-dns android-hostname; do
   [ -s "$MODPATH/files/$f" ] || abort "! Missing required binary: $f"
 done
 
@@ -49,6 +49,7 @@ ui_print "- Installing binaries"
 mv -f "$MODPATH/files/tailscale.combined" "$INSTALL_BIN_DIR/tailscale"
 cp -f "$INSTALL_BIN_DIR/tailscale" "$INSTALL_BIN_DIR/tailscaled"
 mv -f "$MODPATH/files/android-dns" "$INSTALL_BIN_DIR/android-dns"
+mv -f "$MODPATH/files/android-hostname" "$INSTALL_BIN_DIR/android-hostname"
 [ -f "$MODPATH/files/build-info.json" ] && cp -f "$MODPATH/files/build-info.json" "$INSTALL_DIR/build-info.json"
 
 # Keep a known-good copy of the binary plus its checksum. `tailscale update`

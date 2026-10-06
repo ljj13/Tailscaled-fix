@@ -1,6 +1,6 @@
 {
-  "version": "v1.102.4",
-  "versionCode": 1102004,
-  "zipUrl": "https://github.com/keweiya/tailscaled/releases/download/v1.102.4/tailscaled-v1.102.4.zip",
-  "changelog": "https://github.com/keweiya/tailscaled/releases/tag/v1.102.4"
+  "version": "v1.102.5-dnsfix.2-webui.1",
+  "versionCode": 110200503,
+  "zipUrl": "https://github.com/ljj13/Tailscaled-fix/releases/download/v1.102.5-dnsfix.2-webui.1/tailscaled-v1.102.5-dnsfix.2-webui.1-arm64.zip",
+  "changelog": "https://raw.githubusercontent.com/ljj13/Tailscaled-fix/refs/tags/v1.102.5-dnsfix.2-webui.1/docs/releases/v1.102.5-dnsfix.2-webui.1.md"
 }

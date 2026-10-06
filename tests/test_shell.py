@@ -25,13 +25,17 @@ class AndroidShellTests(unittest.TestCase):
                 shutil.copytree(ROOT / 'tailscale', module / 'tailscale')
                 shutil.copytree(ROOT / 'system', module / 'system')
                 (module / 'files').mkdir()
-                for f in ('tailscale.combined', 'android-dns'):
+                for f in ('tailscale.combined', 'android-dns', 'android-hostname'):
                     (module / 'files' / f).write_text('test executable', encoding='utf-8')
                 (module / 'service.sh').write_text('boot script', encoding='utf-8')
                 (install / 'run').mkdir(parents=True)
                 key = install / 'run/tailscaled.state'
                 key.write_bytes(b'node identity and persisted preferences')
                 key.chmod(0o600)
+                initialized = install / 'hostname-initialized'
+                initialized.write_bytes(b'source=settings.global.device_name\nhostname=my-phone\n')
+                initialized.chmod(0o600)
+                (install / 'hostname-user-set').mkdir(mode=0o700)
                 if existing:
                     (install / 'settings.ini').write_text('user settings', encoding='utf-8')
                     (install / 'routes').write_text('192.168.100.0/24\n', encoding='utf-8')
@@ -48,9 +52,14 @@ set_perm_recursive() { find "$1" -type d -exec chmod "$4" {} \\; ; find "$1" -ty
                 self.assertEqual(r.returncode, 0, r.stderr)
                 self.assertEqual(key.read_bytes(), b'node identity and persisted preferences')
                 self.assertEqual(key.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(initialized.read_bytes(), b'source=settings.global.device_name\nhostname=my-phone\n')
+                self.assertEqual(initialized.stat().st_mode & 0o777, 0o600)
+                self.assertTrue((install / 'hostname-user-set').is_dir())
+                self.assertEqual((install / 'hostname-user-set').stat().st_mode & 0o777, 0o700)
                 self.assertTrue((install / 'bin/android-dns').exists())
                 self.assertTrue((boot / 'tailscaled_service.sh').exists())
                 self.assertTrue((install / 'scripts/tailscaled.service').exists())
+                self.assertTrue((install / 'bin/android-hostname').exists())
                 if existing:
                     self.assertEqual((install / 'settings.ini').read_text(), 'user settings')
                     self.assertEqual((install / 'routes').read_text(), '192.168.100.0/24\n')
@@ -146,6 +155,7 @@ set_module_status() { :; }
 add_routes() { :; }
 exempt_tunnel() { :; }
 routes_ok() { return 0; }
+init_android_hostname() { :; }
 nohup() { return 0; }
 ticks=0
 sleep() {

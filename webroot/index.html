@@ -1,182 +1,498 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tailscale</title>
-<link rel="stylesheet" href="./style.css">
-</head>
-<body>
-
-<header>
-  <div class="brand">
-    <span id="dot" class="dot"></span>
-    <div>
-      <div id="status-main" class="status-main">loading…</div>
-      <div id="status-sub" class="status-sub">querying tailscaled</div>
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Tailscale</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <svg
+      class="icon-defs"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <symbol id="i-back" viewBox="0 0 24 24">
+          <path d="m14 5-7 7 7 7M7 12h14" />
+        </symbol>
+        <symbol id="i-chevron" viewBox="0 0 24 24">
+          <path d="m9 5 7 7-7 7" />
+        </symbol>
+        <symbol id="i-refresh" viewBox="0 0 24 24">
+          <path d="M20 8a8 8 0 1 0 .5 7M20 3v5h-5" />
+        </symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+          <circle cx="8" cy="6" r="2" />
+          <circle cx="16" cy="12" r="2" />
+          <circle cx="10" cy="18" r="2" />
+        </symbol>
+        <symbol id="i-network" viewBox="0 0 24 24">
+          <rect x="8" y="3" width="8" height="6" rx="2" />
+          <rect x="2" y="16" width="7" height="5" rx="1.5" />
+          <rect x="15" y="16" width="7" height="5" rx="1.5" />
+          <path d="M12 9v4M5.5 16v-3h13v3" />
+        </symbol>
+        <symbol id="i-log" viewBox="0 0 24 24">
+          <rect x="4" y="3" width="16" height="18" rx="3" />
+          <path d="M8 8h8M8 12h8M8 16h5" />
+        </symbol>
+        <symbol id="i-info" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v6M12 7h.01" />
+        </symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24">
+          <rect x="8" y="8" width="12" height="13" rx="2" />
+          <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+        </symbol>
+        <symbol id="i-close" viewBox="0 0 24 24">
+          <path d="m6 6 12 12M18 6 6 18" />
+        </symbol>
+        <symbol id="i-tailnet" viewBox="0 0 24 24">
+          <circle cx="5" cy="5" r="2" />
+          <circle cx="12" cy="5" r="2" />
+          <circle cx="19" cy="5" r="2" />
+          <circle cx="5" cy="12" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="19" cy="12" r="2" />
+          <circle cx="5" cy="19" r="2" />
+          <circle cx="12" cy="19" r="2" />
+          <circle cx="19" cy="19" r="2" />
+        </symbol>
+      </defs>
+    </svg>
+    <a class="skip-link" href="#content">跳到页面内容</a>
+    <div class="app-shell">
+      <header class="top-app-bar">
+        <div class="top-controls">
+          <button id="back" class="icon-button" aria-label="返回" hidden>
+            <svg class="icon"><use href="#i-back" /></svg></button
+          ><span id="app-caption" class="app-caption">你的私人网络</span
+          ><button
+            id="refresh"
+            class="icon-button root-action"
+            aria-label="刷新状态"
+          >
+            <svg class="icon"><use href="#i-refresh" /></svg>
+          </button>
+        </div>
+        <h1 id="page-title" tabindex="-1">Tailscale</h1>
+        <p id="page-subtitle" class="page-subtitle">让设备之间的连接更简单</p>
+      </header>
+      <main id="content">
+        <section class="page" id="page-home" data-page="home">
+          <div id="health" class="notice" role="status" hidden></div>
+          <article class="card connection-card" id="connection-card">
+            <div class="connection-heading">
+              <div>
+                <p class="eyebrow">Tailnet 连接</p>
+                <h2 id="status-main" aria-live="polite">正在读取状态</h2>
+              </div>
+              <div class="app-mark">
+                <svg class="icon"><use href="#i-tailnet" /></svg>
+              </div>
+            </div>
+            <p id="status-sub" class="connection-subtitle">请稍候</p>
+            <div class="connection-actions">
+              <button
+                id="primary-action"
+                class="button primary root-action"
+                data-action="restart"
+              >
+                重启服务</button
+              ><button
+                id="stop-action"
+                class="button secondary root-action"
+                data-action="stop"
+              >
+                停止服务
+              </button>
+            </div>
+            <div id="login-box" class="login-box" hidden>
+              <p class="summary">打开授权链接，将此设备加入 Tailnet。</p>
+              <a id="login-url" target="_blank" rel="noopener noreferrer"
+                >打开登录链接</a
+              >
+            </div>
+          </article>
+          <h2 class="group-title">此设备</h2>
+          <div class="card preference-group">
+            <div class="preference">
+              <div class="preference-copy">
+                <span class="preference-title">设备名称</span>
+              </div>
+              <span class="trailing" id="home-hostname">—</span>
+            </div>
+            <div class="preference">
+              <div class="preference-copy">
+                <span class="preference-title">Tailnet 地址</span>
+              </div>
+              <span class="trailing numeric" id="home-ip">—</span>
+            </div>
+            <div class="preference">
+              <div class="preference-copy">
+                <span class="preference-title">账户</span>
+              </div>
+              <span class="trailing" id="home-user">—</span>
+            </div>
+          </div>
+          <h2 class="group-title">管理</h2>
+          <nav class="card preference-group" aria-label="模块功能">
+            <button class="preference navigation-row" data-nav="settings">
+              <span class="row-icon blue"
+                ><svg class="icon"><use href="#i-settings" /></svg></span
+              ><span class="preference-copy"
+                ><span class="preference-title">设置</span
+                ><span class="summary">路由、MagicDNS 与设备名称</span></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+            <button class="preference navigation-row" data-nav="network">
+              <span class="row-icon violet"
+                ><svg class="icon"><use href="#i-network" /></svg></span
+              ><span class="preference-copy"
+                ><span class="preference-title">网络与诊断</span
+                ><span class="summary" id="home-network-summary"
+                  >查看 DNS、路由与代理共存状态</span
+                ></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+            <button class="preference navigation-row" data-nav="logs">
+              <span class="row-icon amber"
+                ><svg class="icon"><use href="#i-log" /></svg></span
+              ><span class="preference-copy"
+                ><span class="preference-title">日志</span
+                ><span class="summary">Daemon 与 Diagnostics</span></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+            <button class="preference navigation-row" data-nav="about">
+              <span class="row-icon neutral"
+                ><svg class="icon"><use href="#i-info" /></svg></span
+              ><span class="preference-copy"
+                ><span class="preference-title">关于</span
+                ><span class="summary" id="home-version"
+                  >版本与构建信息</span
+                ></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+          </nav>
+        </section>
+        <section class="page" id="page-settings" data-page="settings" hidden>
+          <h2 class="group-title first">连接选项</h2>
+          <div class="card preference-group">
+            <label class="preference switch-row"
+              ><span class="preference-copy"
+                ><span class="preference-title">接受子网路由</span
+                ><span class="summary"
+                  >访问其他设备发布的局域网。Accept routes</span
+                ></span
+              ><input
+                type="checkbox"
+                class="switch"
+                id="sw-accept-routes"
+                role="switch"
+                data-pref="accept-routes"
+            /></label>
+            <label class="preference switch-row"
+              ><span class="preference-copy"
+                ><span class="preference-title">MagicDNS</span
+                ><span class="summary"
+                  >接受 Tailnet DNS 设置；不会接管 Android 应用
+                  DNS，通常保持关闭。</span
+                ></span
+              ><input
+                type="checkbox"
+                class="switch"
+                id="sw-accept-dns"
+                role="switch"
+                data-pref="accept-dns"
+            /></label>
+            <label class="preference switch-row"
+              ><span class="preference-copy"
+                ><span class="preference-title">阻止传入连接</span
+                ><span class="summary"
+                  >拒绝其他设备主动连接本机。Shields up</span
+                ></span
+              ><input
+                type="checkbox"
+                class="switch"
+                id="sw-shields-up"
+                role="switch"
+                data-pref="shields-up"
+            /></label>
+            <label class="preference switch-row"
+              ><span class="preference-copy"
+                ><span class="preference-title">广播为出口节点</span
+                ><span class="summary"
+                  >允许其他 Tailnet 设备通过本机访问互联网。</span
+                ></span
+              ><input
+                type="checkbox"
+                class="switch"
+                id="sw-advertise-exit-node"
+                role="switch"
+                data-pref="advertise-exit-node"
+            /></label>
+          </div>
+          <p class="section-note" id="prefs-note">正在读取偏好设置</p>
+          <h2 class="group-title">设备与账户</h2>
+          <div class="card preference-group">
+            <button
+              id="btn-hostname"
+              class="preference navigation-row root-action"
+            >
+              <span class="preference-copy"
+                ><span class="preference-title">设备名称</span
+                ><span id="settings-hostname" class="summary">—</span></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg></button
+            ><button
+              id="btn-login"
+              class="preference navigation-row root-action"
+            >
+              <span class="preference-copy"
+                ><span class="preference-title">登录 / 重新授权</span
+                ><span class="summary" id="settings-account"
+                  >加入你的 Tailnet</span
+                ></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+          </div>
+          <div class="card preference-group separated">
+            <button
+              id="btn-logout"
+              class="preference navigation-row root-action danger"
+            >
+              <span class="preference-copy"
+                ><span class="preference-title">退出登录</span
+                ><span class="summary">下次连接需要重新授权</span></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+          </div>
+        </section>
+        <section class="page" id="page-network" data-page="network" hidden>
+          <div class="card preference-group">
+            <button class="preference navigation-row" data-nav="dns">
+              <span class="preference-copy"
+                ><span class="preference-title">DNS</span
+                ><span id="network-dns" class="summary">—</span></span
+              ><span class="trailing" id="network-dns-state">—</span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg></button
+            ><button class="preference navigation-row" data-nav="routing">
+              <span class="preference-copy"
+                ><span class="preference-title">路由与代理共存</span
+                ><span class="summary"
+                  >main、table 52 与 tunnel exemptions</span
+                ></span
+              ><span class="trailing" id="network-route-state">—</span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+          </div>
+          <h2 class="group-title">当前底层网络</h2>
+          <div class="card preference-group" id="network-fields"></div>
+          <h2 class="group-title">诊断工具</h2>
+          <div class="card preference-group">
+            <button
+              class="preference navigation-row root-action"
+              data-probe="dns"
+            >
+              <span class="preference-copy"
+                ><span class="preference-title">检测 DNS</span
+                ><span class="summary"
+                  >检查当前 resolver 的实际可达性</span
+                ></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg></button
+            ><button
+              class="preference navigation-row root-action"
+              data-probe="selftest"
+            >
+              <span class="preference-copy"
+                ><span class="preference-title">完整自检</span
+                ><span class="summary"
+                  >构建、路由、exemption 与 Tailnet ping</span
+                ></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg></button
+            ><button
+              class="preference navigation-row"
+              id="diagnostic-log-link"
+              data-nav="logs"
+            >
+              <span class="preference-copy"
+                ><span class="preference-title">查看诊断日志</span
+                ><span class="summary">保留完整原始输出，便于排查</span></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+          </div>
+        </section>
+        <section class="page" id="page-dns" data-page="dns" hidden>
+          <div class="card preference-group" id="dns-summary-fields"></div>
+          <h2 class="group-title">网络选择与探测</h2>
+          <div class="card preference-group" id="dns-detail-fields"></div>
+          <div class="button-row separated">
+            <button class="button primary root-action" data-probe="dns">
+              检测 DNS</button
+            ><button id="btn-dns-refresh" class="button secondary root-action">
+              重新发现 DNS
+            </button>
+          </div>
+          <p class="section-note">
+            DNS 来自真实底层网络；VPN 接口不会作为 bootstrap resolver 的来源。
+          </p>
+        </section>
+        <section class="page" id="page-routing" data-page="routing" hidden>
+          <div class="card preference-group" id="routing-fields"></div>
+          <h2 class="group-title">
+            路由详情 <span class="group-caption">含 table 52</span>
+          </h2>
+          <div class="card output-card">
+            <div class="output-toolbar">
+              <span class="summary">来自 tailscaled.service routes</span
+              ><button
+                id="routes-refresh"
+                class="icon-button root-action"
+                aria-label="刷新路由详情"
+              >
+                <svg class="icon"><use href="#i-refresh" /></svg>
+              </button>
+            </div>
+            <pre id="routes-output" class="code" tabindex="0">
+进入页面后读取</pre
+            >
+          </div>
+        </section>
+        <section class="page" id="page-logs" data-page="logs" hidden>
+          <div class="segmented" role="group" aria-label="日志来源">
+            <button id="btn-src-daemon" aria-pressed="true">Daemon</button
+            ><button id="btn-src-diag" aria-pressed="false">Diagnostics</button>
+          </div>
+          <div class="card output-card separated">
+            <div class="output-toolbar">
+              <span id="src-label" class="preference-title">Daemon 日志</span
+              ><button
+                id="btn-log-refresh"
+                class="icon-button root-action"
+                aria-label="刷新日志"
+              >
+                <svg class="icon"><use href="#i-refresh" /></svg></button
+              ><button id="btn-copy" class="icon-button" aria-label="复制日志">
+                <svg class="icon"><use href="#i-copy" /></svg>
+              </button>
+            </div>
+            <pre id="out" class="code log-output" tabindex="0">
+进入页面后读取</pre
+            >
+          </div>
+          <div class="card preference-group separated">
+            <label class="preference switch-row"
+              ><span class="preference-copy"
+                ><span class="preference-title">自动刷新</span
+                ><span class="summary"
+                  >仅在当前日志页可见时，每 5 秒刷新</span
+                ></span
+              ><input
+                id="auto"
+                class="switch"
+                type="checkbox"
+                role="switch" /></label
+            ><button
+              id="btn-clear"
+              class="preference navigation-row root-action danger"
+            >
+              <span class="preference-copy"
+                ><span class="preference-title">清空日志</span
+                ><span class="summary"
+                  >清空 Daemon 与 Diagnostics 日志，不影响节点身份</span
+                ></span
+              ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
+          </div>
+        </section>
+        <section class="page" id="page-about" data-page="about" hidden>
+          <div class="about-brand">
+            <div class="app-mark">
+              <svg class="icon"><use href="#i-tailnet" /></svg>
+            </div>
+            <h2>Tailscale</h2>
+            <p id="about-version" class="summary">—</p>
+            <p class="summary">Miuix WebUI · 1</p>
+          </div>
+          <div class="card preference-group" id="about-fields"></div>
+          <h2 class="group-title">支持与限制</h2>
+          <div class="card prose">
+            <p>
+              与 Clash / Mihomo 共存，保留 Android DNS fallback 与 Tailscale
+              路由。
+            </p>
+            <p>
+              支持广播为出口节点；当前构建不支持使用其他出口节点或 Tailscale
+              SSH。自动更新由模块管理。
+            </p>
+            <p class="summary">纯 Web 界面 · 本地资源 · 跟随系统主题</p>
+          </div>
+        </section>
+        <aside id="demo-bar" class="demo-bar" hidden>
+          <button id="demo-picker" class="demo-picker">
+            <span class="demo-indicator"></span><span>本地演示</span
+            ><span id="demo-name">Wi-Fi + FlClash</span
+            ><svg class="icon chevron"><use href="#i-chevron" /></svg>
+          </button>
+          <p>所有操作均为模拟，不会执行设备命令。</p>
+        </aside>
+        <p id="busy-label" class="busy-label" role="status" hidden>
+          正在处理，请稍候…
+        </p>
+      </main>
     </div>
-  </div>
-  <button id="refresh" class="ghost" title="refresh">⟳</button>
-</header>
-
-<nav class="tabs">
-  <button id="tab-status"   class="tab">Status</button>
-  <button id="tab-settings" class="tab">Settings</button>
-  <button id="tab-log"      class="tab">Log</button>
-</nav>
-
-<main>
-
-  <!-- ============================================================ status -->
-  <section id="panel-status">
-    <div id="health" class="health" style="display:none"></div>
-
-    <div class="card">
-      <div class="actions">
-        <button data-action="start"   class="primary">Start</button>
-        <button data-action="stop">Stop</button>
-        <button data-action="restart">Restart</button>
-        <button id="btn-login" class="ghost">Login</button>
+    <div id="overlay" class="overlay" hidden>
+      <div
+        id="dialog"
+        class="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-summary"
+        tabindex="-1"
+      >
+        <div id="sheet-handle" class="sheet-handle" hidden></div>
+        <div class="dialog-heading">
+          <h2 id="dialog-title"></h2>
+          <button id="dialog-close" class="icon-button" aria-label="关闭">
+            <svg class="icon"><use href="#i-close" /></svg>
+          </button>
+        </div>
+        <p id="dialog-summary" class="summary"></p>
+        <div id="dialog-input-group" hidden>
+          <label class="field-label" for="in-hostname">设备名称</label
+          ><input
+            id="in-hostname"
+            class="text-input"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="none"
+            maxlength="253"
+          />
+          <p id="input-error" class="field-error" role="alert" hidden></p>
+        </div>
+        <div id="dialog-choices" class="dialog-choices" hidden></div>
+        <pre
+          id="dialog-output"
+          class="code sheet-output"
+          tabindex="0"
+          hidden
+        ></pre>
+        <div class="dialog-actions">
+          <button id="dialog-cancel" class="button secondary">取消</button
+          ><button id="dialog-confirm" class="button primary root-action">
+            确认
+          </button>
+        </div>
       </div>
-      <div id="login-box" class="login-box" style="display:none">
-        <div class="hint">Open this link to authorise this device:</div>
-        <a id="login-url" href="#" target="_blank" rel="noopener"></a>
-      </div>
     </div>
-
-    <div class="card">
-      <dl class="kv">
-        <dt>Module</dt>          <dd id="v-module">-</dd>
-        <dt>tailscaled</dt>      <dd id="v-daemon">-</dd>
-        <dt>Build</dt>           <dd id="v-build">-</dd>
-        <dt>Tailnet address</dt> <dd id="v-ip">-</dd>
-        <dt>Backend</dt>         <dd id="v-backend">-</dd>
-        <dt>Account</dt>         <dd id="v-user">-</dd>
-      </dl>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Health checks</div>
-      <dl class="kv">
-        <dt>Binary</dt>
-            <dd id="v-binary">-</dd>
-        <dt>Default route</dt>
-            <dd id="v-main">-</dd>
-        <dt>Proxy exemption</dt>
-            <dd id="v-exempt">-</dd>
-        <dt>DNS source</dt> <dd id="v-dns-source">-</dd>
-        <dt>Android network</dt> <dd id="v-dns-network">-</dd>
-        <dt>Underlying network</dt> <dd id="v-dns-underlying">-</dd>
-        <dt>Interface / transport</dt> <dd id="v-dns-iface">-</dd>
-        <dt>Selection reason</dt> <dd id="v-dns-selection">-</dd>
-        <dt>DNS retained</dt> <dd id="v-dns-retained">-</dd>
-        <dt>DNS servers</dt> <dd id="v-dns-servers">-</dd>
-        <dt>DNS query</dt> <dd id="v-dns-check">-</dd>
-      </dl>
-      <p class="hint">
-        <b>Default route</b> must be OK: tailscaled's own traffic is routed through
-        a routing table Android leaves empty, and without a default there it cannot
-        reach the control plane at all.
-        <b>Proxy exemption</b> keeps a TPROXY proxy (Surfing/Clash) from hijacking
-        the tunnel's TCP replies.
-      </p>
-    </div>
-  </section>
-
-  <!-- ========================================================== settings -->
-  <section id="panel-settings" style="display:none">
-    <div class="card">
-      <div class="card-title">
-        Features
-        <span class="right"><button id="btn-prefs-refresh" class="chip">refresh</button></span>
-      </div>
-
-      <label class="switch-row">
-        <span>
-          <b>Accept subnet routes</b>
-          <em>Turn this on to reach a peer's LAN (for example <code>192.168.100.0/24</code>). tailscaled then installs those routes itself — nothing else to configure.</em>
-        </span>
-        <input type="checkbox" id="sw-accept-routes">
-      </label>
-
-      <label class="switch-row">
-        <span>
-          <b>Accept DNS (MagicDNS)</b>
-          <em>Leave off: MagicDNS needs a local DNS listener that does not exist here.</em>
-        </span>
-        <input type="checkbox" id="sw-accept-dns">
-      </label>
-
-      <label class="switch-row">
-        <span>
-          <b>Shields up</b>
-          <em>Refuse all incoming connections.</em>
-        </span>
-        <input type="checkbox" id="sw-shields-up">
-      </label>
-
-      <label class="switch-row">
-        <span>
-          <b>Advertise as an exit node</b>
-          <em>Lets <i>other</i> devices send their internet traffic through this phone.</em>
-        </span>
-        <input type="checkbox" id="sw-advertise-exit-node">
-      </label>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Device name</div>
-      <div class="row">
-        <input id="in-hostname" type="text" spellcheck="false" placeholder="hostname">
-        <button id="btn-hostname" class="primary">Set</button>
-      </div>
-      <p class="hint">Letters, digits, dots and dashes only.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Not available in this build</div>
-      <ul class="notes">
-        <li>
-          <b>Use an exit node</b> — only advertising this device works. Routing
-          <code>0.0.0.0/0</code> through the tunnel from this side is not supported
-          here, and is refused on purpose.
-        </li>
-        <li>
-          <b>Tailscale SSH</b> — built with <code>ts_omit_ssh</code>.
-        </li>
-        <li>
-          <b>Automatic updates</b> — forced off, and the CLI refuses
-          <code>tailscale update</code>. It installs the stock binary, which
-          misroutes the daemon's traffic on Android and blocks the link.
-        </li>
-      </ul>
-      <div class="actions">
-        <button id="btn-logout" class="danger">Log out</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- =============================================================== log -->
-  <section id="panel-log" style="display:none">
-    <div class="card">
-      <div class="card-title">
-        <span id="src-label">Daemon log</span>
-        <span class="right">
-          <button id="btn-src-daemon" class="chip on">daemon</button>
-          <button id="btn-src-diag" class="chip">diagnostics</button>
-          <button id="auto" class="chip">auto: off</button>
-          <button id="btn-log-refresh" class="chip">refresh</button>
-          <button id="btn-clear" class="chip">clear</button>
-        </span>
-      </div>
-      <pre id="out" class="code">loading…</pre>
-    </div>
-  </section>
-
-</main>
-
-<div id="toast" class="toast"></div>
-
-<script type="module" src="./app.js"></script>
-</body>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
 </html>
