@@ -1,6 +1,6 @@
 id=tailscaled
 name=Tailscale (Android build)
-version=v1.102.5-dnsfix.2
-versionCode=110200502
+version=v1.102.5-dnsfix.2-webui.1
+versionCode=110200503
 author=FogPurification
 description=[ starting ] Tailscale for Android (patched linux + Android DNS)

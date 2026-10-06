@@ -15,7 +15,7 @@ const base = {
   ip4: "100.101.23.8/32",
   routes: "100.64.0.0/10",
   routes_auto: "1",
-  version: "v1.102.5-dnsfix.2",
+  version: "v1.102.5-dnsfix.2-webui.1",
   binary_ok: "1",
   osrouter: "1",
   daemon_current: "1",

@@ -1,7 +1,13 @@
 # Tailscale for Android (KernelSU / Magisk module)
 
-This branch fixes Android DNS bootstrapping on the pinned `v1.102.5` base.
-See [DNS_FIX.md](DNS_FIX.md) for the audit, design, tests, and device verification.
+Maintained by **FogPurification**. Current release:
+[v1.102.5-dnsfix.2-webui.1](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.1).
+It combines the Redmi-verified Android DNS fixes, a Miuix-inspired WebUI and
+one-time Android device-name initialization on the pinned Tailscale `v1.102.5` base.
+See [release notes](docs/releases/v1.102.5-dnsfix.2-webui.1.md),
+[DNS audit and device tests](DNS_FIX.md),
+[WebUI design and tests](docs/WEBUI_MIUIX.md) and
+[hostname initialization](docs/ANDROID_HOSTNAME.md).
 
 A self-contained module that runs `tailscaled` on a rooted Android device and
 lets browsers and apps reach the tailnet and a peer's advertised subnets.
@@ -60,17 +66,24 @@ to do by hand.
 ## Install
 
 1. Download the latest `tailscaled-<version>.zip` from
-   [Releases](https://github.com/keweiya/tailscaled/releases).
+   [this repository's Releases](https://github.com/ljj13/Tailscaled-fix/releases).
+   The release also includes `<filename>.zip.sha256`; verify it before installing.
 2. Install it in KernelSU / Magisk / APatch and reboot.
 3. Log in:
 
 ```sh
 su -c 'tailscale login'
-su -c 'tailscale set --accept-dns=false'
 ```
 
-`--accept-dns=false` is recommended: MagicDNS relies on a local DNS listener that
-does not exist in this setup.
+Use the WebUI's MagicDNS switch to change the existing Tailscale DNS preference.
+The Android DNS bootstrap helper discovers physical-network resolvers, follows
+VPN underlying networks and excludes VPN/Tailscale interfaces. It uses private
+resolver files, so a missing `/etc/resolv.conf` or `[::1]:53` listener does not
+block daemon startup. This does not install a global Android/netd DNS override.
+
+Upgrade by installing the new ZIP over the existing module, then rebooting.
+Existing Tailscale state/login identity, `settings.ini`, manual routes and
+hostname protection markers are retained. No logout or node deletion is needed.
 
 ---
 
@@ -96,7 +109,9 @@ replaces; the **state directory** holds everything that must survive an update.
 │   ├── tailscale        combined binary (CLI)
 │   ├── tailscaled       combined binary (daemon)
 │   ├── tailscaled.orig  known-good copy for the binary guard
-│   └── tailscaled.sha256
+│   ├── tailscaled.sha256
+│   ├── android-dns       physical network / DNS discovery helper
+│   └── android-hostname  one-time hostname preference helper
 ├── scripts/             start.sh, tailscaled.service, tailscaled.inotify
 └── run/                 state and logs
     ├── tailscaled.state     identity + Tailscale preferences (login lives here)
@@ -114,28 +129,62 @@ survive module updates. Deleting them restores the defaults.
 |---|---|
 | Which networks go through the tunnel | `/data/adb/tailscale/routes`, then `tailscaled.service restart` |
 | TUN name / table id / rule priority (advanced) | `/data/adb/tailscale/settings.ini` |
-| MagicDNS, hostname, SSH, exit node, `--accept-routes` | **not a file** — these are Tailscale preferences, set with the CLI and stored in `run/tailscaled.state`: `tailscale set --accept-dns=false`, `tailscale set --accept-routes`, `tailscale up --hostname=...` |
+| MagicDNS, hostname, Shields up, advertised exit node, `--accept-routes` | Tailscale preferences, stored in `run/tailscaled.state`; use the WebUI or `tailscale set --hostname=...`, `tailscale set --accept-routes` |
 | Anything about a proxy | not in this module — see the coexistence section |
 
-> `--accept-routes` and `routes` are complementary: `--accept-routes` makes
-> `tailscaled` *accept* the advertised routes in its netmap, and `routes` makes
-> the *kernel* send those destinations into the tunnel. Both are needed for a
-> subnet to work.
+`--accept-routes` lets osrouter install accepted subnet routes into table 52.
+The manual `routes` file is an optional fallback; it is not required for ordinary
+accepted subnet routes.
+
+When `Prefs.Hostname` is empty, the module initializes it once from Android's
+user device name, then marketname/model/device fallbacks. Names are normalized
+to a legal lowercase DNS label. Existing overrides are preserved, and manual
+hostname requests through the WebUI or module CLI permanently disable automatic
+initialization. The reported OS remains Linux because the daemon uses GOOS=linux.
 
 ## WebUI
 
-The module ships a KernelSU / APatch WebUI: open it from the module card in the
-manager. Three tabs, deliberately few controls:
+The module ships a pure HTML/CSS/JS WebUI for KernelSU / APatch and compatible
+Magisk WebUI hosts. Open it from your manager's module card when WebUI is
+supported. The interface follows Miuix / HyperOS settings-page conventions:
+large titles, grouped rounded cards, preference rows, switches and secondary
+pages with Back navigation. It follows the system light/dark theme, supports
+safe areas and uses local resources and system fonts.
 
-| Tab | What it does |
+| Page | What it does |
 |---|---|
-| **Status** | state dot, tailnet address, `BackendState`, account, and three health checks (**binary**, **default route**, **proxy exemption**). Start / Stop / Restart, plus **Login**, which fetches a `login.tailscale.com` link and shows it as a tappable URL. Refreshes every 15 s. |
-| **Settings** | switches for **Accept subnet routes**, **Accept DNS**, **Shields up** and **Advertise as an exit node**; a device **hostname** field; what this build cannot do (using an exit node, SSH, self-update) and **Log out**. |
-| **Log** | one pane, toggling between the daemon log and the full diagnostic dump, with an auto-refresh switch and a clear button. |
+| **Home / 首页** | Connection state, device/Tailnet/account information, start/stop/restart and login. |
+| **Settings / 设置** | Accept routes, MagicDNS, Shields up, advertised exit node, hostname and login/logout. |
+| **Network / 网络详情** | Physical interface, Android VPN underlying network, selftest and links to advanced details. |
+| **DNS diagnostics** | Resolver source, network/transport, selected/excluded interfaces, reachability and marked probes; all dnsfix.2 fields retained. |
+| **Routing details** | Main route, table 52, discovered/manual routes and proxy exemptions. |
+| **Logs / 日志** | Daemon and diagnostic output, refresh/copy/clear. |
+| **About / 关于** | Module version, author, build information and supported capabilities. |
 
-The WebUI only calls the service script, so anything it does you can also do over
-`adb shell` / a terminal with the commands below. If the status dot is red and
-reads *unavailable*, the manager's root bridge is not answering — use the CLI.
+Native actions retain the existing service/CLI API. The bridge uses physical
+installed entry points and preserves socket settings, so it does not rely on
+system-overlay command discovery. Status polling pauses while the page is hidden.
+
+The screenshots below are **desktop browser mock data**, not phone captures.
+See the [complete screenshot gallery](docs/screenshots/webui/README.md).
+
+| Home · light | Home · dark | Settings |
+|---|---|---|
+| <img src="docs/screenshots/webui/light-home.png" width="260" alt="Home, light theme, mock Wi-Fi and FlClash"> | <img src="docs/screenshots/webui/dark-home.png" width="260" alt="Home, dark theme, mock Wi-Fi and FlClash"> | <img src="docs/screenshots/webui/light-settings.png" width="260" alt="Settings, light theme"> |
+
+| Network | DNS diagnostics | Routing |
+|---|---|---|
+| <img src="docs/screenshots/webui/light-network.png" width="260" alt="Network details"> | <img src="docs/screenshots/webui/light-dns.png" width="260" alt="DNS diagnostics"> | <img src="docs/screenshots/webui/light-routing.png" width="260" alt="Routing details"> |
+
+To preview without a phone:
+
+```sh
+python -m http.server 8765 --bind 127.0.0.1 --directory webroot
+```
+
+Open `http://127.0.0.1:8765/?demo=wifi`. Other scenarios are `cellular`,
+`needs-login`, `failure` and `stopped`. Forced demo mode never calls the native
+root bridge.
 
 ## Commands
 
@@ -146,6 +195,9 @@ tailscaled.service routes            # routing that is installed (manual + disco
 tailscaled.service routes-reload     # re-read the route files and apply
 tailscaled.service routes-sync       # discover tailnet subnets and apply them
 tailscaled.service diag              # full diagnostic dump
+tailscaled.service dns               # DNS source and reachability
+tailscaled.service dns-refresh       # rediscover Android DNS
+tailscaled.service selftest          # build, DNS, routing and ping diagnostics
 tailscaled.service webstatus         # machine-readable state (what the WebUI uses)
 tailscaled.service prefs             # machine-readable Tailscale preferences
 tailscaled.service log {runs|service|tailscaled|diag}
@@ -243,9 +295,8 @@ required, and it does not fix the inbound direction.
 * **arm64 only.**
 * **No Tailscale SSH** — built with `ts_omit_ssh`.
 * **Using an exit node is not supported** (advertising this device as one is
-  fine): that needs the daemon's own sockets kept out of the tunnel, which needs
-  `SO_MARK`/`VpnService.protect`, and neither is available to a standalone
-  daemon.
+  supported). This release retains the existing service restriction on selecting
+  another exit node.
 * **No UPX.** The binary is shipped uncompressed; UPX needs executable anonymous
   mappings, which some ROMs/SELinux policies refuse.
 
@@ -274,15 +325,38 @@ survive module updates.
 
 Run `sh scripts/build.sh` under Linux/WSL with Go 1.26.6 and Python 3. The build
 pins Tailscale v1.102.5, applies the existing fwmark patch and Android DNS patches,
-runs the relevant tests, and packages `dist/tailscaled-v1.102.5-dnsfix.1-arm64.zip`.
+runs the relevant tests, and packages `dist/tailscaled-v1.102.5-dnsfix.2-webui.1-arm64.zip`.
 The branch workflow produces an artifact; it does not change main or publish a
 release automatically. The module does not subscribe to upstream's updater,
 which could replace this DNS fix with another build.
+
+The published WebUI 1 ZIP reuses the exact accepted dnsfix.2 daemon and DNS helper
+binaries. To reproduce that packaging path, obtain the accepted release ZIP in
+`dist/`, then run under Linux/WSL with Go 1.26.6 on PATH:
+
+```sh
+python3 scripts/build-hostname.py
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+node tests/webui-command.test.cjs
+node tests/webui.test.cjs
+python3 scripts/package-webui.py --release
+```
+
+The packager verifies the accepted ZIP hash, helper source/binary hashes,
+static arm64 ELF, Unix modes, module metadata and ZIP CRC. It writes a matching
+`.zip.sha256` sidecar and embeds UI/helper provenance.
+
+Browser-test tooling is kept in ignored `build/browser-tools/`: install
+`playwright` and `acorn` there with npm before running the Node tests. Windows
+uses the installed Edge browser by default; on Linux set `WEBUI_BROWSER` to the
+absolute path of an installed Chromium-compatible browser. These dependencies
+are test tooling and are not shipped in the module.
 
 ---
 
 ## Credits
 
+* [keweiya/tailscaled](https://github.com/keweiya/tailscaled) — the v1.102.5 module base
 * [anasfanani/Magisk-Tailscaled](https://github.com/anasfanani/Magisk-Tailscaled) — original module
 * [mgksu/tailscaled](https://github.com/mgksu/tailscaled) — the fork this is based on
 * [Tailscale](https://tailscale.com) — BSD-3-Clause

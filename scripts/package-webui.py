@@ -14,6 +14,9 @@ ACCEPTED_SHA = 'c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae
 DEFAULT_BASE = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-arm64.zip'
 DEFAULT_OUTPUT = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.4-arm64.zip'
 MODULE_AUTHOR = 'FogPurification'
+RELEASE_TAG = 'v1.102.5-dnsfix.2-webui.1'
+RELEASE_VERSION_CODE = '110200503'
+RELEASE_OUTPUT = ROOT / f'dist/tailscaled-{RELEASE_TAG}-arm64.zip'
 SCRIPT_OVERLAYS = ('tailscale/scripts/tailscaled.service', 'system/bin/tailscale', 'customize.sh')
 
 
@@ -48,7 +51,16 @@ def author_metadata(data):
     return re.sub(rb'(?m)^author=[^\r\n]*', f'author={MODULE_AUTHOR}'.encode('utf-8'), data)
 
 
-def package(base, output):
+def release_metadata(data):
+    for key, value in {'author': MODULE_AUTHOR, 'version': RELEASE_TAG, 'versionCode': RELEASE_VERSION_CODE}.items():
+        pattern = rb'(?m)^' + key.encode() + rb'=[^\r\n]*'
+        if len(re.findall(pattern, data)) != 1:
+            raise ValueError(f'Expected exactly one module {key} field')
+        data = re.sub(pattern, f'{key}={value}'.encode(), data)
+    return data
+
+
+def package(base, output, release=False):
     temporary = output.with_suffix('.zip.tmp')
     checksum = output.with_suffix('.zip.sha256')
     if base.resolve() in {path.resolve() for path in (output, temporary, checksum)}:
@@ -60,9 +72,16 @@ def package(base, output):
     ui = {p.relative_to(ROOT).as_posix(): p.read_bytes().replace(b'\r\n', b'\n')
           for p in sorted((ROOT / 'webroot').rglob('*')) if p.is_file()}
     scripts = {name: (ROOT / name).read_bytes().replace(b'\r\n', b'\n') for name in SCRIPT_OVERLAYS}
+    metadata = release_metadata if release else author_metadata
+    if release:
+        source = (ROOT / 'module.prop').read_bytes().replace(b'\r\n', b'\n')
+        if metadata(source) != source:
+            raise ValueError('Release metadata does not match module.prop')
     helper, helper_info = hostname_payload()
     payloads = {**scripts, 'files/android-hostname': helper}
-    manifest = {'edition': 'Miuix WebUI Preview 4', 'ui_revision': revision, 'module_author': MODULE_AUTHOR,
+    manifest = {'edition': 'Miuix WebUI 1' if release else 'Miuix WebUI Preview 4',
+                'module_version': RELEASE_TAG if release else 'v1.102.5-dnsfix.2',
+                'ui_revision': revision, 'module_author': MODULE_AUTHOR,
                 'base_zip': base.name, 'base_sha256': digest,
                 'module_script_sha256': {key: hashlib.sha256(value).hexdigest() for key, value in scripts.items()},
                 'hostname_helper': helper_info,
@@ -78,7 +97,7 @@ def package(base, output):
                     if entry.filename in payloads:
                         continue
                     payload = old.read(entry.filename)
-                    new.writestr(entry, author_metadata(payload) if entry.filename == 'module.prop' else payload)
+                    new.writestr(entry, metadata(payload) if entry.filename == 'module.prop' else payload)
             for name, data in {**payloads, **ui}.items():
                 entry = zipfile.ZipInfo(name, date_time=(2026, 10, 7, 0, 0, 0))
                 entry.create_system = 3
@@ -92,7 +111,7 @@ def package(base, output):
             if core | set(payloads) != {name for name in new.namelist() if not name.startswith('webroot/')}:
                 raise ValueError('Core file list changed')
             for name in core:
-                expected = scripts.get(name, author_metadata(old.read(name)) if name == 'module.prop' else old.read(name))
+                expected = scripts.get(name, metadata(old.read(name)) if name == 'module.prop' else old.read(name))
                 if expected != new.read(name) or old.getinfo(name).external_attr != new.getinfo(name).external_attr:
                     raise ValueError(f'Core bytes or modes changed: {name}')
             required = ('customize.sh', 'module.prop', 'service.sh', 'META-INF/com/google/android/update-binary',
@@ -117,6 +136,7 @@ def package(base, output):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base', type=pathlib.Path, default=DEFAULT_BASE)
-    parser.add_argument('--output', type=pathlib.Path, default=DEFAULT_OUTPUT)
+    parser.add_argument('--output', type=pathlib.Path)
+    parser.add_argument('--release', action='store_true', help='Package formal WebUI 1 with versioned module metadata')
     args = parser.parse_args()
-    package(args.base, args.output)
+    package(args.base, args.output or (RELEASE_OUTPUT if args.release else DEFAULT_OUTPUT), release=args.release)

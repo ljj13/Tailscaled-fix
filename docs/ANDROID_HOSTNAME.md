@@ -76,8 +76,10 @@ The installer validates the new `android-hostname` payload along with the two
 existing binaries before stopping an installation, installs it under `bin/`,
 and retains its existing state/settings/routes permission behavior. Existing
 hostname markers survive upgrade as well. A fresh source build includes the
-helper and writes `tailscaled-v1.102.5-dnsfix.2-hostname.1-arm64.zip`, preserving
-the accepted dnsfix.2 artifact filename.
+helper. The formal WebUI 1 source build writes
+`tailscaled-v1.102.5-dnsfix.2-webui.1-arm64.zip`, preserving the accepted dnsfix.2
+artifact filename. Formal publication uses `package-webui.py --release` and also
+updates module version/versionCode; the Preview 4 comparison below is historical.
 
 Preview 4 is packaged over the exact accepted dnsfix.2 ZIP
 (`c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae`):

@@ -3,15 +3,16 @@
 ## Scope
 
 Stable dnsfix.2 was merged with a merge commit into main (`9ec00a2`), retaining
-its complete history. `feature/webui-miuix` starts from that stable main. This
+its complete history. `feature/webui-miuix` starts from that stable main.
 Previews 1–3 change the WebUI and the owner's requested module author metadata,
 with separate documentation, browser tests and UI packaging support. Preview 4
 also implements the explicitly requested one-time Android hostname preference:
 an isolated helper, service hooks, CLI intent protection and installer payload
 support. See [Android hostname initialization](ANDROID_HOSTNAME.md).
 Daemon and DNS helper binaries, routing implementations, root bridge and
-settings remain unchanged. No release or feature merge is authorized before
-device acceptance.
+settings remain unchanged. On 2026-10-07 the owner explicitly authorized a
+merge commit into main and publication of `v1.102.5-dnsfix.2-webui.1`.
+Historical preview acceptance sections below describe their original scope.
 
 ## Reference study
 
@@ -269,3 +270,17 @@ payloads and the minimal phone checks.
 Local tests: 26 Python tests, 54 shell command checks and the complete WebUI
 browser suite PASS. The author remains FogPurification. About displays Preview 4.
 No phone acceptance, main merge or release is claimed for this addition.
+
+### Formal WebUI 1 release (2026-10-07)
+
+The owner authorized publishing `v1.102.5-dnsfix.2-webui.1` and merging with
+complete history. Formal packaging uses `scripts/package-webui.py --release`,
+updates only author/version/versionCode metadata in addition to the existing
+three hostname script overlays, and preserves the accepted daemon/DNS binaries.
+The module versionCode is 110200503. About and mock data now identify WebUI 1.
+
+All 28 Python tests, 54 native shell checks and the complete browser suite pass.
+The 24 refreshed screenshots are committed in
+[`docs/screenshots/webui`](screenshots/webui/README.md). They show local mock data.
+Release changes and exact test scope are in the
+[release notes](releases/v1.102.5-dnsfix.2-webui.1.md).

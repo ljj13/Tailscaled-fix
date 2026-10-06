@@ -16,6 +16,29 @@ spec.loader.exec_module(packager)
 
 
 class WebUIPackageTests(unittest.TestCase):
+    def test_release_metadata_updates_only_author_version_and_version_code(self):
+        data = b'id=tailscaled\nname=Tailscale\nversion=v1.102.5-dnsfix.2\nversionCode=110200502\nauthor=keweiya\ndescription=keep unchanged\n'
+        metadata = getattr(packager, 'release_metadata', packager.author_metadata)
+        result = metadata(data)
+        self.assertIn(b'version=v1.102.5-dnsfix.2-webui.1\n', result)
+        self.assertIn(b'versionCode=110200503\n', result)
+        self.assertIn(b'author=FogPurification\n', result)
+        self.assertIn(b'id=tailscaled\nname=Tailscale\n', result)
+        self.assertIn(b'description=keep unchanged\n', result)
+
+    def test_release_zip_matches_module_metadata_and_preserves_accepted_binaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = pathlib.Path(directory) / 'release.zip'
+            packager.package(packager.DEFAULT_BASE, output, release=True)
+            with zipfile.ZipFile(packager.DEFAULT_BASE) as old, zipfile.ZipFile(output) as new:
+                info = json.loads(new.read('webroot/ui-build.json'))
+                self.assertEqual(info['edition'], 'Miuix WebUI 1')
+                self.assertEqual(info['module_version'], 'v1.102.5-dnsfix.2-webui.1')
+                self.assertEqual(new.read('module.prop'), (ROOT / 'module.prop').read_bytes().replace(b'\r\n', b'\n'))
+                for name in ('files/tailscale.combined', 'files/android-dns', 'files/build-info.json'):
+                    self.assertEqual(new.read(name), old.read(name))
+                self.assertEqual(new.testzip(), None)
+
     def test_core_payload_preserves_network_binaries_and_limits_script_changes(self):
         if not packager.DEFAULT_BASE.exists():
             self.skipTest('Download the accepted dnsfix.2 ZIP to dist first')
