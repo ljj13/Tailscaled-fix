@@ -8,7 +8,7 @@ import subprocess
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-files = [ROOT / 'files/tailscale.combined', ROOT / 'files/android-dns']
+files = [ROOT / 'files/tailscale.combined', ROOT / 'files/android-dns', ROOT / 'files/android-hostname']
 for path in files:
     data = path.read_bytes()
     if data[:4] != b'\x7fELF' or data[4] != 2 or struct.unpack('<H', data[18:20])[0] != 183:
@@ -33,7 +33,7 @@ manifest = {
     'sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
 }
 (ROOT / 'files/build-info.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
-output = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-arm64.zip'
+output = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-hostname.1-arm64.zip'
 output.parent.mkdir(exist_ok=True)
 paths = []
 for entry in ('META-INF', 'customize.sh', 'service.sh', 'system', 'tailscale', 'webroot', 'uninstall.sh', 'module.prop', 'files'):
@@ -45,7 +45,7 @@ with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
             continue
         name = path.relative_to(ROOT).as_posix()
         data = path.read_bytes()
-        executable = name.endswith('.sh') or name.startswith(('system/bin/', 'tailscale/scripts/')) or name.endswith('update-binary') or name.startswith('files/') and path.name in ('tailscale.combined', 'android-dns')
+        executable = name.endswith('.sh') or name.startswith(('system/bin/', 'tailscale/scripts/')) or name.endswith('update-binary') or name.startswith('files/') and path.name in ('tailscale.combined', 'android-dns', 'android-hostname')
         if name.startswith(('system/', 'tailscale/', 'META-INF/')) or name.endswith('.sh'):
             data = data.replace(b'\r\n', b'\n')
         info = zipfile.ZipInfo(name, date_time=(2026, 10, 6, 0, 0, 0))
@@ -56,7 +56,7 @@ with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
 with zipfile.ZipFile(output) as z:
     if z.testzip() is not None:
         raise SystemExit('ZIP CRC check failed')
-    for required in ('META-INF/com/google/android/update-binary', 'customize.sh', 'files/android-dns', 'files/tailscale.combined'):
+    for required in ('META-INF/com/google/android/update-binary', 'customize.sh', 'files/android-dns', 'files/android-hostname', 'files/tailscale.combined'):
         assert required in z.namelist(), required
 digest = hashlib.sha256(output.read_bytes()).hexdigest()
 output.with_suffix('.zip.sha256').write_text(f'{digest}  {output.name}\n', encoding='utf-8')

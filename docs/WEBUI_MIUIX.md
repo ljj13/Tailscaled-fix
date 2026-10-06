@@ -4,11 +4,14 @@
 
 Stable dnsfix.2 was merged with a merge commit into main (`9ec00a2`), retaining
 its complete history. `feature/webui-miuix` starts from that stable main. This
-preview changes the WebUI and the owner's requested module author metadata,
-with separate documentation, browser tests and UI packaging support.
-Daemon, service, routes, DNS, root bridge and settings
-remain unchanged. No release or feature merge is authorized before device
-acceptance.
+Previews 1–3 change the WebUI and the owner's requested module author metadata,
+with separate documentation, browser tests and UI packaging support. Preview 4
+also implements the explicitly requested one-time Android hostname preference:
+an isolated helper, service hooks, CLI intent protection and installer payload
+support. See [Android hostname initialization](ANDROID_HOSTNAME.md).
+Daemon and DNS helper binaries, routing implementations, root bridge and
+settings remain unchanged. No release or feature merge is authorized before
+device acceptance.
 
 ## Reference study
 
@@ -132,19 +135,24 @@ review finding remains for this local preview.
 # Obtain the accepted base if dist/ is absent in a fresh checkout:
 gh release download v1.102.5-dnsfix.2 --repo ljj13/Tailscaled-fix \
   --pattern tailscaled-v1.102.5-dnsfix.2-arm64.zip --dir dist
+python3 scripts/build-hostname.py
 python scripts/package-webui.py
 python tests/test_webui_package.py -v
 ```
 
-Output: `dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.3-arm64.zip`, plus
+For Preview 4, first run `python3 scripts/build-hostname.py` under Linux/WSL
+with Go 1.26.6 on PATH. It builds only the new hostname helper.
+
+Output: `dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.4-arm64.zip`, plus
 its `.sha256`. This remains an arm64 KernelSU/Magisk/APatch module with the
-accepted dnsfix.2 module ID/version. `webroot/` entries are replaced; Preview 3
-also changes only `author=FogPurification` in `module.prop`, as explicitly requested.
+accepted dnsfix.2 module ID/version. `webroot/` entries are replaced; the author
+remains `FogPurification`. Preview 4 includes the explicitly requested isolated
+hostname helper and three script overlays listed in [its report](ANDROID_HOSTNAME.md).
 The original binary build-info stays intact, with separate `webroot/ui-build.json`
 recording UI revision, UI file hashes and accepted base artifact SHA.
 
-No daemon/helper rebuild is needed for a UI-only preview. Reusing the accepted
-payload avoids changing the already verified code or overwriting its release ZIP.
+The accepted daemon and DNS helper binaries are reused without rebuilding or
+overwriting their release ZIP.
 
 ### Device acceptance still pending
 
@@ -246,3 +254,18 @@ before writing and then fetches fresh preferences, so the rendered switch matche
 the saved value. The browser command adapter and real CLI wrapper
 tests now cover 18 commands across three PATH environments (54 shell checks).
 The installable output is Preview 3; the previous previews remain available.
+
+### Preview 4: one-time Android hostname preference (2026-10-07)
+
+The owner explicitly requested saving an Android-derived default when the
+Tailscale hostname preference is empty. Preview 4 adds the isolated
+`android-hostname` helper, startup/watchdog retry, permanent manual-intent
+protection in the service and CLI wrapper, and installer/build support. Existing
+daemon/DNS helper binaries and network implementations remain unchanged.
+The [hostname report](ANDROID_HOSTNAME.md) documents source priority, name
+normalization, failure handling, concurrent/crash protections, all modified
+payloads and the minimal phone checks.
+
+Local tests: 26 Python tests, 54 shell command checks and the complete WebUI
+browser suite PASS. The author remains FogPurification. About displays Preview 4.
+No phone acceptance, main merge or release is claimed for this addition.

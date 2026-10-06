@@ -51,6 +51,22 @@ type setup_home >/dev/null 2>&1 || setup_home() { export HOME=/data/ssh/root; mk
 : "${dns_fallback_servers=1.1.1.1,8.8.8.8,9.9.9.9,223.5.5.5,119.29.29.29}"
 : "${dns_probe_domain:=controlplane.tailscale.com}"
 
+init_android_hostname() {
+  "${tailscale_dir}/bin/android-hostname" init "${tailscale_dir}" "${tailscale_bin}" ${tailscale_bin_param} >> "${tailscaled_diag_log}" 2>&1
+}
+
+show_hostname_init() {
+  if [ -d "${tailscale_dir}/hostname-user-set" ]; then
+    echo "hostname_initialization=manual-protected"
+  elif [ -f "${tailscale_dir}/hostname-initialized" ]; then
+    echo "hostname_initialization=done"
+  else
+    echo "hostname_initialization=pending"
+  fi
+  sed 's/^source=/hostname_source=/; s/^hostname=/hostname_initial=/' "${tailscale_dir}/hostname-initialized" 2>/dev/null
+  return 0
+}
+
 refresh_dns() {
   _dns_caller=${1:-manual-refresh}
   _dns_dev=$(ordinary_default_route | awk '{print $2}')
@@ -431,6 +447,9 @@ route_watchdog() {
         routes_sync
       fi
     fi
+    # Cheap no-op after first success/manual intent; retry if boot-time Android
+    # settings or the daemon's preference API were not ready yet.
+    init_android_hostname
   done
 }
 
@@ -460,6 +479,7 @@ start_tailscaled() {
       refresh_dns start
       start_watchdog
       [ "${sync_routes_auto}" = "1" ] && routes_sync
+      init_android_hostname
       return 0
     fi
     log Warning "PID ${_pid} started before the current binary was installed - restarting it"
@@ -505,6 +525,7 @@ start_tailscaled() {
   # Pick up the subnet routes the tailnet offers right away (exit 2 = the user
   # still has --accept-routes off; nothing to do until they enable it).
   [ "${sync_routes_auto}" = "1" ] && routes_sync
+  init_android_hostname
   return 0
 }
 
@@ -714,6 +735,7 @@ set_pref() {
       case "${_v}" in
         *[!A-Za-z0-9.-]*|"") diag "set-pref: invalid hostname"; return 1 ;;
       esac
+      "${tailscale_dir}/bin/android-hostname" protect "${tailscale_dir}" || return 1
       _flag="--hostname=${_v}" ;;
     advertise-routes)
       case "${_v}" in
@@ -792,6 +814,8 @@ show_diag() {
   echo ""
   show_dns
   echo ""
+  show_hostname_init
+  echo ""
   echo "daemon log (last 10 lines):"
   tail -n 10 "${tailscaled_log}" 2>/dev/null | sed 's/^/  /'
   echo ""
@@ -835,6 +859,7 @@ selftest() {
   echo "exemptions       : pre=$(_exempt_state mangle PREROUTING) out=$(_exempt_state mangle OUTPUT) nat=$(_exempt_state nat OUTPUT)"
   echo "proxy jumps      : $(iptables -t mangle -L PREROUTING -n -v --line-numbers 2>/dev/null | awk '/DIVERT|BOX_/ {printf "%s:%s ", $1, $2}')"
   check_dns
+  show_hostname_init
 
   if [ -n "$(daemon_pid)" ] && [ -S "${tailscale_dir}/run/tailscaled.sock" ]; then
     echo "client version   : $("${tailscale_bin}" ${tailscale_bin_param} version 2>&1 | head -n1)"

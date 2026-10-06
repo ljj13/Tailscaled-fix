@@ -3,9 +3,11 @@ import hashlib
 import importlib.util
 import json
 import pathlib
+import shutil
 import tempfile
 import unittest
 import zipfile
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('package_webui', ROOT / 'scripts/package-webui.py')
@@ -14,13 +16,18 @@ spec.loader.exec_module(packager)
 
 
 class WebUIPackageTests(unittest.TestCase):
-    def test_core_payload_and_modes_are_identical_except_author(self):
+    def test_core_payload_preserves_network_binaries_and_limits_script_changes(self):
         if not packager.DEFAULT_BASE.exists():
             self.skipTest('Download the accepted dnsfix.2 ZIP to dist first')
         with tempfile.TemporaryDirectory() as directory:
             output = pathlib.Path(directory) / 'preview.zip'
             packager.package(packager.DEFAULT_BASE, output)
             with zipfile.ZipFile(packager.DEFAULT_BASE) as old, zipfile.ZipFile(output) as new:
+                for name in ('customize.sh', 'tailscale/scripts/tailscaled.service', 'system/bin/tailscale', 'files/android-hostname'):
+                    self.assertIn(name, new.namelist())
+                    source = (ROOT / name).read_bytes()
+                    self.assertEqual(new.read(name), source if name.startswith('files/') else source.replace(b'\r\n', b'\n'))
+                    self.assertEqual(new.getinfo(name).external_attr >> 16, 0o100755)
                 for name in old.namelist():
                     if not name.startswith('webroot/'):
                         if name == 'module.prop':
@@ -28,7 +35,7 @@ class WebUIPackageTests(unittest.TestCase):
                             packaged = new.read(name).decode('utf-8').splitlines()
                             self.assertEqual([line for line in original if not line.startswith('author=')], [line for line in packaged if not line.startswith('author=')])
                             self.assertEqual([line for line in packaged if line.startswith('author=')], ['author=FogPurification'])
-                        else:
+                        elif name not in ('customize.sh', 'tailscale/scripts/tailscaled.service', 'system/bin/tailscale'):
                             self.assertEqual(new.read(name), old.read(name), name)
                         self.assertEqual(new.getinfo(name).external_attr, old.getinfo(name).external_attr, name)
                 self.assertEqual(new.read('webroot/ksu.js'), (ROOT / 'webroot/ksu.js').read_bytes().replace(b'\r\n', b'\n'))
@@ -36,6 +43,9 @@ class WebUIPackageTests(unittest.TestCase):
                 info = json.loads(new.read('webroot/ui-build.json'))
                 self.assertEqual(info['base_sha256'], packager.ACCEPTED_SHA)
                 self.assertEqual(info['module_author'], 'FogPurification')
+                self.assertEqual(hashlib.sha256(new.read('files/android-hostname')).hexdigest(), info['hostname_helper']['sha256'])
+                for name, digest in info['module_script_sha256'].items():
+                    self.assertEqual(hashlib.sha256(new.read(name)).hexdigest(), digest, name)
                 for name, digest in info['ui_sha256'].items():
                     self.assertEqual(hashlib.sha256(new.read(name)).hexdigest(), digest, name)
             self.assertTrue(output.with_suffix('.zip.sha256').exists())
@@ -51,6 +61,26 @@ class WebUIPackageTests(unittest.TestCase):
             for suffix in ('.zip.tmp', '.zip.sha256'):
                 with self.assertRaisesRegex(ValueError, 'overwrite'):
                     packager.package(base.with_suffix(suffix), base)
+
+    def test_rejects_stale_helper_source_and_corrupted_binary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = pathlib.Path(directory)
+            shutil.copytree(ROOT / 'tools/android-hostname', fixture / 'tools/android-hostname')
+            (fixture / 'files').mkdir()
+            for name in ('android-hostname', 'android-hostname.build.json'):
+                shutil.copyfile(ROOT / 'files' / name, fixture / 'files' / name)
+            with mock.patch.object(packager, 'ROOT', fixture):
+                packager.hostname_payload()
+                source = fixture / 'tools/android-hostname/main.go'
+                original = source.read_bytes()
+                source.write_bytes(original + b'\n// unbuilt source change\n')
+                with self.assertRaisesRegex(ValueError, 'source changed'):
+                    packager.hostname_payload()
+                source.write_bytes(original)
+                binary = fixture / 'files/android-hostname'
+                binary.write_bytes(binary.read_bytes() + b'corrupted')
+                with self.assertRaisesRegex(ValueError, 'hash mismatch'):
+                    packager.hostname_payload()
 
 
 if __name__ == '__main__':

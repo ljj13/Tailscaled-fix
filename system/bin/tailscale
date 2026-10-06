@@ -2,6 +2,17 @@
 # `tailscale` CLI wrapper. Adds the default socket and blocks the self-updater.
 . /data/adb/tailscale/settings.ini
 
+# Explicit hostname intent is permanent, including resetting to an empty name.
+# Wait for an in-flight initializer before executing the user's command so the
+# manual value wins. Other commands retain their exec/socket behavior.
+for _arg in "$@"; do
+  case "$_arg" in
+    --hostname|--hostname=*|-hostname|-hostname=*)
+      "${tailscale_dir:-/data/adb/tailscale}/bin/android-hostname" protect "${tailscale_dir:-/data/adb/tailscale}" || exit 1
+      break ;;
+  esac
+done
+
 case "$1" in
   update)
     echo "tailscale update is disabled in this module." >&2
