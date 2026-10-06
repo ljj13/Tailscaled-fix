@@ -1,5 +1,9 @@
 # Android DNS fix for v1.102.5
 
+**dnsfix.2 VPN/underlying 更新与真机证据：见 [DNS_FIX_2.md](DNS_FIX_2.md)。**
+
+下文保留 dnsfix.1 的初始审计；dnsfix.2 的网络选择与缓存规则以上述文档为准。
+
 ## Scope and pinned versions
 
 - Module base: keweiya/tailscaled tag `v1.102.5`, commit `aec266c8c8a2115f83833c07f95bc5f71501a78d`.

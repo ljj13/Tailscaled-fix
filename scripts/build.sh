@@ -27,7 +27,7 @@ OVERLAY="$BUILD_DIR/overlay/overlay.json"
   eval "$(CGO_ENABLED=0 go run ./cmd/mkversion)"
   CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -overlay "$OVERLAY" -trimpath \
     -tags ts_include_cli,ts_omit_ssh \
-    -ldflags "-X tailscale.com/version.longStamp=${VERSION_LONG}-android-dnsfix.1 -X tailscale.com/version.shortStamp=${VERSION_SHORT} -s -w" \
+    -ldflags "-X tailscale.com/version.longStamp=${VERSION_LONG}-android-dnsfix.2 -X tailscale.com/version.shortStamp=${VERSION_SHORT} -s -w" \
     -o "$ROOT/files/tailscale.combined" ./cmd/tailscaled
 )
 (

@@ -33,7 +33,7 @@ manifest = {
     'sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
 }
 (ROOT / 'files/build-info.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
-output = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.1-arm64.zip'
+output = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-arm64.zip'
 output.parent.mkdir(exist_ok=True)
 paths = []
 for entry in ('META-INF', 'customize.sh', 'service.sh', 'system', 'tailscale', 'webroot', 'uninstall.sh', 'module.prop', 'files'):

@@ -1,6 +1,43 @@
 # Local verification — 2026-10-06
 
-Tested on Windows with Ubuntu 24.04 WSL and Go 1.26.6. No Android device is attached.
+Tested on Windows with Ubuntu 24.04 WSL and Go 1.26.6. dnsfix.2 also tested over
+ADB on rooted Redmi Note 8 Pro `pnq47xf6899t4huc`.
+
+## dnsfix.2 verification
+
+| Check | Result |
+| --- | --- |
+| Helper Go tests | 20 passed with race detector; go vet passed |
+| Python build/script/upgrade checks | 8 passed (2 build + 6 shell) |
+| Real-helper CLI regressions | 2 passed: first-boot network-change retry; failed refresh preserves resolver bytes and state/0600 |
+| Complete relevant Tailscale packages | net/dns, net/dnscache, net/netns, osrouter passed with the existing fixture overlay |
+| Bootstrap watcher race tests | 2 passed |
+| Actual standard Go resolver integration | Passed: private DNS selection and atomic file replacement/reload without restart |
+| Shell syntax / ShellCheck / WebUI JS | Passed |
+| Independent review | CLAT routing, explicit empty underlying, public-cache revocation, first-boot race, multi-VPN precedence, interface-specific source fixed; final review found no blocking findings |
+| Device network selection, FlClash ON | Active physical106/CELLULAR/ccmni1, VPN107 then108/CELLULAR\|VPN, underlying106; tun0 excluded |
+| Device automatic OFF→ON recovery | At 19:59:16 OFF active-default; at 19:59:48 ON VPN108→106; both kept 120.80.80.80,221.5.88.88 and reachable=true |
+| Device marked route | Before fix main/default and mark0x10020000 both went tun0; after fix main/default via ccmni1 and marked DNS route dev ccmni1 |
+| Device manual vs watchdog | Same mark and physical route; both successfully resolve with network DNS; discovery about 54–69 ms, successful probes about 33–63 ms in captured samples |
+| Device coexistence | Running, tailscale0, table52 four routes, exemptions pre/out/nat OK; tailscale ping and kernel ping both succeeded |
+| Device identity/config | Tailnet IP remains100.118.66.106; settings/routes SHA256 unchanged; no login/logout performed |
+| Device injected failure (isolated state directory) | All candidates failed for an .invalid test name; reachable=false/retained=true; verified source/list unchanged; bootstrap SHA256 identical before/after |
+| Not device-tested | Wi-Fi switching, CLAT-only access, other OEM dump formats, full ZIP cover-install/reboot; covered by fixtures where applicable |
+
+The resolver integration initially failed because its two immediate replacements
+received exactly the same kernel mtime (confirmed by logging identical nanosecond
+timestamps). The fixture now waits across Go's five-second reload gate before
+the second write, asserts different mtimes, and passes. Production watchdog
+refreshes are separated by at least 15 seconds; retained failed refreshes do not
+rewrite the resolver. First-boot and byte-preservation tests execute the real
+compiled helper with isolated OEM-style dumpsys commands.
+
+Phone verification uses updated helper/service plus the existing dnsfix.1 daemon
+(the daemon networking patches are unchanged in dnsfix.2). The installable ZIP
+contains the dnsfix.2 stamped rebuilt daemon; full root-manager cover-install is
+not claimed as device-tested.
+
+## Historical dnsfix.1 verification
 
 | Check | Result |
 | --- | --- |

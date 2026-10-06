@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -20,59 +20,6 @@ import (
 )
 
 const bypassMark = 0x10020000
-
-var dnsList = regexp.MustCompile(`DnsAddresses:\s*\[([^\]]*)\]`)
-var ifaceName = regexp.MustCompile(`InterfaceName:\s*([^\s,}]+)`)
-var networkID = regexp.MustCompile(`network\{([0-9]+)\}`)
-var activeID = regexp.MustCompile(`Active default network:\s*([0-9]+)`)
-var vpnNetwork = regexp.MustCompile(`ni\{VPN\b|\btype:\s*VPN\b|Transports:\s*VPN\b`)
-
-func connectivityDNS(dump, iface string) []string {
-	active := activeID.FindStringSubmatch(dump)
-	// Restrict parsing to current NetworkAgentInfo records, never request logs.
-	if i := strings.Index(dump, "Current Networks:"); i >= 0 {
-		dump = dump[i:]
-	}
-	if i := strings.Index(dump, "Network Requests:"); i >= 0 {
-		dump = dump[:i]
-	}
-	// Active default network usually precedes Current Networks; interface matching
-	// is preferred because a VPN may itself be Android's default network.
-	starts := regexp.MustCompile(`(?m)^\s*(?:NetworkAgentInfo|networkAgentInfo)\s*[\[{]`).FindAllStringIndex(dump, -1)
-	for i, pos := range starts {
-		end := len(dump)
-		if i+1 < len(starts) {
-			end = starts[i+1][0]
-		}
-		block := dump[pos[0]:end]
-		name := ifaceName.FindStringSubmatch(block)
-		id := networkID.FindStringSubmatch(block)
-		if len(name) < 2 {
-			continue
-		}
-		// CLAT interfaces are stacked links; DNS belongs to their parent.
-		match := false
-		for _, n := range ifaceName.FindAllStringSubmatch(block, -1) {
-			if iface != "" && n[1] == iface {
-				match = true
-			}
-		}
-		if vpnNetwork.MatchString(block) {
-			continue
-		}
-		if iface == "" && len(active) == 2 && len(id) == 2 && id[1] == active[1] {
-			match = true
-		}
-		if !match {
-			continue
-		}
-		dns := dnsList.FindStringSubmatch(block)
-		if len(dns) == 2 {
-			return validServers(strings.FieldsFunc(dns[1], func(r rune) bool { return r == ',' || r == '/' || r == ' ' }), name[1])
-		}
-	}
-	return nil
-}
 
 func validServers(input []string, iface string) []string {
 	var out []string
@@ -116,28 +63,6 @@ func command(ctx context.Context, name string, args ...string) string {
 	return string(out)
 }
 
-func discover(ctx context.Context, iface string) ([]string, string) {
-	dump := command(ctx, "dumpsys", "connectivity")
-	if dns := connectivityDNS(dump, iface); len(dns) > 0 {
-		return dns, "android-linkproperties"
-	}
-	// Older Android releases expose DNS via properties; newer releases don't.
-	var props []string
-	if iface != "" {
-		for _, n := range []string{"1", "2", "3", "4"} {
-			props = append(props, command(ctx, "getprop", "net."+iface+".dns"+n))
-		}
-	}
-	if dns := validServers(props, iface); len(dns) > 0 {
-		return dns, "android-interface-property"
-	}
-	props = nil
-	for _, n := range []string{"1", "2", "3", "4"} {
-		props = append(props, command(ctx, "getprop", "net.dns"+n))
-	}
-	return validServers(props, iface), "android-legacy-property"
-}
-
 func markedControl(mark bool) func(string, string, syscall.RawConn) error {
 	return func(_, _ string, c syscall.RawConn) error {
 		var sockErr error
@@ -162,6 +87,12 @@ func probeDNS(ctx context.Context, address, domain string, mark bool) error {
 	}}
 	ips, err := r.LookupIP(ctx, "ip4", domain)
 	if err != nil {
+		var dnsErr *net.DNSError
+		if errors.As(err, &dnsErr) {
+			copy := *dnsErr
+			copy.Server = address
+			return &copy
+		}
 		return err
 	}
 	if len(ips) == 0 {
@@ -191,20 +122,34 @@ func working(servers []string, probe func(string) error) ([]string, []string) {
 }
 
 func choose(android []string, source string, fallback []string, probe func(string) error) ([]string, string, bool, []string) {
-	ok, details := working(android, probe)
-	if len(ok) > 0 {
-		return ok, source, true, details
+	servers, source, reachable, _, details := chooseCached(android, source, fallback, verifiedDNS{}, false, probe)
+	return servers, source, reachable, details
+}
+
+func chooseCached(android []string, source string, fallback []string, old verifiedDNS, retainable bool, probe func(string) error) ([]string, string, bool, bool, []string) {
+	servers, details := working(android, probe)
+	if len(servers) > 0 {
+		return servers, source, true, false, details
+	}
+	if retainable {
+		ok, more := working(old.Servers, probe)
+		details = append(details, more...)
+		if len(ok) > 0 {
+			return ok, old.Source, true, false, details
+		}
 	}
 	ok, more := working(fallback, probe)
 	details = append(details, more...)
 	if len(ok) > 0 {
-		return ok, "public-fallback", true, details
+		return ok, "public-fallback", true, false, details
 	}
-	// Offline boot must still publish non-loopback candidates so reconnect works.
+	if retainable {
+		return old.Servers, old.Source, false, true, details
+	}
 	if len(android) > 0 {
-		return android, source + "-unverified", false, details
+		return android, source + "-unverified", false, false, details
 	}
-	return fallback, "public-fallback-unverified", false, details
+	return fallback, "public-fallback-unverified", false, false, details
 }
 
 func writeAtomic(path string, data []byte) error {
@@ -233,13 +178,51 @@ func writeAtomic(path string, data []byte) error {
 	return os.Rename(f.Name(), path)
 }
 
+func selectionStatus(s Selection, hint string) string {
+	return fmt.Sprintf("dns_network=%s\ndns_transport=%s\ndns_active_vpn=%s\ndns_underlying=%s\ndns_iface=%s\ndns_excluded=%s\ndns_selection_reason=%s\ndns_route_hint=%s\ndns_physical_route=%s\n", s.ID, s.Transport, s.VPN, s.Underlying, s.Iface, s.Excluded, s.Reason, hint, s.Route)
+}
+
+func routeSnapshot(server string) string {
+	host := strings.Split(server, "%")[0]
+	family := "-4"
+	if strings.Contains(host, ":") {
+		family = "-6"
+	}
+	return strings.Join(strings.Fields(command(context.Background(), "ip", family, "route", "get", host, "mark", "0x10020000")), " ")
+}
+
+func publishedServers(dir string) []string {
+	data, _ := os.ReadFile(filepath.Join(dir, "bootstrap-resolv.conf"))
+	var servers []string
+	for _, line := range strings.Split(string(data), "\n") {
+		f := strings.Fields(line)
+		if len(f) == 2 && f[0] == "nameserver" {
+			servers = append(servers, f[1])
+		}
+	}
+	return servers
+}
+
 func run() error {
 	dir := flag.String("dir", "/data/adb/tailscale", "state directory")
-	iface := flag.String("iface", "", "active physical interface")
+	iface := flag.String("iface", "", "ordinary route hint (not authoritative)")
 	domain := flag.String("domain", "controlplane.tailscale.com", "DNS reachability test name")
 	fallback := flag.String("fallback", "1.1.1.1,8.8.8.8,9.9.9.9,223.5.5.5,119.29.29.29", "fallback servers; empty disables public fallback")
-	check := flag.Bool("check", false, "check currently published servers without changing them")
+	caller := flag.String("caller", "manual", "diagnostic caller label")
+	check := flag.Bool("check", false, "check published servers without changing them")
+	networkOnly := flag.Bool("network", false, "read-only physical network and route discovery")
 	flag.Parse()
+	discoveryStart := time.Now()
+	discoveryCtx, discoveryCancel := context.WithTimeout(context.Background(), 6*time.Second)
+	defer discoveryCancel()
+	if *networkOnly {
+		s := selectNetwork(command(discoveryCtx, "dumpsys", "connectivity"), *iface)
+		fmt.Print(selectionStatus(s, *iface))
+		if s.ID == "" {
+			return errors.New("no physical Android network")
+		}
+		return nil
+	}
 	if err := os.MkdirAll(*dir, 0700); err != nil {
 		return err
 	}
@@ -251,45 +234,108 @@ func run() error {
 	if err = syscall.Flock(int(lock.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		return fmt.Errorf("DNS refresh already running: %w", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 18*time.Second)
-	defer cancel()
-	probe := func(s string) error { return probeDNS(ctx, net.JoinHostPort(s, "53"), *domain, true) }
+	s, android, source := discover(discoveryCtx, *iface)
+	discoveryMS := time.Since(discoveryStart).Milliseconds()
+	// Start a fresh budget AFTER discovery. Manual and watchdog use the same
+	// marked sockets, no SO_BINDTODEVICE, and the same probe deadline.
+	probe := func(server string) error {
+		ctx, cancel := freshProbeContext()
+		defer cancel()
+		return probeDNS(ctx, net.JoinHostPort(server, "53"), *domain, true)
+	}
 	if *check {
-		data, err := os.ReadFile(filepath.Join(*dir, "bootstrap-resolv.conf"))
-		if err != nil {
-			return err
+		fmt.Print(selectionStatus(s, *iface))
+		servers := publishedServers(*dir)
+		before := ""
+		if len(servers) > 0 {
+			before = routeSnapshot(servers[0])
 		}
-		var servers []string
-		for _, line := range strings.Split(string(data), "\n") {
-			f := strings.Fields(line)
-			if len(f) == 2 && f[0] == "nameserver" {
-				servers = append(servers, f[1])
-			}
-		}
+		started := time.Now()
 		ok, details := working(servers, probe)
+		fmt.Printf("dns_probe_caller=%s\ndns_probe_mark=0x10020000\ndns_discovery_ms=%d\ndns_probe_ms=%d\ndns_route_before=%s\n", *caller, discoveryMS, time.Since(started).Milliseconds(), before)
+		if len(servers) > 0 {
+			fmt.Printf("dns_route_after=%s\n", routeSnapshot(servers[0]))
+		}
 		fmt.Println(strings.Join(details, "\n"))
 		if len(ok) == 0 {
 			return errors.New("no reachable bootstrap DNS")
 		}
 		return nil
 	}
-	android, source := discover(ctx, *iface)
-	servers, source, reachable, details := choose(android, source, validServers(strings.Split(*fallback, ","), *iface), probe)
+	cachePath := filepath.Join(*dir, "dns-verified.json")
+	old := readVerified(cachePath)
+	old = allowedCache(old, validServers(strings.Split(*fallback, ","), s.Iface))
+	retainable := canRetain(old, s, time.Now())
+	before := ""
+	candidates := append(append([]string{}, android...), validServers(strings.Split(*fallback, ","), s.Iface)...)
+	probeTarget := ""
+	if len(candidates) > 0 {
+		probeTarget = candidates[0]
+		for _, candidate := range candidates {
+			if !strings.Contains(candidate, ":") {
+				probeTarget = candidate
+				break
+			}
+		}
+		before = routeSnapshot(probeTarget)
+	}
+	started := time.Now()
+	servers, source, reachable, retained, details := chooseCached(android, source, validServers(strings.Split(*fallback, ","), s.Iface), old, retainable, probe)
+	probeMS := time.Since(started).Milliseconds()
 	if len(servers) == 0 {
+		if len(validServers(strings.Split(*fallback, ","), s.Iface)) == 0 {
+			if err := revokePublicBootstrap(*dir); err != nil {
+				return err
+			}
+		}
 		return errors.New("no DNS candidates; public fallback is disabled")
 	}
 	if len(servers) > 3 {
 		servers = servers[:3]
 	}
+	// A network switch during probes must not publish old-network answers as
+	// verified on the new network. Leave the existing resolver for this tick;
+	// the watchdog repeats discovery and probing on the next tick.
+	afterSelection := selectNetwork(command(context.Background(), "dumpsys", "connectivity"), *iface)
+	changed := s.ID != afterSelection.ID || s.Iface != afterSelection.Iface || s.Underlying != afterSelection.Underlying
+	if changed {
+		status := selectionStatus(afterSelection, *iface) + fmt.Sprintf("dns_source=network-changed-during-probe\ndns_servers=%s\ndns_reachable=false\ndns_retained=true\ndns_checked=%s\n", strings.Join(publishedServers(*dir), ","), time.Now().Format(time.RFC3339))
+		_ = writeAtomic(filepath.Join(*dir, "dns-status"), []byte(status))
+		fmt.Print(status)
+		if len(validServers(publishedServers(*dir), s.Iface)) == 0 {
+			return errors.New("network changed before first bootstrap; watchdog will retry startup")
+		}
+		return nil
+	}
 	contents := "# Android bootstrap DNS; managed by android-dns\n"
-	for _, s := range servers {
-		contents += "nameserver " + s + "\n"
+	for _, server := range servers {
+		contents += "nameserver " + server + "\n"
 	}
 	contents += "options timeout:2 attempts:2\n"
-	if err := writeAtomic(filepath.Join(*dir, "bootstrap-resolv.conf"), []byte(contents)); err != nil {
-		return err
+	// A failed refresh preserving the same verified list must not touch even
+	// comments/mtime of the existing bootstrap file.
+	if !retained || strings.Join(publishedServers(*dir), ",") != strings.Join(servers, ",") {
+		if err := writeAtomic(filepath.Join(*dir, "bootstrap-resolv.conf"), []byte(contents)); err != nil {
+			return err
+		}
 	}
-	status := fmt.Sprintf("dns_source=%s\ndns_servers=%s\ndns_iface=%s\ndns_reachable=%t\ndns_checked=%s\ndns_probe=%s\ndns_details=%s\n", source, strings.Join(servers, ","), *iface, reachable, time.Now().Format(time.RFC3339), *domain, strings.Join(details, "; "))
+	if reachable && s.ID != "" {
+		old = verifiedDNS{Network: s.ID, Iface: s.Iface, Source: source, Servers: servers, Verified: time.Now(), BootID: bootID()}
+		data, err := json.Marshal(old)
+		if err != nil {
+			return err
+		}
+		if err = writeAtomic(cachePath, append(data, '\n')); err != nil {
+			return err
+		}
+	} else if !retainable {
+		_ = os.Remove(cachePath)
+	}
+	after := ""
+	if probeTarget != "" {
+		after = routeSnapshot(probeTarget)
+	}
+	status := selectionStatus(s, *iface) + fmt.Sprintf("dns_source=%s\ndns_servers=%s\ndns_reachable=%t\ndns_retained=%t\ndns_last_verified=%s\ndns_checked=%s\ndns_probe=%s\ndns_probe_caller=%s\ndns_probe_mark=0x10020000\ndns_discovery_ms=%d\ndns_probe_ms=%d\ndns_route_before=%s\ndns_route_after=%s\ndns_details=%s\n", source, strings.Join(servers, ","), reachable, retained, old.Verified.Format(time.RFC3339), time.Now().Format(time.RFC3339), *domain, *caller, discoveryMS, probeMS, before, after, strings.Join(details, "; "))
 	if err := writeAtomic(filepath.Join(*dir, "dns-status"), []byte(status)); err != nil {
 		return err
 	}

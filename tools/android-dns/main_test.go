@@ -20,8 +20,8 @@ Current Networks:
 	if strings.Join(got, ",") != "2001:4860:4860::8888,10.0.0.1" {
 		t.Fatalf("wrong active DNS: %v", got)
 	}
-	if got := connectivityDNS(dump, "wlan0"); len(got) != 1 || got[0] != "192.168.1.1" {
-		t.Fatalf("physical interface must win over VPN/default: %v", got)
+	if got := connectivityDNS(dump, "wlan0"); strings.Join(got, ",") != "2001:4860:4860::8888,10.0.0.1" {
+		t.Fatalf("Android active default must win over stale route hint: %v", got)
 	}
 	if got := connectivityDNS(dump, ""); strings.Join(got, ",") != "2001:4860:4860::8888,10.0.0.1" {
 		t.Fatalf("active default not recognized: %v", got)
@@ -145,7 +145,7 @@ Current Networks:
 			t.Fatalf("%q: %v", iface, got)
 		}
 	}
-	if got := connectivityDNS(dump, "tun0"); len(got) != 0 {
+	if got := connectivityDNS(dump, "tun0"); strings.Join(got, ",") != "10.0.0.1" {
 		t.Fatalf("VPN DNS leaked into bootstrap: %v", got)
 	}
 }

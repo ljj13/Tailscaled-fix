@@ -52,9 +52,14 @@ def main():
       mu.Lock(); used = append(used, addr); mu.Unlock()
       return (&net.Dialer{}).DialContext(ctx, network, conn.LocalAddr().String())
      }
+     var priorMtime time.Time
      for i, server := range []string{"192.0.2.53", "198.51.100.53"} {
-      temp := path+".tmp"; os.WriteFile(temp, []byte("nameserver "+server+"\noptions timeout:1 attempts:1\n"), 0600); os.Rename(temp, path)
+      // Separate writes across the kernel mtime tick and Go's 5s reload gate.
       if i > 0 { time.Sleep(6*time.Second) }
+      temp := path+".tmp"; os.WriteFile(temp, []byte("nameserver "+server+"\noptions timeout:1 attempts:1\n"), 0600); os.Rename(temp, path)
+      info, _ := os.Stat(path)
+      if i > 0 && info.ModTime().Equal(priorMtime) { panic("fixture replacements share mtime") }
+      priorMtime = info.ModTime()
       mu.Lock(); used = nil; mu.Unlock()
       ips, err := net.DefaultResolver.LookupIP(context.Background(), "ip4", "dns-regression.example"); if err != nil || len(ips) != 1 { panic(fmt.Sprintf("lookup failed: %v %v", ips, err)) }
       mu.Lock(); got := append([]string(nil), used...); mu.Unlock()

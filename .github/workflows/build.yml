@@ -21,6 +21,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_dns_build.py' -v
           python3 tests/test_shell.py
+          python3 tests/test_dns_helper.py
           shellcheck -s sh -S warning -e SC1090,SC1091,SC2034,SC2086,SC2154 customize.sh service.sh uninstall.sh tailscale/scripts/* system/bin/* scripts/build.sh
       - name: Build pinned v1.102.5 and package
         run: sh scripts/build.sh
@@ -28,6 +29,6 @@ jobs:
         run: python3 tests/test_resolver.py
       - uses: actions/upload-artifact@v4
         with:
-          name: tailscaled-v1.102.5-dnsfix.1-arm64
+          name: tailscaled-v1.102.5-dnsfix.2-arm64
           path: dist/*
           if-no-files-found: error

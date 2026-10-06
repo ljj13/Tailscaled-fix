@@ -92,6 +92,11 @@ async function refreshStatus({ announce = false } = {}) {
   const problems = [];
   setText('v-dns-source', `${s.dns_source || '?'} (${s.dns_iface || 'offline'})`);
   setText('v-dns-servers', s.dns_servers || '?');
+  setText('v-dns-network', s.dns_network || '?');
+  setText('v-dns-underlying', `${s.dns_underlying || 'system default'} (VPN ${s.dns_active_vpn || 'none'})`);
+  setText('v-dns-iface', `${s.dns_iface || '?'} / ${s.dns_transport || '?'}`);
+  setText('v-dns-selection', s.dns_selection_reason || '?');
+  setText('v-dns-retained', s.dns_retained === 'true' ? `yes; last verified ${s.dns_last_verified || '?'}` : 'no');
   setText('v-dns-check', `${s.dns_reachable === 'true' ? 'OK' : 'FAILED'} · ${s.dns_checked || 'unchecked'}`, s.dns_reachable === 'true' ? '' : 'warn');
   if (running && s.dns_reachable !== 'true') problems.push('Bootstrap DNS query failed; check Diagnostics.');
   if (!running) problems.push(waitingDNS ? 'Waiting for Android DNS; startup will retry automatically.' : 'tailscaled is not running — press Start, then check the Log tab.');

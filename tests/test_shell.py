@@ -69,7 +69,7 @@ set_perm_recursive() { find "$1" -type d -exec chmod "$4" {} \\; ; find "$1" -ty
 
     def test_no_gateway_route_and_wifi_mobile_transition(self):
         service = (ROOT / 'tailscale/scripts/tailscaled.service').read_text(encoding='utf-8')
-        functions = service[service.index('detect_default_route()'):service.index('# Does this binary link osrouter')]
+        functions = service[service.index('ordinary_default_route()'):service.index('# Does this binary link osrouter')]
         with tempfile.TemporaryDirectory() as tmp:
             tmp = pathlib.Path(tmp)
             mock = tmp / 'ip'
@@ -90,6 +90,30 @@ exit 1
             changes = (tmp / 'changes').read_text()
             self.assertIn('default dev rmnet_data0 table main', changes)
             self.assertNotIn('table 52', changes)
+
+    def test_vpn_default_is_never_copied_to_main(self):
+        service = (ROOT / 'tailscale/scripts/tailscaled.service').read_text(encoding='utf-8')
+        functions = service[service.index('ordinary_default_route()'):service.index('# Does this binary link osrouter')]
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = pathlib.Path(tmp)
+            (tmp / 'ip').write_text('''#!/bin/sh
+if [ "$1 $2" = "route get" ]; then echo '8.8.8.8 dev tun0 src 172.19.0.1'; exit 0; fi
+if [ "$1 $2" = "route replace" ]; then echo "$*" >> "$CHANGES"; exit 0; fi
+exit 1
+''')
+            (tmp / 'ip').chmod(0o755)
+            helper = tmp / 'android-dns'
+            helper.write_text("#!/bin/sh\necho dns_network=106\necho 'dns_physical_route=10.1.2.3 ccmni1 10.1.2.3'\n")
+            helper.chmod(0o755)
+            env = {**os.environ, 'PATH': str(tmp) + ':' + os.environ['PATH'], 'android_dns_bin': str(helper), 'CHANGES': str(tmp / 'changes')}
+            r = subprocess.run(['sh'], input=functions + '\ninfo=$(detect_default_route)\napply_main_default "$info"\napply_main_default "- tun0 172.19.0.1" && exit 10\nexit 0\n', text=True, env=env, capture_output=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            changes = (tmp / 'changes').read_text()
+            self.assertIn('default via 10.1.2.3 dev ccmni1 table main', changes)
+            self.assertNotIn('tun0', changes)
+            helper.unlink()
+            r = subprocess.run(['sh'], input=functions + '\ninfo=$(detect_default_route)\n[ -z "$info" ]\n', text=True, env=env, capture_output=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_offline_start_without_fallback_recovers_automatically(self):
         service = (ROOT / 'tailscale/scripts/tailscaled.service').read_text(encoding='utf-8')
