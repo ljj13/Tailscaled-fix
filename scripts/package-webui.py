@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-"""Package a UI preview over the accepted stable ZIP, preserving all core bytes."""
+"""Package a UI preview, preserving core payload except authorized author metadata."""
 import argparse
 import hashlib
 import json
 import pathlib
+import re
 import subprocess
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCEPTED_SHA = 'c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae'
 DEFAULT_BASE = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-arm64.zip'
-DEFAULT_OUTPUT = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.2-arm64.zip'
+DEFAULT_OUTPUT = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.3-arm64.zip'
+MODULE_AUTHOR = 'FogPurification'
+
+
+def author_metadata(data):
+    if len(re.findall(rb'(?m)^author=[^\r\n]*', data)) != 1:
+        raise ValueError('Expected exactly one module author field')
+    return re.sub(rb'(?m)^author=[^\r\n]*', f'author={MODULE_AUTHOR}'.encode('utf-8'), data)
 
 
 def package(base, output):
@@ -24,7 +32,7 @@ def package(base, output):
     revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     ui = {p.relative_to(ROOT).as_posix(): p.read_bytes().replace(b'\r\n', b'\n')
           for p in sorted((ROOT / 'webroot').rglob('*')) if p.is_file()}
-    manifest = {'edition': 'Miuix WebUI Preview 2', 'ui_revision': revision,
+    manifest = {'edition': 'Miuix WebUI Preview 3', 'ui_revision': revision, 'module_author': MODULE_AUTHOR,
                 'base_zip': base.name, 'base_sha256': digest,
                 'ui_sha256': {key: hashlib.sha256(value).hexdigest() for key, value in ui.items()}}
     ui['webroot/ui-build.json'] = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
@@ -35,9 +43,10 @@ def package(base, output):
                 raise ValueError('Base ZIP CRC validation failed')
             for entry in old.infolist():
                 if not entry.filename.startswith('webroot/'):
-                    new.writestr(entry, old.read(entry.filename))
+                    payload = old.read(entry.filename)
+                    new.writestr(entry, author_metadata(payload) if entry.filename == 'module.prop' else payload)
             for name, data in ui.items():
-                entry = zipfile.ZipInfo(name, date_time=(2026, 10, 6, 0, 0, 0))
+                entry = zipfile.ZipInfo(name, date_time=(2026, 10, 7, 0, 0, 0))
                 entry.create_system = 3
                 entry.external_attr = 0o100644 << 16
                 entry.compress_type = zipfile.ZIP_DEFLATED
@@ -49,7 +58,8 @@ def package(base, output):
             if core != {name for name in new.namelist() if not name.startswith('webroot/')}:
                 raise ValueError('Core file list changed')
             for name in core:
-                if old.read(name) != new.read(name) or old.getinfo(name).external_attr != new.getinfo(name).external_attr:
+                expected = author_metadata(old.read(name)) if name == 'module.prop' else old.read(name)
+                if expected != new.read(name) or old.getinfo(name).external_attr != new.getinfo(name).external_attr:
                     raise ValueError(f'Core bytes or modes changed: {name}')
             required = ('customize.sh', 'module.prop', 'service.sh', 'META-INF/com/google/android/update-binary',
                         'files/android-dns', 'files/tailscale.combined', 'webroot/app.js', 'webroot/demo.js', 'webroot/commands.js')
@@ -62,7 +72,7 @@ def package(base, output):
             temporary.unlink()
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     checksum.write_bytes(f'{digest}  {output.name}\n'.encode('ascii'))
-    print(f'{output}\nSHA256 {digest}\nCore payload: identical to accepted dnsfix.2 ({len(core)} entries)')
+    print(f'{output}\nSHA256 {digest}\nCore payload: {len(core) - 1} entries identical; module.prop changes only author={MODULE_AUTHOR}; all modes preserved')
     return output
 
 

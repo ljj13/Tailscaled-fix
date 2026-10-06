@@ -52,5 +52,6 @@ with tempfile.TemporaryDirectory() as directory:
                 arguments = item['logical'].split()[1:]
                 assert result.stdout.strip() == 'service:' + ''.join(f'<{arg}>' for arg in arguments), result.stdout
             else:
-                assert result.stdout.strip() == f'cli:<--socket={fixture}/custom.sock><up><--timeout=8s>', result.stdout
+                arguments = item['logical'].split()[1:]
+                assert result.stdout.strip() == f'cli:<--socket={fixture}/custom.sock>' + ''.join(f'<{arg}>' for arg in arguments), result.stdout
     print(f'PASS missing-PATH reproduction; {len(data["commands"])} commands in minimal, empty and poisoned PATH; real CLI wrapper preserves custom socket')

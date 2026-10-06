@@ -4,8 +4,9 @@
 
 Stable dnsfix.2 was merged with a merge commit into main (`9ec00a2`), retaining
 its complete history. `feature/webui-miuix` starts from that stable main. This
-preview changes the WebUI only, with separate documentation, browser tests and
-UI packaging support. Daemon, service, routes, DNS, root bridge and settings
+preview changes the WebUI and the owner's requested module author metadata,
+with separate documentation, browser tests and UI packaging support.
+Daemon, service, routes, DNS, root bridge and settings
 remain unchanged. No release or feature merge is authorized before device
 acceptance.
 
@@ -135,10 +136,11 @@ python scripts/package-webui.py
 python tests/test_webui_package.py -v
 ```
 
-Output: `dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.2-arm64.zip`, plus
+Output: `dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.3-arm64.zip`, plus
 its `.sha256`. This remains an arm64 KernelSU/Magisk/APatch module with the
-accepted dnsfix.2 module ID/version. Only `webroot/` entries are replaced;
-the original binary build-info stays intact, with separate `webroot/ui-build.json`
+accepted dnsfix.2 module ID/version. `webroot/` entries are replaced; Preview 3
+also changes only `author=FogPurification` in `module.prop`, as explicitly requested.
+The original binary build-info stays intact, with separate `webroot/ui-build.json`
 recording UI revision, UI file hashes and accepted base artifact SHA.
 
 No daemon/helper rebuild is needed for a UI-only preview. Reusing the accepted
@@ -198,3 +200,49 @@ label, while retaining the accepted dnsfix.2 module version and identity/state
 upgrade behavior. The supplied screenshot is a failed device observation,
 not a device PASS; the new ZIP still needs the manager status/actions checked
 on the phone. No merge into main or WebUI release is performed.
+
+### Preview 3: effective device name and module author (2026-10-07)
+
+The owner confirmed Preview 2's manager command lookup is now working and
+identified the old Android 1.102.3 node in the screenshot as the official app
+that has since been uninstalled. That app and this standalone module have
+separate state/identities. An offline app record can remain in the control
+plane after uninstall; no old node deletion or identity migration is performed.
+
+The module deliberately uses GOOS=linux for osrouter. Pinned Tailscale source
+`hostinfo.New` reports `version.OS()` and the Linux kernel version, while
+`ipn.Prefs.Hostname` explicitly documents that an empty override uses
+`os.Hostname`. Android's kernel hostname can be `localhost`; the control
+plane derives a unique machine name such as `localhost-0`. See the official
+[machine-name documentation](https://tailscale.com/docs/concepts/machine-names).
+The screenshot establishes the observed machine name, not the exact history
+of how its suffix was assigned. Linux reporting remains unchanged.
+
+The WebUI had read only the explicit `Prefs.Hostname` override, so an empty
+override incorrectly rendered as no device name. It now reads the existing
+`tailscale status --json` API when that override is empty. It selects only
+`Self.DNSName`'s first label, then `Self.HostName`; malformed/unavailable data
+displays an honest system-default label. Explicit hostname preferences still
+take precedence. The settings row explains when the name is the default, and
+its editor starts with the effective name. No name is automatically saved.
+This read runs on initial prefs load/settings/manual refresh, not every
+15-second background poll. No service/API endpoint or daemon change is added.
+
+The requested author `FogPurification` is now in source `module.prop`, the
+About page and preview manifest. Packaging intentionally permits this exact
+author-field change while preserving every other module.prop field and mode.
+All other 16 non-WebUI ZIP entries remain byte-identical to accepted dnsfix.2,
+including binaries, installer, service and persisted-configuration defaults.
+Module ID/version, login identity and existing state are preserved. Upstream
+credits/license files are retained.
+
+Regression evidence: before the fix the empty-override test failed with `—`
+instead of `localhost-0`; the author test failed with `keweiya` instead of
+`FogPurification`. After the fix tests verify effective DNSName, HostName fallback,
+invalid JSON, absent Self, no use of a Peer name, explicit override and no rename
+command when viewing defaults. A delayed-prefs regression also verifies that
+clicking a switch during the default-name read waits for the previous snapshot
+before writing and then fetches fresh preferences, so the rendered switch matches
+the saved value. The browser command adapter and real CLI wrapper
+tests now cover 18 commands across three PATH environments (54 shell checks).
+The installable output is Preview 3; the previous previews remain available.

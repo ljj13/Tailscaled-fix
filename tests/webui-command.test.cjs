@@ -35,6 +35,7 @@ const ROOT = path.resolve(__dirname, "..");
     "selftest",
   ].map((action) => "tailscaled.service " + action);
   commands.push("tailscale up --timeout=8s");
+  commands.push("tailscale status --json");
   const input = JSON.stringify({
     root: ROOT.replace(/\\/g, "/"),
     commands: commands.map((logical) => ({

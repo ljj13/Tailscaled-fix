@@ -1,4 +1,4 @@
-"""Verify preview ZIP isolation against the accepted stable installer payload."""
+"""Verify core isolation, with the explicit module-author metadata exception."""
 import hashlib
 import importlib.util
 import json
@@ -14,7 +14,7 @@ spec.loader.exec_module(packager)
 
 
 class WebUIPackageTests(unittest.TestCase):
-    def test_core_payload_and_modes_are_identical(self):
+    def test_core_payload_and_modes_are_identical_except_author(self):
         if not packager.DEFAULT_BASE.exists():
             self.skipTest('Download the accepted dnsfix.2 ZIP to dist first')
         with tempfile.TemporaryDirectory() as directory:
@@ -23,12 +23,19 @@ class WebUIPackageTests(unittest.TestCase):
             with zipfile.ZipFile(packager.DEFAULT_BASE) as old, zipfile.ZipFile(output) as new:
                 for name in old.namelist():
                     if not name.startswith('webroot/'):
-                        self.assertEqual(new.read(name), old.read(name), name)
+                        if name == 'module.prop':
+                            original = old.read(name).decode('utf-8').splitlines()
+                            packaged = new.read(name).decode('utf-8').splitlines()
+                            self.assertEqual([line for line in original if not line.startswith('author=')], [line for line in packaged if not line.startswith('author=')])
+                            self.assertEqual([line for line in packaged if line.startswith('author=')], ['author=FogPurification'])
+                        else:
+                            self.assertEqual(new.read(name), old.read(name), name)
                         self.assertEqual(new.getinfo(name).external_attr, old.getinfo(name).external_attr, name)
                 self.assertEqual(new.read('webroot/ksu.js'), (ROOT / 'webroot/ksu.js').read_bytes().replace(b'\r\n', b'\n'))
                 self.assertEqual(new.testzip(), None)
                 info = json.loads(new.read('webroot/ui-build.json'))
                 self.assertEqual(info['base_sha256'], packager.ACCEPTED_SHA)
+                self.assertEqual(info['module_author'], 'FogPurification')
                 for name, digest in info['ui_sha256'].items():
                     self.assertEqual(hashlib.sha256(new.read(name)).hexdigest(), digest, name)
             self.assertTrue(output.with_suffix('.zip.sha256').exists())

@@ -366,6 +366,12 @@ const server = http.createServer((req, res) => {
       };
       window.failPref = false;
       window.failStatus = false;
+      window.fakeSelf = {
+        HostName: "localhost",
+        DNSName: "localhost-0.demo-tailnet.ts.net.",
+      };
+      window.badStatusJSON = false;
+      window.prefsDelay = 0;
       window.fakeStatus = {
         daemon: "1",
         backend: "Running",
@@ -468,6 +474,13 @@ const server = http.createServer((req, res) => {
           } else if (command === "tailscale up --timeout=8s") {
             errno = 1;
             stderr = "https://login.tailscale.com/a/native-fixture";
+          } else if (command === "tailscale status --json") {
+            stdout = window.badStatusJSON
+              ? "invalid status output"
+              : JSON.stringify({
+                  Self: window.fakeSelf,
+                  Peer: { other: { HostName: "other-device" } },
+                });
           } else if (
             /^tailscaled.service (start|stop|restart)$/.test(command)
           ) {
@@ -495,9 +508,12 @@ const server = http.createServer((req, res) => {
           }
           setTimeout(
             () => window[callback](errno, stdout, stderr),
-            command.startsWith("tail ") || command === "tailscaled.service diag"
-              ? window.logDelay || 20
-              : 20,
+            command === "tailscaled.service prefs"
+              ? window.prefsDelay || 20
+              : command.startsWith("tail ") ||
+                  command === "tailscaled.service diag"
+                ? window.logDelay || 20
+                : 20,
           );
         },
       };
@@ -704,6 +720,110 @@ const server = http.createServer((req, res) => {
         "missing legacy command " + command,
       );
     assert.deepEqual(nativeErrors, []);
+    // Empty Prefs.Hostname means use the system hostname. It is not a missing
+    // device name: status.Self has the effective name, possibly deduplicated.
+    await native.goto(base);
+    await native
+      .locator("#status-main")
+      .filter({ hasText: "已连接" })
+      .waitFor();
+    await idle(native);
+    await native.evaluate(() => {
+      window.fakePrefs.hostname = "";
+    });
+    await native.locator("#refresh").click();
+    await idle(native);
+    assert.equal(
+      await native.locator("#home-hostname").innerText(),
+      "localhost-0",
+    );
+    await native.locator('[data-nav="settings"]').click();
+    await idle(native);
+    assert.match(
+      await native.locator("#settings-hostname").innerText(),
+      /localhost-0.*默认/,
+    );
+    await native.locator("#btn-hostname").click();
+    assert.equal(
+      await native.locator("#in-hostname").inputValue(),
+      "localhost-0",
+    );
+    await native.locator("#dialog-cancel").click();
+    await native.locator("#overlay").waitFor({ state: "hidden" });
+    assert.ok(
+      !(await native.evaluate(() => window.commands)).some((command) =>
+        command.startsWith("tailscaled.service set-pref hostname"),
+      ),
+      "viewing a default name must not rename the node",
+    );
+    await native.locator("#back").click();
+    await native.locator("#page-home").waitFor({ state: "visible" });
+    await native.evaluate(() => {
+      window.prefsDelay = 400;
+      window.commands = [];
+    });
+    await native.locator('[data-nav="settings"]').click();
+    await native.locator("#sw-accept-routes").click();
+    await idle(native);
+    assert.equal(
+      await native.evaluate(() => window.fakePrefs.accept_routes),
+      "0",
+    );
+    assert.equal(
+      await native.locator("#sw-accept-routes").isChecked(),
+      false,
+      "write must refresh after pending default-hostname read",
+    );
+    await native.evaluate(() => {
+      window.prefsDelay = 0;
+    });
+    await native.evaluate(() => {
+      window.fakeSelf = { HostName: "kernel-hostname", DNSName: "" };
+    });
+    await native.locator("#refresh").click();
+    await idle(native);
+    assert.equal(
+      await native.locator("#home-hostname").innerText(),
+      "kernel-hostname",
+    );
+    await native.evaluate(() => {
+      window.badStatusJSON = true;
+    });
+    await native.locator("#refresh").click();
+    await idle(native);
+    assert.equal(
+      await native.locator("#home-hostname").innerText(),
+      "系统默认",
+    );
+    await native.evaluate(() => {
+      window.badStatusJSON = false;
+      window.fakeSelf = null;
+    });
+    await native.locator("#refresh").click();
+    await idle(native);
+    assert.equal(
+      await native.locator("#home-hostname").innerText(),
+      "系统默认",
+      "never use Peer hostname as this device",
+    );
+    await native.evaluate(() => {
+      window.fakePrefs.hostname = "explicit-name";
+    });
+    await native.locator("#refresh").click();
+    await idle(native);
+    assert.equal(
+      await native.locator("#home-hostname").innerText(),
+      "explicit-name",
+    );
+    await native.locator("#back").click();
+    await native.locator('[data-nav="about"]').click();
+    assert.match(
+      await native.locator("#about-fields").innerText(),
+      /FogPurification/,
+    );
+    console.log(
+      "PASS empty hostname uses status.Self only; DNSName/HostName fallback, invalid JSON, no rename or Peer leakage, explicit override",
+    );
     // Forced demo must never call an available root bridge.
     await native.goto(`${base}/?demo=cellular`);
     await native

@@ -14,6 +14,7 @@ const demo =
 const state = {
   status: {},
   prefs: {},
+  nodeName: "",
   prefsReady: false,
   busy: false,
   page: "home",
@@ -137,6 +138,10 @@ async function operation(fn) {
   state.busy = true;
   updateDisabled();
   try {
+    // Finish any preference snapshot (including its default-name read) before
+    // writing. Otherwise a successful setter could join that older request
+    // instead of loading preferences captured after the write.
+    if (state.prefsRequest) await state.prefsRequest;
     await fn();
   } catch (error) {
     toast(String(error).slice(0, 180));
@@ -220,7 +225,7 @@ function renderStatus() {
     !running ? "启动服务" : needsLogin ? "登录 Tailnet" : "重启服务",
   );
   $("stop-action").hidden = !running;
-  text("home-hostname", state.prefs.hostname);
+  text("home-hostname", state.prefs.hostname || state.nodeName || "系统默认");
   text("home-ip", s.ip4);
   text("home-user", s.user || (needsLogin ? "尚未登录" : "—"));
   text("home-version", s.version || "版本与构建信息");
@@ -335,6 +340,7 @@ function renderStatus() {
   ]);
   text("about-version", s.version);
   rows("about-fields", [
+    ["模块作者", "author", "FogPurification"],
     [
       "运行模式",
       "osrouter",
@@ -411,6 +417,29 @@ async function loadPrefs() {
     } else {
       state.prefs = prefs;
       state.prefsReady = true;
+      // Empty Prefs.Hostname means the daemon uses its OS hostname. Read Self
+      // for the actual Tailnet name instead of mistaking this for no name.
+      state.nodeName = "";
+      if (!prefs.hostname) {
+        const actual = await run("tailscale status --json", true);
+        if (epoch !== state.epoch) return;
+        if (actual.errno === 0) {
+          try {
+            const self = JSON.parse(actual.stdout).Self;
+            if (self && typeof self === "object") {
+              const dns =
+                typeof self.DNSName === "string"
+                  ? self.DNSName.trim().split(".")[0]
+                  : "";
+              const host =
+                typeof self.HostName === "string" ? self.HostName.trim() : "";
+              state.nodeName = dns || host;
+            }
+          } catch (_) {
+            /* unavailable name: keep an honest system-default label */
+          }
+        }
+      }
       Object.keys(SWITCHES).forEach((id) => {
         const key = SWITCHES[id];
         $(id).checked =
@@ -418,7 +447,13 @@ async function loadPrefs() {
             ? (prefs.advertise_routes || "").indexOf("0.0.0.0/0") >= 0
             : prefs[key.replace(/-/g, "_")] === "1";
       });
-      text("settings-hostname", prefs.hostname);
+      text(
+        "settings-hostname",
+        prefs.hostname ||
+          (state.nodeName
+            ? `${state.nodeName} · 默认名称`
+            : "跟随系统默认名称"),
+      );
       text("prefs-note", "设置即时保存；不会重置 Tailscale state 或节点身份。");
     }
     renderStatus();
@@ -651,7 +686,7 @@ async function setHostname() {
   const value = await openModal({
     title: "设备名称",
     summary: "使用字母、数字、点或短横线。仅更新名称，不改变节点身份。",
-    input: state.prefs.hostname || "tailscale",
+    input: state.prefs.hostname || state.nodeName || "tailscale",
     confirm: "保存",
   });
   if (value === null) return;
@@ -774,6 +809,7 @@ async function selectDemo() {
     demo.select(selected);
     state.status = {};
     state.prefs = {};
+    state.nodeName = "";
     state.prefsReady = false;
     $("login-box").hidden = true;
     text("demo-name", scenarios[demo.name]);

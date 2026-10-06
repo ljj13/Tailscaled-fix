@@ -127,6 +127,16 @@ export function createDemo(initial) {
       await new Promise((resolve) => setTimeout(resolve, 80));
       if (command === "tailscaled.service webstatus") return result(kv(status));
       if (command === "tailscaled.service prefs") return result(kv(prefs));
+      if (command === "tailscale status --json")
+        return result(
+          JSON.stringify({
+            Self: {
+              HostName: prefs.hostname || "localhost",
+              DNSName:
+                (prefs.hostname || "localhost-0") + ".demo-tailnet.ts.net.",
+            },
+          }),
+        );
       if (/^tailscaled\.service (start|stop|restart)$/.test(command)) {
         const stop = command.endsWith(" stop");
         Object.assign(status, {
