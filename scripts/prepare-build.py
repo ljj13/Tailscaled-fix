@@ -33,7 +33,7 @@ patched.write_text(text.replace('"/etc/resolv.conf"', '"/data/adb/tailscale/boot
 replacements[str(original)] = str(patched)
 (output / 'overlay.json').write_text(json.dumps({'Replace': replacements}))
 
-subprocess.run(['git', 'apply', '-'], input=(repo / 'linuxfw-mark.patch').read_text(), text=True, cwd=source, check=True)
+subprocess.run(['git', 'apply', '-'], input=(repo / 'patches/linuxfw-mark.patch').read_text(), text=True, cwd=source, check=True)
 path = source / 'net/dns/resolvconfpath_default.go'
 text = path.read_text()
 path.write_text(text.replace('/etc/resolv.conf', '/data/adb/tailscale/os-resolv.conf')

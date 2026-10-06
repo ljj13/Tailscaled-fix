@@ -58,7 +58,7 @@ Two kernel-level collisions are handled too:
 
 | Problem | Fix |
 |---|---|
-| Stock marks `0x40000` / `0x80000` collide with the **"permission" bits (18–19)** of Android's `netd` fwmark layout, misrouting the control plane | build patch moves them to reserved bits: `0x8000000` and `0x10020000` (`linuxfw-mark.patch`) |
+| Stock marks `0x40000` / `0x80000` collide with the **"permission" bits (18–19)** of Android's `netd` fwmark layout, misrouting the control plane | build patch moves them to reserved bits: `0x8000000` and `0x10020000` (`patches/linuxfw-mark.patch`) |
 | A TPROXY proxy (Surfing/Clash) jumps `DIVERT` at mangle `PREROUTING` rule 1 and hijacks the tunnel's TCP replies — ping works, the browser hangs | the module keeps `-i tailscale0 -j RETURN` at rule 1 of mangle `PREROUTING` and `-o tailscale0 -j RETURN` at rule 1 of mangle/nat `OUTPUT`, re-asserted every 15 s |
 
 Everything else is osrouter's job, and it does it well: it installs its rules at

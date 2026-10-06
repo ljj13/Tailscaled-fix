@@ -13,14 +13,16 @@
 | `webroot/` | 纯 HTML / CSS / JS WebUI 和本地 demo 数据。 |
 | `tools/android-dns/` | Android 网络 / DNS 发现 helper 与 Go 测试。 |
 | `tools/android-hostname/` | 默认设备名初始化 helper。 |
-| `patches/`、`linuxfw-mark.patch` | Tailscale / Go DNS 与 fwmark 构建补丁。 |
+| `patches/` | Tailscale / Go DNS 与 fwmark 构建补丁。 |
 | `scripts/` | 固定版本构建、测试准备和 ZIP 打包。 |
 | `tests/` | DNS、脚本、升级、hostname、WebUI 与打包测试。 |
 | `.github/workflows/` | 构建工作流，只上传 artifact，不自动发布 Release。 |
 | `docs/dns/`、`docs/testing/`、`docs/releases/` | DNS 技术报告、测试记录与发布说明。 |
 | `docs/screenshots/webui/` | 已选入文档的截图和本地图库。 |
 
-模块入口与构建依赖路径保持原位。根目录文档是项目入口；完整专项报告归入 `docs/`。
+模块安装入口保持管理器要求的路径。构建补丁统一放在 `patches/`，
+根目录只保留双语 README 和模块必要文件，专项报告统一归入 `docs/`。
+构建工作流支持手动运行，无需通过修改占位文件触发。
 
 ## 本地产物
 

@@ -254,7 +254,7 @@ Android 的 netd 通常将默认路由保存在每个网络的独立路由表中
 
 | 问题 | 处理方式 |
 |---|---|
-| 原始 `0x40000` / `0x80000` mark 与 Android netd fwmark 的 permission 位（18 / 19）冲突。 | 构建时通过 `linuxfw-mark.patch` 改为 `0x8000000` 和 `0x10020000`。 |
+| 原始 `0x40000` / `0x80000` mark 与 Android netd fwmark 的 permission 位（18 / 19）冲突。 | 构建时通过 `patches/linuxfw-mark.patch` 改为 `0x8000000` 和 `0x10020000`。 |
 | TPROXY 的 `DIVERT` 抢先匹配隧道 TCP 回复，造成 ping 正常但浏览器卡住。 | 保持 mangle `PREROUTING` 的 `-i tailscale0 -j RETURN`，以及 mangle / nat `OUTPUT` 的 `-o tailscale0 -j RETURN` 为第 1 条，每 15 秒检查。 |
 
 osrouter 的规则优先级为 5210–5270，位于 netd 的 11000 之前。

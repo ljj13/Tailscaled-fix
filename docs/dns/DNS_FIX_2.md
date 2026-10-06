@@ -2,7 +2,7 @@
 
 仍以 upstream `v1.102.5` 为基线。本文记录当时在
 `fix/android-dns-v1.102.5` 分支上的开发与验收；该分支现已保留完整历史合并到 main。
-当前发布版本见 [发布说明索引](../../RELEASE_NOTES.md)。
+当前发布版本见 [发布说明索引](../releases/README.md)。
 
 ## 真机确认的根因
 
