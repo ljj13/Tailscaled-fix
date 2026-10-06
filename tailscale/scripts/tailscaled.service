@@ -32,6 +32,7 @@ scripts_name=$(basename "$0")
 : "${tailscaled_service_log:=${tailscaled_run_dir}/service.log}"
 : "${tailscaled_diag_log:=${tailscaled_run_dir}/diag.log}"
 : "${module_prop:=/data/adb/modules/tailscaled/module.prop}"
+: "${module_dir:=/data/adb/modules/tailscaled}"
 : "${sync_routes_auto:=1}"
 : "${sync_every_ticks:=4}"
 : "${tun_iface:=tailscale0}"
@@ -44,6 +45,37 @@ scripts_name=$(basename "$0")
 type diag >/dev/null 2>&1 || diag() { printf '%s %s\n' "$(date +'%Y-%m-%d %H:%M:%S')" "$*" >> "${tailscaled_diag_log:-/dev/null}" 2>/dev/null; }
 type log >/dev/null 2>&1 || log() { printf '%s [%s]: %s\n' "$(date +'%Y-%m-%d %H:%M:%S')" "$1" "$2" >> "${tailscaled_runs_log:-/dev/null}" 2>/dev/null; }
 type setup_home >/dev/null 2>&1 || setup_home() { export HOME=/data/ssh/root; mkdir -p "$HOME" 2>/dev/null; }
+
+# Defaults live here too: upgrades deliberately preserve old settings.ini.
+: "${android_dns_bin:=${tailscale_dir}/bin/android-dns}"
+: "${dns_fallback_servers=1.1.1.1,8.8.8.8,9.9.9.9,223.5.5.5,119.29.29.29}"
+: "${dns_probe_domain:=controlplane.tailscale.com}"
+
+refresh_dns() {
+  _dns_dev=$(detect_default_route | awk '{print $2}')
+  _dns_before=$(sed '/^dns_checked=/d; /^dns_details=/d' "${tailscale_dir}/dns-status" 2>/dev/null)
+  if ! "${android_dns_bin}" --dir "${tailscale_dir}" --iface "${_dns_dev}" \
+      --fallback "${dns_fallback_servers}" --domain "${dns_probe_domain}" > /dev/null 2>> "${tailscaled_diag_log}"; then
+    diag "DNS: refresh failed; see diag log (existing resolver retained)"
+    return 1
+  fi
+  _dns_after=$(sed '/^dns_checked=/d; /^dns_details=/d' "${tailscale_dir}/dns-status" 2>/dev/null)
+  [ "${_dns_before}" = "${_dns_after}" ] || diag "DNS: $(printf '%s' "${_dns_after}" | tr '\n' ' ')"
+  return 0
+}
+
+show_dns() {
+  echo "DNS bootstrap file: ${tailscale_dir}/bootstrap-resolv.conf (Go resolver)"
+  echo "DNS OS config file: /data/adb/tailscale/os-resolv.conf (Tailscale only)"
+  cat "${tailscale_dir}/dns-status" 2>/dev/null || echo "dns_source=not-initialized"
+  cat "${tailscale_dir}/bootstrap-resolv.conf" 2>/dev/null
+}
+
+check_dns() {
+  show_dns
+  _dns_dev=$(detect_default_route | awk '{print $2}')
+  "${android_dns_bin}" --dir "${tailscale_dir}" --iface "${_dns_dev}" --domain "${dns_probe_domain}" --check
+}
 
 # ---------------------------------------------------------------- helpers ---
 daemon_pid() {
@@ -64,7 +96,7 @@ hash_file() {
 
 set_module_status() {
   [ -w "${module_prop}" ] || return 0
-  sed -i "s#^description=.*#description=[ $1 ] Tailscale for Android (self-contained GOOS=android build)#" "${module_prop}" 2>/dev/null
+  sed -i "s#^description=.*#description=[ $1 ] Tailscale for Android (patched linux + Android DNS)#" "${module_prop}" 2>/dev/null
 }
 
 # ------------------------------------------------- binary integrity guard ---
@@ -155,13 +187,14 @@ detect_default_route() {
     *unreachable*|"") _probe=$(ip route get 1.1.1.1 2>/dev/null | head -n1) ;;
   esac
   printf '%s %s %s' \
-    "$(printf '%s' "$_probe" | sed -n 's/.* via \([0-9a-fA-F:.]*\).*/\1/p')" \
+    "$(printf '%s' "$_probe" | sed -n 's/.* via \([0-9a-fA-F:.]*\).*/\1/p' | awk '{print} END {if (NR == 0) print "-"}')" \
     "$(printf '%s' "$_probe" | sed -n 's/.* dev \([^ ]*\).*/\1/p')" \
     "$(printf '%s' "$_probe" | sed -n 's/.* src \([0-9a-fA-F:.]*\).*/\1/p')"
 }
 
 apply_main_default() {
   _gw=$(printf '%s' "$1" | awk '{print $1}')
+  [ "${_gw}" = "-" ] && _gw=""
   _dev=$(printf '%s' "$1" | awk '{print $2}')
   [ -n "${_dev}" ] || return 1
   if [ -n "${_gw}" ]; then
@@ -175,6 +208,7 @@ apply_main_default() {
 
 main_route_matches() {
   _gw=$(printf '%s' "$1" | awk '{print $1}')
+  [ "${_gw}" = "-" ] && _gw=""
   _dev=$(printf '%s' "$1" | awk '{print $2}')
   [ -n "${_dev}" ] || return 1
   if [ -n "${_gw}" ]; then
@@ -350,13 +384,24 @@ route_watchdog() {
   while :; do
     sleep 15
     _tick=$((_tick + 1))
-    [ -n "$(daemon_pid)" ] || { diag "watchdog: daemon gone, exiting"; exit 0; }
+    if [ -z "$(daemon_pid)" ]; then
+      if [ -f "${tailscaled_run_dir}/dns-start-pending" ] && [ ! -f "${module_dir}/disable" ]; then
+        diag "watchdog: retrying startup after DNS was unavailable"
+        start_tailscaled
+        continue
+      fi
+      diag "watchdog: daemon gone, exiting"
+      exit 0
+    fi
     if ! routes_ok; then
       diag "watchdog: routes missing or stale -> re-asserting"
       add_routes
     else
       exempt_tunnel
     fi
+    # Runs after main route repair, on every network transition and retry tick.
+    # Go checks the private file mtime on lookups (at most every 5 seconds).
+    refresh_dns
     # Periodically pick up subnet routes that appeared or disappeared in the
     # tailnet. One status query per interval, so this stays cheap.
     if [ "${sync_routes_auto}" = "1" ]; then
@@ -392,6 +437,7 @@ start_tailscaled() {
       log Info "tailscaled already running (PID ${_pid})."
       diag "start: already running (PID ${_pid}), started after the current binary"
       add_routes
+      refresh_dns
       start_watchdog
       [ "${sync_routes_auto}" = "1" ] && routes_sync
       return 0
@@ -405,6 +451,18 @@ start_tailscaled() {
   setup_home
   mkdir -p "${tailscaled_run_dir}" "${tailscale_dir}/tmp" 2>/dev/null
   export TMPDIR="${tailscale_dir}/tmp"
+  # Bootstrap must exist before the first control-plane lookup. osrouter hasn't
+  # started yet, so prepare main and its existing bypass rules first.
+  fix_controlplane_routing
+  if ! refresh_dns; then
+    # With public fallback disabled, an offline first boot has no candidates.
+    # Keep retrying instead of losing the one-shot boot entry permanently.
+    : > "${tailscaled_run_dir}/dns-start-pending"
+    start_watchdog
+    diag "start: waiting for Android DNS; watchdog will retry automatically"
+    return 0
+  fi
+  rm -f "${tailscaled_run_dir}/dns-start-pending"
   rm -f "${tailscaled_run_dir}/tailscaled.sock" 2>/dev/null
   nohup "${tailscaled_bin}" ${tailscaled_bin_param} >> "${tailscaled_log}" 2>&1 &
   _pid=$!
@@ -429,6 +487,7 @@ start_tailscaled() {
 
 stop_tailscaled() {
   stop_watchdog
+  rm -f "${tailscaled_run_dir}/dns-start-pending"
   _pid=$(daemon_pid)
   if [ -n "${_pid}" ]; then
     kill -15 "${_pid}" 2>/dev/null
@@ -514,6 +573,8 @@ show_webstatus() {
   echo "exempt_prerouting=$(_exempt_state mangle PREROUTING)"
   echo "exempt_output=$(_exempt_state mangle OUTPUT)"
   echo "exempt_nat=$(_exempt_state nat OUTPUT)"
+  cat "${tailscale_dir}/dns-status" 2>/dev/null
+  [ -f "${tailscaled_run_dir}/dns-start-pending" ] && echo "dns_start_pending=1" || echo "dns_start_pending=0"
 
   _backend=""
   _user=""
@@ -706,6 +767,8 @@ show_diag() {
   echo "tunnel exemptions (rule 1 of each chain must RETURN tunnel traffic):"
   show_exemptions
   echo ""
+  show_dns
+  echo ""
   echo "daemon log (last 10 lines):"
   tail -n 10 "${tailscaled_log}" 2>/dev/null | sed 's/^/  /'
   echo ""
@@ -748,6 +811,7 @@ selftest() {
   echo "tun addresses    : $(ip -o -4 addr show "${tun_iface}" 2>/dev/null | awk '{print $4}' | tr '\n' ' ')"
   echo "exemptions       : pre=$(_exempt_state mangle PREROUTING) out=$(_exempt_state mangle OUTPUT) nat=$(_exempt_state nat OUTPUT)"
   echo "proxy jumps      : $(iptables -t mangle -L PREROUTING -n -v --line-numbers 2>/dev/null | awk '/DIVERT|BOX_/ {printf "%s:%s ", $1, $2}')"
+  check_dns
 
   if [ -n "$(daemon_pid)" ] && [ -S "${tailscale_dir}/run/tailscaled.sock" ]; then
     echo "client version   : $("${tailscale_bin}" ${tailscale_bin_param} version 2>&1 | head -n1)"
@@ -783,8 +847,10 @@ case "$1" in
   logout)     logout_now ;;
   log)        log_view "$2" ;;
   selftest)   selftest ;;
+  dns)        check_dns ;;
+  dns-refresh) refresh_dns ;;
   __watchdog) route_watchdog ;;
   *)
-    echo "usage: ${scripts_name} {start|stop|restart|status|routes|routes-reload|routes-sync|diag|webstatus|prefs|set-pref <key> <value>|logout|selftest|log{runs|service|tailscaled|diag}}"
+    echo "usage: ${scripts_name} {start|stop|restart|status|routes|routes-reload|routes-sync|diag|dns|dns-refresh|webstatus|prefs|set-pref <key> <value>|logout|selftest|log{runs|service|tailscaled|diag}}"
     ;;
 esac

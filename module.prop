@@ -1,7 +1,6 @@
 id=tailscaled
 name=Tailscale (Android build)
-version=v1.102.4
-versionCode=1102004
+version=v1.102.5-dnsfix.1
+versionCode=110200501
 author=keweiya
-description=[ starting ] Tailscale for Android (self-contained GOOS=android build)
-updateJson=https://raw.githubusercontent.com/keweiya/tailscaled/refs/heads/main/update.json
+description=[ starting ] Tailscale for Android (patched linux + Android DNS)

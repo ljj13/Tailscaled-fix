@@ -18,6 +18,11 @@ SERVICE_DIR="/data/adb/service.d"
 INSTALL_DIR="/data/adb/tailscale"
 INSTALL_BIN_DIR="$INSTALL_DIR/bin"
 
+# Refuse incomplete payloads before touching the running installation.
+for f in tailscale.combined android-dns; do
+  [ -s "$MODPATH/files/$f" ] || abort "! Missing required binary: $f"
+done
+
 if [ -f "$INSTALL_DIR/scripts/tailscaled.service" ]; then
   ui_print "- Stopping the running tailscaled service"
   "$INSTALL_DIR/scripts/tailscaled.service" stop >/dev/null 2>&1
@@ -43,6 +48,8 @@ mkdir -p "$INSTALL_DIR" "$INSTALL_BIN_DIR" "$SERVICE_DIR"
 ui_print "- Installing binaries"
 mv -f "$MODPATH/files/tailscale.combined" "$INSTALL_BIN_DIR/tailscale"
 cp -f "$INSTALL_BIN_DIR/tailscale" "$INSTALL_BIN_DIR/tailscaled"
+mv -f "$MODPATH/files/android-dns" "$INSTALL_BIN_DIR/android-dns"
+[ -f "$MODPATH/files/build-info.json" ] && cp -f "$MODPATH/files/build-info.json" "$INSTALL_DIR/build-info.json"
 
 # Keep a known-good copy of the binary plus its checksum. `tailscale update`
 # downloads the OFFICIAL upstream release, which is compiled for GOOS=linux and
@@ -74,7 +81,10 @@ done
 rm -rf "$MODPATH/files" "$MODPATH/tailscale"
 
 ui_print "- Setting permissions"
-set_perm_recursive "$INSTALL_DIR" 0 0 0755 0755
+# Scope permissions to installed program files. Never chmod existing node keys,
+# state, routes, or user settings on upgrade.
+set_perm_recursive "$INSTALL_BIN_DIR" 0 0 0755 0755
+set_perm_recursive "$INSTALL_DIR/scripts" 0 0 0755 0755
 set_perm_recursive "$MODPATH/system/bin" 0 0 0755 0755
 # KernelSU / APatch read the WebUI from the module directory itself.
 [ -d "$MODPATH/webroot" ] && set_perm_recursive "$MODPATH/webroot" 0 0 0755 0644

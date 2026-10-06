@@ -1,3 +1,19 @@
+# v1.102.5-dnsfix.1
+
+Fixes standalone Linux tailscaled DNS bootstrapping on rooted Android without
+requiring `/etc/resolv.conf` or a loopback DNS listener. Discovers current Android
+network DNS, validates it using the daemon's bypass mark, and uses configurable
+public fallback when necessary. Refreshes on the routing watchdog; preserves
+state and user configuration on upgrade. Adds DNS diagnostics and WebUI status.
+
+See [DNS_FIX.md](DNS_FIX.md) and [TEST_RESULTS.md](TEST_RESULTS.md) for the design,
+audit, local verification, and minimum device checks. Install the ZIP directly
+over the existing module; do not uninstall first.
+
+The original v1.102.5 release notes are retained below.
+
+---
+
 Self-contained KernelSU / Magisk / APatch module running `tailscaled` on a rooted Android device, with the routing it needs so browsers and apps can reach the tailnet and a peer's advertised subnets.
 
 ## Fixed: the daemon would not start
