@@ -1,5 +1,6 @@
 import { exec, toast as nativeToast, bridgeAvailable } from "./ksu.js";
 import { createDemo, scenarios } from "./demo.js";
+import { nativeCommand } from "./commands.js";
 
 const SVC = "tailscaled.service";
 const DAEMON_LOG = "/data/adb/tailscale/run/tailscaled.log";
@@ -77,7 +78,7 @@ async function run(command, quiet = false) {
   // Serialize bridge requests, including probes and background reads. No probe
   // overlaps a write or runs with different routing flags from manual actions.
   const task = commandQueue.then(() =>
-    demo ? demo.exec(command) : exec(command),
+    demo ? demo.exec(command) : exec(nativeCommand(command)),
   );
   commandQueue = task.catch(() => {});
   let result;
@@ -385,7 +386,9 @@ async function refreshStatus(announce = false) {
       state.readError = "";
     } else
       state.readError =
-        "读取状态失败，当前显示上次取得的数据。" + errorText(result);
+        (Object.prototype.hasOwnProperty.call(state.status, "daemon")
+          ? "读取状态失败，当前显示上次取得的数据。"
+          : "读取状态失败，尚未取得服务数据。") + errorText(result);
     renderStatus();
     if (announce) toast(state.readError || "状态已刷新");
   })();

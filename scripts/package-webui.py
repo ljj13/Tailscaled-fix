@@ -10,7 +10,7 @@ import zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ACCEPTED_SHA = 'c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae'
 DEFAULT_BASE = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-arm64.zip'
-DEFAULT_OUTPUT = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview-arm64.zip'
+DEFAULT_OUTPUT = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.2-arm64.zip'
 
 
 def package(base, output):
@@ -24,7 +24,7 @@ def package(base, output):
     revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     ui = {p.relative_to(ROOT).as_posix(): p.read_bytes().replace(b'\r\n', b'\n')
           for p in sorted((ROOT / 'webroot').rglob('*')) if p.is_file()}
-    manifest = {'edition': 'Miuix WebUI Preview 1', 'ui_revision': revision,
+    manifest = {'edition': 'Miuix WebUI Preview 2', 'ui_revision': revision,
                 'base_zip': base.name, 'base_sha256': digest,
                 'ui_sha256': {key: hashlib.sha256(value).hexdigest() for key, value in ui.items()}}
     ui['webroot/ui-build.json'] = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
@@ -52,7 +52,7 @@ def package(base, output):
                 if old.read(name) != new.read(name) or old.getinfo(name).external_attr != new.getinfo(name).external_attr:
                     raise ValueError(f'Core bytes or modes changed: {name}')
             required = ('customize.sh', 'module.prop', 'service.sh', 'META-INF/com/google/android/update-binary',
-                        'files/android-dns', 'files/tailscale.combined', 'webroot/app.js', 'webroot/demo.js')
+                        'files/android-dns', 'files/tailscale.combined', 'webroot/app.js', 'webroot/demo.js', 'webroot/commands.js')
             for name in required:
                 if name not in new.namelist():
                     raise ValueError(f'Missing installer payload: {name}')

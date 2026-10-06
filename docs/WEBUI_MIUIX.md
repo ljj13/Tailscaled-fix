@@ -135,7 +135,7 @@ python scripts/package-webui.py
 python tests/test_webui_package.py -v
 ```
 
-Output: `dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview-arm64.zip`, plus
+Output: `dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.2-arm64.zip`, plus
 its `.sha256`. This remains an arm64 KernelSU/Magisk/APatch module with the
 accepted dnsfix.2 module ID/version. Only `webroot/` entries are replaced;
 the original binary build-info stays intact, with separate `webroot/ui-build.json`
@@ -152,3 +152,49 @@ DNS/routing details, system themes, safe areas and manager hardware Back.
 Preserve the existing dnsfix.2 Wi-Fi/cellular + FlClash coexistence checks.
 This task does not use ADB or claim physical WebView/phone acceptance.
 The feature branch remains separate from `main`; no release is published.
+
+### Preview 2: manager shell command discovery (2026-10-07)
+
+The supplied phone screenshot reports `tailscaled.service: inaccessible or not
+found`. The UI/bridge loaded, but short module command names depended on PATH and
+the manager's mount namespace. The installer places the real control script at
+`/data/adb/tailscale/scripts/tailscaled.service`; the system overlay wrapper is
+not needed to call it. The previous injected bridge test accepted those short
+names directly and did not execute a shell, so it missed this dependency.
+
+`webroot/commands.js` now translates native transport only:
+
+- Service calls use `/data/adb/tailscale/scripts/tailscaled.service` with the
+  original arguments.
+- Login uses `/data/adb/modules/tailscaled/system/bin/tailscale`. This is the
+  original CLI wrapper in the physical module directory; it sources preserved
+  settings and retains custom socket behavior and the update guard.
+- Android utility directories and manager tools are added to the native shell
+  PATH. Neither entry point depends on a system overlay or `command -v` lookup.
+- Demo mode retains local logical commands and never calls the native adapter.
+  `ksu.js`, installer, daemon, service, DNS and routing source remain unchanged.
+- A first status failure says no service data has been obtained; cached-data
+  wording is used only after an earlier successful read.
+
+Regression command (POSIX Python shell fixture; Windows uses WSL Ubuntu-24.04,
+or the distro named by `WEBUI_WSL_DISTRO`):
+
+```sh
+node tests/webui-command.test.cjs
+node tests/webui.test.cjs
+python tests/test_webui_package.py -v
+```
+
+The pre-fix regression failed with exit 127 and `tailscaled.service: not found`.
+After the fix all 17 native action/read commands pass with minimal, empty and
+poisoned PATH (51 shell checks). The fixture runs the actual existing CLI wrapper
+and verifies its custom socket. The full browser suite also passes with an
+injected bridge that requires physical entry-point paths; original command
+arguments, demo isolation, 24 screenshots and all previous interactions remain
+verified. Packaging checks preserve all 17 core entries and their Unix modes.
+
+Preview 1's ZIP remains available. Preview 2 gets a separate filename and About
+label, while retaining the accepted dnsfix.2 module version and identity/state
+upgrade behavior. The supplied screenshot is a failed device observation,
+not a device PASS; the new ZIP still needs the manager status/actions checked
+on the phone. No merge into main or WebUI release is performed.

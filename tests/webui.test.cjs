@@ -14,7 +14,7 @@ const acorn = require(
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
   }),
 );
-for (const name of ["app.js", "ksu.js", "demo.js"])
+for (const name of ["app.js", "ksu.js", "demo.js", "commands.js"])
   acorn.parse(fs.readFileSync(path.join(ROOT, "webroot", name), "utf8"), {
     ecmaVersion: 2019,
     sourceType: "module",
@@ -350,6 +350,7 @@ const server = http.createServer((req, res) => {
     native.on("pageerror", (error) => nativeErrors.push(error.message));
     await native.addInitScript(() => {
       window.commands = [];
+      window.nativeCommands = [];
       window.polls = [];
       window.testVisible = true;
       Object.defineProperty(document, "visibilityState", {
@@ -403,6 +404,37 @@ const server = http.createServer((req, res) => {
       window.ksu = {
         toast() {},
         exec(command, options, callback) {
+          window.nativeCommands.push(command);
+          const pathSetup =
+            'export PATH="/system/bin:/system/xbin:/vendor/bin:/data/adb/ksu/bin:/data/adb/magisk:$PATH"\n';
+          if (!command.startsWith(pathSetup))
+            throw new Error("missing manager shell PATH setup");
+          command = command.slice(pathSetup.length);
+          if (
+            command.startsWith(
+              "/data/adb/tailscale/scripts/tailscaled.service ",
+            )
+          )
+            command =
+              "tailscaled.service " +
+              command.slice(
+                "/data/adb/tailscale/scripts/tailscaled.service ".length,
+              );
+          else if (
+            command.startsWith(
+              "/data/adb/modules/tailscaled/system/bin/tailscale ",
+            )
+          )
+            command =
+              "tailscale " +
+              command.slice(
+                "/data/adb/modules/tailscaled/system/bin/tailscale ".length,
+              );
+          else if (
+            command.startsWith("tailscaled.service ") ||
+            command.startsWith("tailscale ")
+          )
+            throw new Error("module command not found in manager PATH");
           window.commands.push(command);
           let stdout = "",
             errno = 0,
