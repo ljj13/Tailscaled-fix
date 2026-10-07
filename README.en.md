@@ -7,7 +7,7 @@ Maintained by **FogPurification**. Current release:
 It combines the Redmi-verified Android DNS fixes, a Miuix-inspired WebUI and
 one-time Android device-name initialization, network diagnostics and the outer IPv6
 routing fix on the pinned Tailscale `v1.102.5` base.
-See [release notes](docs/releases/v1.102.5-dnsfix.2-webui.2.md),
+See the [usage guide (Chinese)](docs/USAGE.md), [release notes](docs/releases/v1.102.5-dnsfix.2-webui.2.md),
 [DNS audit and device tests](docs/dns/DNS_FIX.md),
 [WebUI design and tests](docs/WEBUI_MIUIX.md),
 [hostname initialization](docs/ANDROID_HOSTNAME.md) and

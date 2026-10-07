@@ -2,6 +2,8 @@
 
 项目使用与安装：[简体中文 README](../README.md) · [English README](../README.en.md)
 
+[使用指南](USAGE.md)：SSH、Termux、ADB、文件传输、本地服务、子网与 Direct / DERP 判断。
+
 ## 发布与验证
 
 | 文档 | 内容 |

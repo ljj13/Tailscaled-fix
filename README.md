@@ -7,7 +7,7 @@
 基于 Tailscale `v1.102.5`，包含已通过 Redmi 真机验收的 Android DNS 修复、
 Miuix 风格 WebUI、网络诊断、Android 默认设备名初始化与 outer IPv6 路由修复。
 
-相关文档：[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.2.md)、
+相关文档：[使用指南](docs/USAGE.md)、[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.2.md)、
 [DNS 审计与真机测试](docs/dns/DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
 [设备名初始化](docs/ANDROID_HOSTNAME.md)、[文档索引](docs/README.md)。
 
