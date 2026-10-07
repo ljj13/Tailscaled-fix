@@ -95,6 +95,7 @@ type Options struct {
 	CLI, Dir, PID, Mark, Peer string
 	Args                      []string
 	Export                    bool
+	ExitAudit                 bool
 	Ping                      bool
 }
 
@@ -544,7 +545,7 @@ func main() {
 	flag.StringVar(&o.Mark, "mark", "0x10020000", "fwmark for read-only route lookups")
 	flag.StringVar(&o.Peer, "peer", "", "optional peer IP for selftest ping")
 	flag.BoolVar(&o.Ping, "ping", false, "bounded ping of explicit or first online peer")
-	format := flag.String("format", "json", "json, text or report")
+	format := flag.String("format", "json", "json, text, report or exit-audit (read-only)")
 	watchParent := flag.Int("watch-parent", 0, "optional passive network observer for its watchdog parent")
 	timeout := flag.Duration("timeout", 15*time.Second, "total diagnostic deadline (maximum 30s)")
 	flag.Parse()
@@ -556,13 +557,14 @@ func main() {
 		return
 	}
 	o.Args = flag.Args()
-	if _, err := strconv.ParseUint(o.Mark, 0, 32); err != nil || *timeout <= 0 || *timeout > 30*time.Second || (*format != "json" && *format != "text" && *format != "report") {
+	if _, err := strconv.ParseUint(o.Mark, 0, 32); err != nil || *timeout <= 0 || *timeout > 30*time.Second || (*format != "json" && *format != "text" && *format != "report" && *format != "exit-audit") {
 		fmt.Fprintln(os.Stderr, "invalid diagnostic options")
 		os.Exit(2)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
-	if *format == "report" {
+	if *format == "report" || *format == "exit-audit" {
+		o.ExitAudit = *format == "exit-audit"
 		fmt.Print(diagnosticExport(ctx, o))
 		return
 	}

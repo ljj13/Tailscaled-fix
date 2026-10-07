@@ -1086,7 +1086,7 @@ network_diagnostics() {
 diagnostic_report() {
   if [ -x "${tailscale_dir}/bin/android-netdiag" ]; then
     "${tailscale_dir}/bin/android-netdiag" --cli "${tailscale_bin}" --dir "${tailscale_dir}" \
-      --pid "$(daemon_pid)" --format report -- ${tailscale_bin_param} ||
+      --pid "$(daemon_pid)" --format "${1:-report}" -- ${tailscale_bin_param} ||
       printf '\n<unavailable: diagnostic helper failed>\n'
   else
     printf 'Tailscaled-fix Diagnostic Report\nversion: unknown\nbuild: unavailable\ngenerated: %s\nredaction: enabled\n\n<unavailable: diagnostic helper missing>\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -1112,10 +1112,11 @@ case "$1" in
   selftest)   selftest "$2" ;;
   netdiag)    network_diagnostics json ;;
   report)     diagnostic_report ;;
+  exit-audit) diagnostic_report exit-audit ;;
   dns)        check_dns ;;
   dns-refresh) refresh_dns ;;
   __watchdog) route_watchdog ;;
   *)
-    echo "usage: ${scripts_name} {start|stop|restart|status|routes|routes-reload|routes-sync|diag|dns|dns-refresh|webstatus|prefs|set-pref <key> <value>|logout|selftest [peer-ip]|netdiag|report|log{runs|service|tailscaled|diag}}"
+    echo "usage: ${scripts_name} {start|stop|restart|status|routes|routes-reload|routes-sync|diag|dns|dns-refresh|webstatus|prefs|set-pref <key> <value>|logout|selftest [peer-ip]|netdiag|report|exit-audit|log{runs|service|tailscaled|diag}}"
     ;;
 esac

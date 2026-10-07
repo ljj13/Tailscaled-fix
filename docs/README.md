@@ -29,6 +29,7 @@
 | [设备 / Peers](PEERS.md) | 独立设备列表、只读 ping、路径与能力。 |
 | [脱敏诊断报告](DIAGNOSTIC_REPORT.md) | 本地复制/保存、集中脱敏与安全边界。 |
 | [网络切换收敛](NETWORK_CONVERGENCE.md) | 被动 netlink 通知与 15 秒 watchdog fallback。 |
+| [Exit Node Client 审计](EXIT_NODE_CLIENT_AUDIT.md) | table52/netd/FlClash/DNS 优先级与只读 exit-audit。 |
 | [开发与目录说明](DEVELOPMENT.md) | 源码职责、构建入口、测试命令及本地产物约定。 |
 | [版本化备份](UPGRADE_BACKUPS.md) | 升级前快照、权限、保留数量与回滚辅助。 |
 | [Release CI](RELEASE_CI.md) | 固定构建、完整测试、草稿校验、发布与 feed 更新。 |

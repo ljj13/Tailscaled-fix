@@ -58,7 +58,7 @@ _exempt_state() { echo OK; }
 check_dns() { echo dns_reachable=true; }
 ip() { :; }
 iptables() { :; }
-case "$1" in selftest) selftest ;; netdiag) network_diagnostics json ;; report) diagnostic_report ;; esac
+case "$1" in selftest) selftest ;; netdiag) network_diagnostics json ;; report) diagnostic_report ;; exit-audit) diagnostic_report exit-audit ;; esac
 '''
         script.write_text(content)
         listener = socket.socket(socket.AF_UNIX)
@@ -111,6 +111,19 @@ case "$1" in selftest) selftest ;; netdiag) network_diagnostics json ;; report) 
             self.assertIn('<unavailable: diagnostic helper missing>', result.stdout)
             self.assertNotIn('unchanged node identity', result.stdout)
             self.assertEqual(identity.read_bytes(), b'unchanged node identity')
+
+    def test_exit_audit_partial_failure_is_read_only_and_safe(self):
+        for mode in ('malformed', 'timeout'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                script, identity = self.fixture(directory, mode)
+                result = subprocess.run(['sh', str(script), 'exit-audit'], capture_output=True, text=True, timeout=3)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('mode=read-only', result.stdout)
+                self.assertIn('configured=unknown', result.stdout)
+                self.assertIn('restoration_live_test=not-performed', result.stdout)
+                self.assertIn('[unmarked IPv4 route]', result.stdout)
+                self.assertNotIn('unchanged node identity', result.stdout)
+                self.assertEqual(identity.read_bytes(), b'unchanged node identity')
 
 
 if __name__ == '__main__':

@@ -163,6 +163,8 @@ func safePreferences(result CommandResult) CommandResult {
 	// An allowlist, not a blacklist: Persist and future prefs never enter a report.
 	var prefs struct {
 		Hostname                                  string
+		ExitNodeID, ExitNodeIP                    *string
+		ExitNodeAllowLANAccess                    *bool
 		RouteAll, CorpDNS, ShieldsUp, WantRunning *bool
 		AdvertiseRoutes                           []string
 	}
@@ -261,6 +263,13 @@ func diagnosticExport(ctx context.Context, o Options) string {
 		"table52 IPv4":                        {"ip", "-4", "route", "show", "table", "52"}, "table52 IPv6": {"ip", "-6", "route", "show", "table", "52"},
 		"table1099 IPv4": {"ip", "-4", "route", "show", "table", "1099"}, "table1099 IPv6": {"ip", "-6", "route", "show", "table", "1099"},
 	}
+	if o.ExitAudit {
+		jobs["unmarked IPv4 route"] = []string{"ip", "-4", "route", "get", "1.1.1.1"}
+		jobs["unmarked IPv6 route"] = []string{"ip", "-6", "route", "get", "2606:4700:4700::1111"}
+		for _, table := range []string{"mangle", "nat"} {
+			jobs[table+" OUTPUT rules"] = []string{"iptables", "-t", table, "-S", "OUTPUT"}
+		}
+	}
 	// Fixed logs only, bounded tail; the redactor runs after all results are joined.
 	for _, name := range []string{"service", "diag", "tailscaled"} {
 		jobs[name+" log"] = []string{"tail", "-n", "120", filepath.Join(o.Dir, "run", name+".log")}
@@ -292,6 +301,10 @@ func diagnosticExport(ctx context.Context, o Options) string {
 	}
 	r := collect(ctx, o)
 	wg.Wait()
+	if o.ExitAudit {
+		values["Exit Node Client preflight"] = CommandResult{Stdout: exitAuditSummary(values["prefs safe fields"], r.Raw["status"])}
+		values["Exit Node restoration risk"] = CommandResult{Stdout: "table1099_ipv4_default=" + exitDefaultRoute(values["table1099 IPv4"]) + "\ntable1099_ipv6_default=" + exitDefaultRoute(values["table1099 IPv6"]) + "\nDefaults in module-owned/manual routes are not removed by tailscale set --exit-node=; never auto-delete foreign routing state.\n"}
+	}
 	// status JSON is summarized into the existing typed public model, never dumped.
 	values["status JSON safe summary"] = CommandResult{Stdout: "backend=" + r.Backend + "\nversion=" + r.Version}
 	summary := struct {
