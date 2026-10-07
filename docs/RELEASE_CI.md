@@ -72,3 +72,6 @@ python3 scripts/release-ci.py verify --tag TAG --bundle build/release-validation
 当前 module.prop 可能仍使用上次正式版本号，验证产物只应作为测试 artifact，不能冒充该 tag 的正式资产。
 publish 命令仅用于 tag-triggered CI。本轮用 mock 覆盖发布失败/重试状态机，
 不会为了测试创建真实草稿或正式 Release。
+
+实际 workflow_dispatch 全流程通过、publish跳过，本地与hosted ZIP字节一致；
+详见[本轮验证报告](testing/BACKUP_RELEASE_CI.md)。

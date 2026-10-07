@@ -8,6 +8,7 @@
 | WebUI 1 正式版本验证汇总 | [发布说明](../releases/v1.102.5-dnsfix.2-webui.1.md) |
 | 网络诊断增强与 Redmi ↔ EAIDK direct 排查 | [P2P 排查记录](P2P_DIAGNOSIS.md) |
 | outer IPv6 marked routing 修复与 direct 真机恢复 | [IPv6 修复验收](IPV6_MARKED_ROUTING.md) |
+| 版本化备份、Release状态机与GitHub只验证运行 | [备份/CI验证](BACKUP_RELEASE_CI.md) |
 
 报告分别注明本地测试、助手 ADB 观测和用户确认的真机验收。
 第一轮 P2P 报告保留未恢复时的证据；后续 IPv6 报告记录 ADB 实测的 direct 恢复与自动切换验收。
