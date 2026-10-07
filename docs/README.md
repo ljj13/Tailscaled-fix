@@ -8,6 +8,7 @@
 |---|---|
 | [发布说明](releases/README.md) | 当前版本与历史版本入口。 |
 | [更新记录](CHANGELOG.md) | 各版本主要变化。 |
+| [WebUI 2 / IPv6 direct](releases/v1.102.5-dnsfix.2-webui.2.md) | 网络诊断、IPv6 修复与移动数据 / 切网验收。 |
 | [WebUI 1](releases/v1.102.5-dnsfix.2-webui.1.md) | 正式版本功能、兼容性、验证与安装资产。 |
 | [历史发布说明](releases/HISTORY.md) | v1.102.5、dnsfix.1、dnsfix.2 的完整原始记录。 |
 | [测试索引](testing/README.md) | 各子系统验证入口，区分本地检查与真机验收。 |
@@ -21,7 +22,7 @@
 | [dnsfix.2](dns/DNS_FIX_2.md) | VPN 底层网络、物理路由、verified DNS 缓存与诊断字段。 |
 | [Miuix WebUI](WEBUI_MIUIX.md) | 页面结构、组件、bridge、mock、浏览器测试和历史预览构建。 |
 | [Android 设备名](ANDROID_HOSTNAME.md) | 名称来源、规范化、手工命名保护和并发测试。 |
-| [网络诊断](NETWORK_DIAGNOSTICS.md) | main 尚未发布的 endpoint、DERP、UDP、NAT 与 marked route 诊断。 |
+| [网络诊断](NETWORK_DIAGNOSTICS.md) | endpoint、DERP、UDP、NAT 与 marked route 诊断。 |
 | [开发与目录说明](DEVELOPMENT.md) | 源码职责、构建入口、测试命令及本地产物约定。 |
 
 ## 截图

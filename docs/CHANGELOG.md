@@ -2,7 +2,7 @@
 
 完整功能说明和验证范围见 [发布说明](releases/README.md)。
 
-## main · 尚未发布
+## v1.102.5-dnsfix.2-webui.2 · 2026-10-07
 
 - 修复 outer IPv6：按当前 physical netId 验证并引用真实 netd IPv6 表，保留原 fwmark 与 IPv4 路由；网络变化时自动撤销/更新规则和 Re-STUN。Redmi 移动数据 + FlClash OFF/ON 已恢复 IPv6 direct，见 [验收报告](testing/IPV6_MARKED_ROUTING.md)。
 - 增加只读 Tailscale 网络诊断采集器，统一 selftest / diag 与 WebUI 网络详情。
@@ -10,6 +10,8 @@
 - 区分 home DERP、实际路径和未知状态；补充 JSON 缺字段、离线、超时与私钥保护测试。
 
 [设计与用法](NETWORK_DIAGNOSTICS.md)
+
+[发布说明与真机验证范围](releases/v1.102.5-dnsfix.2-webui.2.md)
 
 ## v1.102.5-dnsfix.2-webui.1 · 2026-10-07
 

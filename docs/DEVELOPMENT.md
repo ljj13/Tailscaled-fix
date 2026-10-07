@@ -44,7 +44,7 @@ Linux / WSL 全量构建需要 Go 1.26.6 和 Python 3：
 sh scripts/build.sh
 ```
 
-正式 WebUI 1 包复用已验收 dnsfix.2 的 daemon / DNS helper。
+正式 WebUI 2 包复用已验收 dnsfix.2 的 daemon / DNS helper。
 该打包路径需要在 `dist/` 放置原始 `tailscaled-v1.102.5-dnsfix.2-arm64.zip`，
 并使用 Go 1.26.6 构建 hostname helper：
 

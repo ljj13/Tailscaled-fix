@@ -3,16 +3,22 @@
 **简体中文** | [English](README.en.md)
 
 由 **FogPurification** 维护。当前发布版本：
-[v1.102.5-dnsfix.2-webui.1](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.1)。
+[v1.102.5-dnsfix.2-webui.2](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.2)。
 基于 Tailscale `v1.102.5`，包含已通过 Redmi 真机验收的 Android DNS 修复、
-Miuix 风格 WebUI，以及 Android 默认设备名初始化。
+Miuix 风格 WebUI、网络诊断、Android 默认设备名初始化与 outer IPv6 路由修复。
 
-相关文档：[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.1.md)、
+相关文档：[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.2.md)、
 [DNS 审计与真机测试](docs/dns/DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
 [设备名初始化](docs/ANDROID_HOSTNAME.md)、[文档索引](docs/README.md)。
 
-main 另包含[尚未发布的网络诊断增强](docs/NETWORK_DIAGNOSTICS.md)：endpoint、DERP 地区、
+本版包含[网络诊断增强](docs/NETWORK_DIAGNOSTICS.md)：endpoint、DERP 地区、
 peer 路径、UDP / NAT 与 outer route，集中展示在 WebUI 网络详情页。
+
+Redmi Note 8 Pro 移动数据 + FlClash OFF/ON 已恢复 **IPv6 direct，实测37–80 ms**。
+Wi-Fi/移动数据切换由 watchdog 自动更新物理网络策略；测试中的 IPv4-only Wi-Fi
+没有 IPv6 出口，自动撤销旧移动规则并保留 DERP fallback，不强制 direct。
+原 fwmark、IPv4 main route、table52/1099、DNS、proxy exemptions 与节点身份保持不变。
+详见[IPv6 修复与真机验收](docs/testing/IPV6_MARKED_ROUTING.md)。
 
 本模块在已 ROOT 的 Android 设备上运行独立的 `tailscaled`，通过内核网络接口
 让浏览器和其他应用访问 Tailnet，以及其他节点通告的子网。
@@ -295,12 +301,12 @@ uninstall.sh              停止 daemon 并移除模块路由
 
 在 Linux / WSL 中使用 Go 1.26.6 和 Python 3，运行 `sh scripts/build.sh`。
 构建固定使用 Tailscale `v1.102.5`，应用现有 fwmark 与 Android DNS 补丁，执行相关测试，
-并生成 `dist/tailscaled-v1.102.5-dnsfix.2-webui.1-arm64.zip`。
+并生成 `dist/tailscaled-v1.102.5-dnsfix.2-webui.2-arm64.zip`。
 分支构建工作流只生成 artifact，不会自动修改 main 或发布 Release。
 模块不接入上游自动更新，避免其他构建替换本模块的 DNS 修复。
 
-已发布的 WebUI 1 ZIP 复用经过验收的 dnsfix.2 daemon 和 DNS helper 二进制。
-严格复现已发布版本时请使用对应 tag；当前 main 还包含尚未发布的诊断增强。
+正式 WebUI 2 ZIP 复用经过验收的 dnsfix.2 daemon 和 DNS helper 二进制。
+严格复现已发布版本时请使用对应 tag。
 如需复现该打包流程，先将已验收的发布 ZIP 放入 `dist/`，再在 Linux / WSL 中执行，
 并确保 Go 1.26.6 位于 PATH：
 

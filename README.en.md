@@ -3,18 +3,26 @@
 [简体中文](README.md) | **English**
 
 Maintained by **FogPurification**. Current release:
-[v1.102.5-dnsfix.2-webui.1](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.1).
+[v1.102.5-dnsfix.2-webui.2](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.2).
 It combines the Redmi-verified Android DNS fixes, a Miuix-inspired WebUI and
-one-time Android device-name initialization on the pinned Tailscale `v1.102.5` base.
-See [release notes](docs/releases/v1.102.5-dnsfix.2-webui.1.md),
+one-time Android device-name initialization, network diagnostics and the outer IPv6
+routing fix on the pinned Tailscale `v1.102.5` base.
+See [release notes](docs/releases/v1.102.5-dnsfix.2-webui.2.md),
 [DNS audit and device tests](docs/dns/DNS_FIX.md),
 [WebUI design and tests](docs/WEBUI_MIUIX.md),
 [hostname initialization](docs/ANDROID_HOSTNAME.md) and
 [documentation index](docs/README.md).
 
-Main also contains [unreleased network diagnostics](docs/NETWORK_DIAGNOSTICS.md):
+This release includes [network diagnostics](docs/NETWORK_DIAGNOSTICS.md):
 endpoints, DERP regions, peer paths, UDP/NAT and marked outer routes, shown only
-on the WebUI network detail page. The published release remains unchanged.
+on the WebUI network detail page.
+
+Redmi Note 8 Pro cellular tests with FlClash OFF/ON restored **IPv6 direct at
+37–80 ms**. The watchdog updates the physical policy automatically when switching
+Wi-Fi/cellular. On the tested IPv4-only Wi-Fi, it removes the old cellular policy
+and retains DERP fallback; direct is not forced. Existing fwmark, IPv4 main route,
+table52/1099, DNS, proxy exemptions and node identity are preserved.
+See the [IPv6 device verification report](docs/testing/IPV6_MARKED_ROUTING.md).
 
 A self-contained module that runs `tailscaled` on a rooted Android device and
 lets browsers and apps reach the tailnet and a peer's advertised subnets.
@@ -119,7 +127,7 @@ replaces; the **state directory** holds everything that must survive an update.
 │   ├── tailscaled.sha256
 │   ├── android-dns       physical network / DNS discovery helper
 │   ├── android-hostname  one-time hostname preference helper
-│   └── android-netdiag   read-only network diagnostics (unreleased main)
+│   └── android-netdiag   read-only network diagnostics
 ├── scripts/             start.sh, tailscaled.service, tailscaled.inotify
 └── run/                 state and logs
     ├── tailscaled.state     identity + Tailscale preferences (login lives here)
@@ -339,14 +347,14 @@ survive module updates.
 
 Run `sh scripts/build.sh` under Linux/WSL with Go 1.26.6 and Python 3. The build
 pins Tailscale v1.102.5, applies the existing fwmark patch and Android DNS patches,
-runs the relevant tests, and packages `dist/tailscaled-v1.102.5-dnsfix.2-webui.1-arm64.zip`.
+runs the relevant tests, and packages `dist/tailscaled-v1.102.5-dnsfix.2-webui.2-arm64.zip`.
 The branch workflow produces an artifact; it does not change main or publish a
 release automatically. The module does not subscribe to upstream's updater,
 which could replace this DNS fix with another build.
 
-The published WebUI 1 ZIP reuses the exact accepted dnsfix.2 daemon and DNS helper
+The published WebUI 2 ZIP reuses the exact accepted dnsfix.2 daemon and DNS helper
 binaries. Use the release tag to reproduce the published version exactly;
-current main also includes unreleased diagnostics. To use that packaging path, obtain the accepted release ZIP in
+To use that packaging path, obtain the accepted release ZIP in
 `dist/`, then run under Linux/WSL with Go 1.26.6 on PATH:
 
 ```sh

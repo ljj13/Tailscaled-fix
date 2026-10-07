@@ -14,8 +14,8 @@ ACCEPTED_SHA = 'c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae
 DEFAULT_BASE = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-arm64.zip'
 DEFAULT_OUTPUT = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.4-arm64.zip'
 MODULE_AUTHOR = 'FogPurification'
-RELEASE_TAG = 'v1.102.5-dnsfix.2-webui.1'
-RELEASE_VERSION_CODE = '110200503'
+RELEASE_TAG = 'v1.102.5-dnsfix.2-webui.2'
+RELEASE_VERSION_CODE = '110200504'
 RELEASE_OUTPUT = ROOT / f'dist/tailscaled-{RELEASE_TAG}-arm64.zip'
 SCRIPT_OVERLAYS = ('tailscale/scripts/tailscaled.service', 'system/bin/tailscale', 'customize.sh')
 
@@ -84,7 +84,7 @@ def package(base, output, release=False):
     helper, helper_info = hostname_payload()
     netdiag, netdiag_info = helper_payload('android-netdiag')
     payloads = {**scripts, 'files/android-hostname': helper, 'files/android-netdiag': netdiag}
-    manifest = {'edition': 'Miuix WebUI 1' if release else 'Miuix WebUI Preview 4',
+    manifest = {'edition': 'Miuix WebUI 2' if release else 'Miuix WebUI Preview 4',
                 'module_version': RELEASE_TAG if release else 'v1.102.5-dnsfix.2',
                 'ui_revision': revision, 'module_author': MODULE_AUTHOR,
                 'base_zip': base.name, 'base_sha256': digest,
