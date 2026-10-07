@@ -14,6 +14,7 @@
 | Exit Node Client 原生闭环：转发/恢复通过，Android DNS与Fake-IP共存失败 | [Exit Node真机验收](EXIT_NODE_CLIENT_ACCEPTANCE.md) |
 | Exit scoped policy只读模型与goto5271内核门槛失败 | [策略建模/内核验证](EXIT_NODE_POLICY_MODEL.md) |
 | scoped throw内核路由通过，新域名门槛被VPN DNS阻塞 | [throw Gate 1实测](EXIT_NODE_THROW_GATE.md) |
+| VPN local+Fake-IP联合门槛：同前缀osrouter route导致add冲突 | [throw Gate 1B](EXIT_NODE_THROW_GATE_1B.md) |
 
 报告分别注明本地测试、助手 ADB 观测和用户确认的真机验收。
 第一轮 P2P 报告保留未恢复时的证据；后续 IPv6 报告记录 ADB 实测的 direct 恢复与自动切换验收。
