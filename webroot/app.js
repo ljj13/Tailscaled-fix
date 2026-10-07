@@ -3,6 +3,7 @@ import { createDemo, scenarios } from "./demo.js";
 import { nativeCommand } from "./commands.js";
 import { diagnosticRows } from "./network.js";
 import { peerList, peerPingCommand, pingSummary } from "./peers.js";
+import { exportText } from "./report.js";
 
 const SVC = "tailscaled.service";
 const DAEMON_LOG = "/data/adb/tailscale/run/tailscaled.log";
@@ -551,6 +552,7 @@ function openModal(options) {
   $("dialog-input-group").hidden = !options.input;
   $("dialog-output").hidden = !options.output;
   $("dialog-output").textContent = options.output || "";
+  $("report-save").hidden = !options.report;
   $("dialog-choices").hidden = !options.choices;
   $("dialog-choices").textContent = "";
   $("input-error").hidden = true;
@@ -806,6 +808,27 @@ async function loadPeers() {
  try{await state.peerRequest;}finally{state.peerRequest=null;}
 }
 
+async function exportReport() {
+ let report;
+ await operation(async()=>{
+  const result=await run(`${SVC} report`,true);
+  // No raw stderr or failed/legacy response may become an export by accident.
+  if(result.errno!==0 || !/^Tailscaled-fix Diagnostic Report\r?\n/.test(result.stdout) || !/^redaction: enabled\r?$/m.test(result.stdout)) {
+   toast("报告不可用，请安装支持脱敏导出的模块");return;
+  }
+  report=exportText(result.stdout,$("report-secrets").value.split(/\r?\n/).filter(Boolean));
+  $("report-secrets").value="";
+ });
+ if(report) await openModal({title:"脱敏诊断报告",summary:"已隐藏已识别的秘密字段；IP、hostname 与网络信息保留。分享前仍可检查全文。",output:report,report:true});
+}
+function saveReport() {
+ if(!state.modal || !state.modal.options.report)return;
+ const url=URL.createObjectURL(new Blob([state.modal.options.output],{type:"text/plain;charset=utf-8"}));
+ const a=document.createElement("a");a.href=url;a.download="tailscaled-diagnostic-"+new Date().toISOString().replace(/[:.]/g,"-")+".txt";
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ toast("已请求保存；若管理器不支持下载，可复制或长按文本");
+}
+
 async function loadNetwork() {
   if (state.networkRequest) return state.networkRequest;
   const epoch = state.epoch;
@@ -965,6 +988,8 @@ function wire() {
   $("btn-logout").onclick = logout;
   $("btn-dns-refresh").onclick = () => probe("dns-refresh");
   $("routes-refresh").onclick = () => operation(loadRoutes);
+  $("report-export").onclick = exportReport;
+  $("report-save").onclick = saveReport;
   $("peers-refresh").onclick = () => operation(loadPeers);
   $("netdiag-refresh").onclick = () => operation(loadNetwork);
   $("netdiag-raw").onclick = () => openModal({ title: "网络诊断原始输出", summary: "包含命令 stdout / stderr、错误与超时信息，可复制。", output: state.networkRaw || "尚未采集" });

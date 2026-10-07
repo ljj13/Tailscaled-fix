@@ -58,7 +58,7 @@ _exempt_state() { echo OK; }
 check_dns() { echo dns_reachable=true; }
 ip() { :; }
 iptables() { :; }
-case "$1" in selftest) selftest ;; netdiag) network_diagnostics json ;; esac
+case "$1" in selftest) selftest ;; netdiag) network_diagnostics json ;; report) diagnostic_report ;; esac
 '''
         script.write_text(content)
         listener = socket.socket(socket.AF_UNIX)
@@ -89,6 +89,28 @@ case "$1" in selftest) selftest ;; netdiag) network_diagnostics json ;; esac
             self.assertEqual(result.returncode, 0)
             self.assertIn('helper unavailable', result.stdout)
             self.assertIn('===== end selftest =====', result.stdout)
+
+    def test_report_partial_failure_is_safe_and_keeps_identity(self):
+        for mode in ('malformed', 'timeout'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                script, identity = self.fixture(directory, mode)
+                result = subprocess.run(['sh', str(script), 'report'], capture_output=True, text=True, timeout=3)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('Tailscaled-fix Diagnostic Report', result.stdout)
+                self.assertIn('redaction: enabled', result.stdout)
+                self.assertIn('<unavailable:', result.stdout)
+                self.assertNotIn('unchanged node identity', result.stdout)
+                self.assertEqual(identity.read_bytes(), b'unchanged node identity')
+
+    def test_missing_report_helper_returns_safe_unavailable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            script, identity = self.fixture(directory, 'malformed', helper=False)
+            result = subprocess.run(['sh', str(script), 'report'], capture_output=True, text=True, timeout=3)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn('redaction: enabled', result.stdout)
+            self.assertIn('<unavailable: diagnostic helper missing>', result.stdout)
+            self.assertNotIn('unchanged node identity', result.stdout)
+            self.assertEqual(identity.read_bytes(), b'unchanged node identity')
 
 
 if __name__ == '__main__':

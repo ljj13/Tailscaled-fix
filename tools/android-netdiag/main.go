@@ -94,6 +94,7 @@ type Report struct {
 type Options struct {
 	CLI, Dir, PID, Mark, Peer string
 	Args                      []string
+	Export                    bool
 	Ping                      bool
 }
 
@@ -384,6 +385,9 @@ func collect(ctx context.Context, o Options) Report {
 		"outer_ipv4":    {"ip", "-4", "route", "get", "1.1.1.1", "mark", o.Mark},
 		"outer_ipv6":    {"ip", "-6", "route", "get", "2606:4700:4700::1111", "mark", o.Mark},
 	}
+	if o.Export {
+		delete(jobs, "magicsock_log")
+	}
 	if _, err := os.Stat(filepath.Join(o.Dir, "bin/android-dns")); err == nil {
 		jobs["android_network"] = []string{filepath.Join(o.Dir, "bin/android-dns"), "--network", "--iface", r.Network["dns_route_hint"]}
 	}
@@ -540,16 +544,20 @@ func main() {
 	flag.StringVar(&o.Mark, "mark", "0x10020000", "fwmark for read-only route lookups")
 	flag.StringVar(&o.Peer, "peer", "", "optional peer IP for selftest ping")
 	flag.BoolVar(&o.Ping, "ping", false, "bounded ping of explicit or first online peer")
-	format := flag.String("format", "json", "json or text")
+	format := flag.String("format", "json", "json, text or report")
 	timeout := flag.Duration("timeout", 15*time.Second, "total diagnostic deadline (maximum 30s)")
 	flag.Parse()
 	o.Args = flag.Args()
-	if _, err := strconv.ParseUint(o.Mark, 0, 32); err != nil || *timeout <= 0 || *timeout > 30*time.Second || (*format != "json" && *format != "text") {
+	if _, err := strconv.ParseUint(o.Mark, 0, 32); err != nil || *timeout <= 0 || *timeout > 30*time.Second || (*format != "json" && *format != "text" && *format != "report") {
 		fmt.Fprintln(os.Stderr, "invalid diagnostic options")
 		os.Exit(2)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
+	if *format == "report" {
+		fmt.Print(diagnosticExport(ctx, o))
+		return
+	}
 	r := collect(ctx, o)
 	if *format == "text" {
 		fmt.Print(textReport(r))

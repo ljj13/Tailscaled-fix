@@ -778,3 +778,7 @@ body.modal-open {
 .peer-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .peer-actions .button { flex: 1; min-width: 70px; min-height: 44px; padding: 10px 12px; }
 .empty-note { color: var(--secondary); font-size: 14px; padding: 0 12px; }
+
+.report-secret-options { padding: var(--space-page); margin-bottom: var(--space-group); }
+.report-secret-options summary { cursor: pointer; min-height: 44px; }
+.report-secret-options textarea { display: block; width: 100%; margin-top: 8px; background: var(--surface-muted); color: var(--text); border: 0; border-radius: var(--radius-control); padding: 12px; font: inherit; }

@@ -5,6 +5,7 @@ const path = require("node:path");
 const http = require("node:http");
 const ROOT = path.resolve(__dirname, "..");
 require("./peers-ui.test.cjs");
+require("./report-ui.test.cjs");
 const { chromium } = require(
   require.resolve("playwright", {
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
@@ -15,7 +16,7 @@ const acorn = require(
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
   }),
 );
-for (const name of ["app.js", "ksu.js", "demo.js", "commands.js", "network.js", "peers.js"])
+for (const name of ["app.js", "ksu.js", "demo.js", "commands.js", "network.js", "peers.js", "report.js"])
   acorn.parse(fs.readFileSync(path.join(ROOT, "webroot", name), "utf8"), {
     ecmaVersion: 2019,
     sourceType: "module",
@@ -342,6 +343,20 @@ const server = http.createServer((req, res) => {
     console.log(
       "PASS mock actions, five scenarios, seven pages, themes, diagnostics, dialogs/back, local resources",
     );
+
+    await page.goto(`${base}/?demo=cellular#network`);
+    await page.locator(".report-secret-options summary").click();
+    await page.locator("#report-secrets").fill("demo");
+    await page.locator("#report-export").click();await idle();
+    await page.locator("#dialog-output").filter({hasText:"redaction: enabled"}).waitFor();
+    assert.equal(await page.locator("#report-save").isVisible(),true);
+    assert.ok(!(await page.locator("#dialog-output").innerText()).includes("demo"));
+    assert.equal(await page.locator("#report-secrets").inputValue(),"");
+    const downloadPromise=page.waitForEvent("download");await page.locator("#report-save").click();const download=await downloadPromise;
+    assert.match(download.suggestedFilename(),/^tailscaled-diagnostic-.*\.txt$/);
+    await page.locator("#dialog-confirm").click();
+    await page.locator("#dialog-cancel").click();await page.locator("#overlay").waitFor({state:"hidden"});
+    console.log("PASS redacted report preview, copy, text download and modal/back");
 
     // Dedicated peers page: grouped rows, safe details/copy/ping, no list on home.
     await page.goto(`${base}/?demo=cellular#peers`);
@@ -915,6 +930,11 @@ const server = http.createServer((req, res) => {
     await native.locator("#peers-note").filter({hasText:"读取失败"}).waitFor();
     assert.equal(await native.locator(".peer-card").count(),3);
     assert.deepEqual(nativeErrors,[]);
+    await native.locator("#back").click();
+    await native.locator('[data-nav="network"]').click();
+    await native.locator("#report-export").click();await idle(native);
+    assert.equal(await native.locator("#overlay").isVisible(),false,"never show unsupported raw report");
+    assert.ok((await native.evaluate(()=>window.commands)).includes("tailscaled.service report"));
     console.log("PASS peers native timeout, invalid JSON/cache, self exclusion, missing fields and HTML safety");
     console.log(
       "PASS native bridge command contract, failure rollback, cached state, unknown DNS fields, HTML safety, demo isolation",

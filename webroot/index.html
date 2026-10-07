@@ -285,6 +285,10 @@
           </div>
         </section>
         <section class="page" id="page-network" data-page="network" hidden>
+          <details class="card report-secret-options"><summary>额外隐藏内容（可选）</summary><label for="report-secrets" class="summary">每行一个秘密值；仅用于本次导出，不保存或发送给 shell。</label><textarea id="report-secrets" rows="2" autocomplete="off" spellcheck="false" aria-label="额外秘密值"></textarea></details>
+          <div class="card preference-group">
+            <button class="preference navigation-row root-action" id="report-export"><span class="preference-copy"><span class="preference-title">导出脱敏诊断报告</span><span class="summary">保留排障地址，隐藏密钥、登录链接与令牌</span></span><svg class="icon chevron"><use href="#i-chevron" /></svg></button>
+          </div>
           <div class="card preference-group">
             <button class="preference navigation-row" data-nav="dns">
               <span class="preference-copy"
@@ -516,7 +520,7 @@
           class="code sheet-output"
           tabindex="0"
           hidden
-        ></pre>
+        ></pre><button class="button secondary" id="report-save" hidden>保存文本报告</button>
         <div class="dialog-actions">
           <button id="dialog-cancel" class="button secondary">取消</button
           ><button id="dialog-confirm" class="button primary root-action">

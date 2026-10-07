@@ -126,6 +126,7 @@ export function createDemo(initial) {
     async exec(command) {
       await new Promise((resolve) => setTimeout(resolve, 80));
       if (command === "tailscaled.service webstatus") return result(kv(status));
+      if (command === "tailscaled.service report") return result("Tailscaled-fix Diagnostic Report\nversion: "+status.version+"\nbuild: local demo\ngenerated: "+new Date().toISOString()+"\nredaction: enabled\n\n[daemon/backend]\nbackend="+status.backend+"\n[DNS status]\n"+kv(status)+"\n[peer paths]\neaidk-310 · "+(name==="cellular"?"Direct 33ms":"DERP(hkg)")+"\n[secrets]\n[REDACTED]\n");
       if (command === "tailscaled.service netdiag") {
         const stopped = name === "stopped", failed = name === "failure";
         const ipv6 = name === "cellular";
