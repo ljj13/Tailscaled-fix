@@ -293,6 +293,159 @@ ensure_bypass_rules() {
   return 0
 }
 
+# Android outer IPv6 physical policy -------------------------------------------
+# A netId added to SO_MARK cannot bypass osrouter's earlier 5210/5250 rules.
+# Reuse netd's actual IPv6 table for the selected physical netId instead. Only
+# local bypass-marked IPv6 is affected; neither routes nor socket marks change.
+outer_ipv6_lock() {
+  # flock is provided by Android toybox; kernel ownership survives no stale PID
+  # file and prevents start/stop/watchdog from publishing competing selections.
+  if ! command -v flock >/dev/null 2>&1; then
+    outer_ipv6_status unavailable '' '' '' flock-unavailable
+    return 1
+  fi
+  mkdir -p "${tailscale_dir}" 2>/dev/null
+  umask 077
+  exec 9>"${tailscale_dir}/outer-ipv6.lock" || return 1
+  _oi_wait=${1:-0}
+  while :; do
+    # mksh marks shell descriptors CLOEXEC; explicitly pass fd 9 to toybox.
+    # Android toybox has no -w option, so use bounded nonblocking retries.
+    flock -n 9 9<&9 && return 0
+    [ "${_oi_wait}" -gt 0 ] || return 1
+    sleep 1
+    _oi_wait=$((_oi_wait - 1))
+  done
+}
+
+outer_ipv6_owned_tables() {
+  ip -6 rule show 2>/dev/null | awk '
+    NF==9 && $1=="5209:" && $2=="from" && $3=="all" && $4=="fwmark" &&
+    $5=="0x10020000/0x1e020000" && $6=="iif" && $7=="lo" && $8=="lookup" {print $9}'
+}
+
+remove_outer_ipv6_rule() {
+  # Match the complete owned signature, never delete a foreign priority alone.
+  _oi_foreign=$(ip -6 rule show 2>/dev/null | awk '
+    $1=="5209:" && !(NF==9 && $2=="from" && $3=="all" && $4=="fwmark" &&
+    $5=="0x10020000/0x1e020000" && $6=="iif" && $7=="lo" && $8=="lookup") {
+      for(i=1;i<NF;i++) if($i=="lookup") print $(i+1)
+    }')
+  outer_ipv6_owned_tables | {
+    _oi_failed=0
+    while read -r _oi_table; do
+      [ -n "${_oi_table}" ] || continue
+      # Kernel deletion treats omitted source/uid selectors as wildcards.
+      # Never risk deleting a same-table foreign rule before the owned one.
+      if printf '%s\n' "${_oi_foreign}" | grep -Fxq "${_oi_table}"; then
+        diag "outer-ipv6: ambiguous foreign rule for table ${_oi_table}; skip deletion"
+        _oi_failed=1
+        continue
+      fi
+      ip -6 rule del pref 5209 fwmark 0x10020000/0x1e020000 iif lo lookup "${_oi_table}" 2>/dev/null || _oi_failed=1
+    done
+    [ "${_oi_failed}" = 0 ]
+  }
+}
+
+outer_ipv6_status() {
+  mkdir -p "${tailscale_dir}" 2>/dev/null
+  (umask 077; printf '%s\n' \
+    "outer_ipv6_state=$1" "outer_ipv6_network=${2:-}" "outer_ipv6_iface=${3:-}" \
+    "outer_ipv6_table=${4:-}" "outer_ipv6_reason=$5" \
+    'outer_ipv6_mark=0x10020000' 'outer_ipv6_rule=5209' \
+    > "${tailscale_dir}/outer-ipv6-status.tmp.$$" && \
+    mv -f "${tailscale_dir}/outer-ipv6-status.tmp.$$" "${tailscale_dir}/outer-ipv6-status")
+  return 0
+}
+
+clear_outer_ipv6() (
+  outer_ipv6_lock 10 || exit 0
+  if remove_outer_ipv6_rule; then
+    outer_ipv6_status stopped '' '' '' service-stopped
+  else
+    outer_ipv6_status conflict '' '' '' ambiguous-rule-cleanup
+  fi
+)
+
+sync_outer_ipv6() (
+  # Subshell keeps temporary selection variables out of startup/watchdog state.
+  outer_ipv6_lock || exit 0
+  _oi_previous=$(cat "${tailscale_dir}/outer-ipv6-status" 2>/dev/null)
+  _oi_network=$("${android_dns_bin}" --network 2>/dev/null)
+  _oi_id=$(printf '%s\n' "${_oi_network}" | sed -n 's/^dns_network=//p')
+  _oi_iface=$(printf '%s\n' "${_oi_network}" | sed -n 's/^dns_iface=//p')
+  case "${_oi_id}" in ''|*[!0-9]*|0*) _oi_id='' ;; esac
+  case "${_oi_iface}" in ''|lo|tun*|tap*|tailscale*|wg*|ppp*|ipsec*|dummy*|veth*|v4-*) _oi_iface='' ;; esac
+  _oi_table=''
+  if [ -n "${_oi_id}" ] && [ "${_oi_id}" -le 65535 ] && [ -n "${_oi_iface}" ]; then
+    # Evidence is a native fwmark rule whose netId matches ConnectivityService.
+    # netId occupies the 0xffff mask in AOSP Fwmark.h and the live netd rules.
+    _oi_candidates=$(ip -6 rule show 2>/dev/null | awk '{
+      m=""; t=""; for(i=1;i<NF;i++) {if($i=="fwmark") m=$(i+1); if($i=="lookup") t=$(i+1)}
+      if(m!="" && t!="") print m, t
+    }')
+    while read -r _oi_selector _oi_candidate; do
+      case "${_oi_selector}" in 0x[0-9a-fA-F]*/0x[0-9a-fA-F]*) ;; *) continue ;; esac
+      _oi_value=$(printf '%d' "${_oi_selector%/*}" 2>/dev/null) || continue
+      _oi_mask=$(printf '%d' "${_oi_selector#*/}" 2>/dev/null) || continue
+      [ $((_oi_mask & 65535)) -eq 65535 ] && [ $((_oi_value & 65535)) -eq "${_oi_id}" ] || continue
+      case "${_oi_candidate}" in ''|*[!a-zA-Z0-9_]*|main|default|local|52|1099|tun*|tailscale*|lo) continue ;; esac
+      [ "${_oi_candidate}" != "${tun_table:-1099}" ] || continue
+      # Route contents, not a table name convention, must prove the physical exit.
+      ip -6 route show table "${_oi_candidate}" 2>/dev/null | \
+        awk -v d="${_oi_iface}" '$1=="default" {for(i=1;i<NF;i++) if($i=="dev" && $(i+1)==d) ok=1} END {exit !ok}' || continue
+      ip -6 addr show dev "${_oi_iface}" scope global 2>/dev/null | grep -q 'inet6 [23][0-9a-fA-F]*:' || continue
+      _oi_table=${_oi_candidate}
+      break
+    done <<EOF
+${_oi_candidates}
+EOF
+  fi
+  if [ -z "${_oi_table}" ]; then
+    if remove_outer_ipv6_rule; then
+      outer_ipv6_status unavailable "${_oi_id}" "${_oi_iface}" '' no-verified-physical-ipv6-table
+    else
+      outer_ipv6_status conflict "${_oi_id}" "${_oi_iface}" '' ambiguous-rule-cleanup
+    fi
+    exit 0
+  fi
+  _oi_priority=$(ip -6 rule show 2>/dev/null | awk '$1=="5209:"')
+  _oi_count=$(printf '%s\n' "${_oi_priority}" | awk 'NF {n++} END {print n+0}')
+  _oi_owned_count=$(outer_ipv6_owned_tables | awk 'NF {n++} END {print n+0}')
+  if [ "${_oi_count}" != "${_oi_owned_count}" ]; then
+    remove_outer_ipv6_rule
+    outer_ipv6_status conflict "${_oi_id}" "${_oi_iface}" "${_oi_table}" foreign-rule-at-5209
+    diag 'outer-ipv6: foreign rule at 5209; leaving it intact'
+    exit 0
+  fi
+  _oi_current=$(outer_ipv6_owned_tables)
+  _oi_changed=0
+  if [ "${_oi_current}" != "${_oi_table}" ]; then
+    if ! remove_outer_ipv6_rule; then
+      outer_ipv6_status conflict "${_oi_id}" "${_oi_iface}" "${_oi_table}" ambiguous-rule-cleanup
+      exit 0
+    fi
+    if ! ip -6 rule add pref 5209 fwmark 0x10020000/0x1e020000 iif lo lookup "${_oi_table}" 2>/dev/null; then
+      outer_ipv6_status error "${_oi_id}" "${_oi_iface}" "${_oi_table}" rule-add-failed
+      exit 0
+    fi
+    _oi_changed=1
+  fi
+  printf '%s\n' "${_oi_previous}" | grep -qx "outer_ipv6_network=${_oi_id}" || _oi_changed=1
+  outer_ipv6_status active "${_oi_id}" "${_oi_iface}" "${_oi_table}" verified-netd-physical-policy
+  if [ "${_oi_changed}" = 1 ]; then
+    diag "outer-ipv6: netId=${_oi_id} iface=${_oi_iface} table=${_oi_table} mark=0x10020000 pref=5209"
+    # Routing changes do not notify netmon. Re-STUN publishes the actual IPv6
+    # listener endpoint; do not rebind ports, restart daemon or change identity.
+    if [ -n "$(daemon_pid)" ] && command -v timeout >/dev/null 2>&1; then
+      timeout 4 "${tailscale_bin}" ${tailscale_bin_param} debug restun >/dev/null 2>&1 || \
+        diag 'outer-ipv6: restun unavailable/timed out; daemon periodic discovery remains enabled'
+    fi
+  fi
+  exit 0
+)
+
 fix_controlplane_routing() {
   _info=$(detect_default_route)
   _dev=$(printf '%s' "${_info}" | awk '{print $2}')
@@ -398,6 +551,7 @@ add_routes() {
 }
 
 del_routes() {
+  clear_outer_ipv6
   # Remove every rule that points at our table, whatever preference it has: an
   # upgrade may have used a different pref, and leaving those behind would keep
   # sending traffic to a table we are about to empty.
@@ -436,6 +590,7 @@ route_watchdog() {
       exempt_tunnel
     fi
     # Runs after main route repair, on every network transition and retry tick.
+    sync_outer_ipv6
     # Go checks the private file mtime on lookups (at most every 5 seconds).
     refresh_dns watchdog
     # Periodically pick up subnet routes that appeared or disappeared in the
@@ -476,6 +631,7 @@ start_tailscaled() {
       log Info "tailscaled already running (PID ${_pid})."
       diag "start: already running (PID ${_pid}), started after the current binary"
       add_routes
+      sync_outer_ipv6
       refresh_dns start
       start_watchdog
       [ "${sync_routes_auto}" = "1" ] && routes_sync
@@ -494,6 +650,7 @@ start_tailscaled() {
   # Bootstrap must exist before the first control-plane lookup. osrouter hasn't
   # started yet, so prepare main and its existing bypass rules first.
   fix_controlplane_routing
+  sync_outer_ipv6
   if ! refresh_dns start; then
     # With public fallback disabled, an offline first boot has no candidates.
     # Keep retrying instead of losing the one-shot boot entry permanently.
@@ -618,6 +775,7 @@ show_webstatus() {
   echo "exempt_output=$(_exempt_state mangle OUTPUT)"
   echo "exempt_nat=$(_exempt_state nat OUTPUT)"
   cat "${tailscale_dir}/dns-status" 2>/dev/null
+  cat "${tailscale_dir}/outer-ipv6-status" 2>/dev/null
   [ -f "${tailscaled_run_dir}/dns-start-pending" ] && echo "dns_start_pending=1" || echo "dns_start_pending=0"
 
   _backend=""
@@ -817,6 +975,7 @@ show_diag() {
   show_hostname_init
   echo ""
   network_diagnostics text
+  cat "${tailscale_dir}/outer-ipv6-status" 2>/dev/null
   echo ""
   echo "daemon log (last 10 lines):"
   tail -n 10 "${tailscaled_log}" 2>/dev/null | sed 's/^/  /'
@@ -864,6 +1023,7 @@ selftest() {
   show_hostname_init
 
   if [ -n "$(daemon_pid)" ] && [ -S "${tailscale_dir}/run/tailscaled.sock" ]; then
+    cat "${tailscale_dir}/outer-ipv6-status" 2>/dev/null
     network_diagnostics text "$1" --ping
   else
     echo "daemon           : NOT RUNNING (press Start first)"

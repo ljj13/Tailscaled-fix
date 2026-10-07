@@ -4,6 +4,7 @@
 
 ## main · 尚未发布
 
+- 修复 outer IPv6：按当前 physical netId 验证并引用真实 netd IPv6 表，保留原 fwmark 与 IPv4 路由；网络变化时自动撤销/更新规则和 Re-STUN。Redmi 移动数据 + FlClash OFF/ON 已恢复 IPv6 direct，见 [验收报告](testing/IPV6_MARKED_ROUTING.md)。
 - 增加只读 Tailscale 网络诊断采集器，统一 selftest / diag 与 WebUI 网络详情。
 - 展示 endpoints、DERP 地区、peer 状态与路径、UDP listener、netcheck 和 outer route。
 - 区分 home DERP、实际路径和未知状态；补充 JSON 缺字段、离线、超时与私钥保护测试。

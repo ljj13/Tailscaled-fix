@@ -2,6 +2,9 @@
 
 日期：2026-10-07。诊断增强基于 main，未发布 Release。
 
+本页保留第一轮只读排查结论。后续已在移动数据下修复 outer IPv6 并恢复 direct，
+见 [IPv6 marked routing 修复与真机验收](IPV6_MARKED_ROUTING.md)。
+
 ## 已完成的采集
 
 - Redmi Note 8 Pro：ROOT Android、GOOS=linux 1.102.5、FlClash 开启。

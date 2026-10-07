@@ -23,6 +23,7 @@ jobs:
           python3 tests/test_shell.py
           python3 tests/test_dns_helper.py
           python3 tests/test_android_hostname.py
+          python3 -m unittest discover -s tests -p 'test_outer_ipv6.py' -v
           shellcheck -s sh -S warning -e SC1090,SC1091,SC2034,SC2086,SC2154 customize.sh service.sh uninstall.sh tailscale/scripts/* system/bin/* scripts/build.sh
       - name: Network diagnostic helper tests
         working-directory: tools/android-netdiag
