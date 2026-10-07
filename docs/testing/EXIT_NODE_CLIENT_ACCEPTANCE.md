@@ -4,6 +4,8 @@
 
 **结果：PARTIAL / NOT ACCEPTED。原生双栈转发、outer bypass、LAN access 和退出恢复通过；Android DNS 与 FlClash Fake-IP 共存失败。不能宣告 `NO_CODE_CHANGE_NEEDED`，不进入 WebUI Exit Node 选择器阶段。**
 
+后续 [scoped policy建模与内核门槛验证](EXIT_NODE_POLICY_MODEL.md) 确认当前配置的Fake-IP实际为198.18.0.0/16（此前/15为假设），并发现goto5271未解析，按用户要求停止实现。
+
 ## 前置与测量边界
 
 - Fog `100.79.33.7` 临时执行 `tailscale set --advertise-exit-node`，用户在管理端批准。Redmi status JSON 实际出现 `ExitNodeOption=true` 后才首次启用客户端。
