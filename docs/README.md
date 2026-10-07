@@ -10,6 +10,7 @@
 |---|---|
 | [发布说明](releases/README.md) | 当前版本与历史版本入口。 |
 | [更新记录](CHANGELOG.md) | 各版本主要变化。 |
+| [WebUI 3 / 备份与发布事务](releases/v1.102.5-dnsfix.2-webui.3.md) | 私有升级备份、首次真实CI发布及feed验收。 |
 | [WebUI 2 / IPv6 direct](releases/v1.102.5-dnsfix.2-webui.2.md) | 网络诊断、IPv6 修复与移动数据 / 切网验收。 |
 | [WebUI 1](releases/v1.102.5-dnsfix.2-webui.1.md) | 正式版本功能、兼容性、验证与安装资产。 |
 | [历史发布说明](releases/HISTORY.md) | v1.102.5、dnsfix.1、dnsfix.2 的完整原始记录。 |

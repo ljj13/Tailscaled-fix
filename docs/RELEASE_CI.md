@@ -23,7 +23,7 @@
 不要在新版本发布前把 main 的 update.json 指向尚未存在的资产。
 先修改 module.prop 的 version/versionCode、对应发布说明和相关 README，再提交并推 tag。
 发布完成后 CI 按实际 tag 生成并提交 update.json；当前已发布版本的 feed 保持有效。
-本轮没有增加版本号、创建 tag 或发布新 Release。
+首次真实 tag 发布与 feed 更新已通过，见 [真实事务验收](testing/RELEASE_TRANSACTION.md)。
 
 ## 测试与发布边界
 
