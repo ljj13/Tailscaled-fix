@@ -1,6 +1,6 @@
 {
-  "version": "v1.102.5-dnsfix.2-webui.2",
-  "versionCode": 110200504,
-  "zipUrl": "https://github.com/ljj13/Tailscaled-fix/releases/download/v1.102.5-dnsfix.2-webui.2/tailscaled-v1.102.5-dnsfix.2-webui.2-arm64.zip",
-  "changelog": "https://raw.githubusercontent.com/ljj13/Tailscaled-fix/refs/tags/v1.102.5-dnsfix.2-webui.2/docs/releases/v1.102.5-dnsfix.2-webui.2.md"
+  "version": "v1.102.5-dnsfix.2-webui.3",
+  "versionCode": 110200505,
+  "zipUrl": "https://github.com/ljj13/Tailscaled-fix/releases/download/v1.102.5-dnsfix.2-webui.3/tailscaled-v1.102.5-dnsfix.2-webui.3-arm64.zip",
+  "changelog": "https://raw.githubusercontent.com/ljj13/Tailscaled-fix/refs/tags/v1.102.5-dnsfix.2-webui.3/docs/releases/v1.102.5-dnsfix.2-webui.3.md"
 }
