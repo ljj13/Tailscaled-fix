@@ -76,7 +76,7 @@ func TestReportPartialFailureAndNoStateRead(t *testing.T) {
 			t.Fatal("leak", secret, out)
 		}
 	}
-	for _, required := range []string{"Tailscaled-fix Diagnostic Report", "redaction: enabled", "<unavailable:", "[DNS status]", "[table52 IPv4]", "[service log]"} {
+	for _, required := range []string{"Tailscaled-fix Diagnostic Report\nversion: v-test\n", "redaction: enabled", "<unavailable:", "[DNS status]", "[table52 IPv4]", "[service log]"} {
 		if !strings.Contains(out, required) {
 			t.Fatal("missing", required, out)
 		}

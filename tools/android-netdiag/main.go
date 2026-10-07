@@ -545,8 +545,16 @@ func main() {
 	flag.StringVar(&o.Peer, "peer", "", "optional peer IP for selftest ping")
 	flag.BoolVar(&o.Ping, "ping", false, "bounded ping of explicit or first online peer")
 	format := flag.String("format", "json", "json, text or report")
+	watchParent := flag.Int("watch-parent", 0, "optional passive network observer for its watchdog parent")
 	timeout := flag.Duration("timeout", 15*time.Second, "total diagnostic deadline (maximum 30s)")
 	flag.Parse()
+	if *watchParent != 0 {
+		if err := watchNetwork(*watchParent, o.Dir); err != nil {
+			fmt.Fprintln(os.Stderr, "network-observer unavailable:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	o.Args = flag.Args()
 	if _, err := strconv.ParseUint(o.Mark, 0, 32); err != nil || *timeout <= 0 || *timeout > 30*time.Second || (*format != "json" && *format != "text" && *format != "report") {
 		fmt.Fprintln(os.Stderr, "invalid diagnostic options")

@@ -129,7 +129,8 @@ exit 1
     def test_offline_start_without_fallback_recovers_automatically(self):
         service = (ROOT / 'tailscale/scripts/tailscaled.service').read_text(encoding='utf-8')
         start = service[service.index('start_tailscaled()'):service.index('stop_tailscaled()')]
-        watchdog = service[service.index('route_watchdog()'):service.index('start_watchdog()')]
+        watchdog = service[service.index('watchdog_cleanup()'):service.index('start_watchdog()')]
+        watchdog = watchdog.replace('+ 15', '+ 0')
         with tempfile.TemporaryDirectory() as tmp:
             tmp = pathlib.Path(tmp)
             env = {**os.environ, 'FIXTURE': str(tmp)}
@@ -157,24 +158,19 @@ set_module_status() { :; }
 add_routes() { :; }
 exempt_tunnel() { :; }
 routes_ok() { return 0; }
-init_android_hostname() { :; }
+init_android_hostname() { [ "${_tick:-0}" -eq 0 ] || exit 0; }
+sync_outer_ipv6() { :; }
 nohup() { return 0; }
-ticks=0
-sleep() {
-  [ "$1" = 15 ] || return 0
-  ticks=$((ticks+1))
-  [ "$ticks" -le 1 ] || exit 0
-  touch "$FIXTURE/online"
-}
 '''
             program = fixture + start + watchdog + r'''
 start_tailscaled
 [ -f "$tailscaled_run_dir/dns-start-pending" ] || exit 11
 [ -f "$FIXTURE/worker" ] || exit 12
 [ ! -f "$tailscaled_pid" ] || exit 13
+touch "$FIXTURE/online"
 route_watchdog
 '''
-            r = subprocess.run(['sh'], input=program, text=True, env=env, capture_output=True)
+            r = subprocess.run(['sh'], input=program, text=True, env=env, capture_output=True, timeout=10)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertTrue((tmp / 'run/daemon.pid').exists())
             self.assertFalse((tmp / 'run/dns-start-pending').exists())

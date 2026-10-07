@@ -175,11 +175,16 @@ safe areas and uses local resources and system fonts.
 |---|---|
 | **Home / 首页** | Connection state, device/Tailnet/account information, start/stop/restart and login. |
 | **Settings / 设置** | Accept routes, MagicDNS, Shields up, advertised exit node, hostname and login/logout. |
+| **Devices / 设备 (main, unreleased)** | Grouped peers, paths, Exit/Subnet capabilities, bounded ping, copy and details. |
 | **Network / 网络详情** | Physical interface, Android VPN underlying network, selftest and links to advanced details. |
 | **DNS diagnostics** | Resolver source, network/transport, selected/excluded interfaces, reachability and marked probes; all dnsfix.2 fields retained. |
 | **Routing details** | Main route, table 52, discovered/manual routes and proxy exemptions. |
 | **Logs / 日志** | Daemon and diagnostic output, refresh/copy/clear. |
 | **About / 关于** | Module version, author, build information and supported capabilities. |
+
+Main also includes [redacted diagnostic export](docs/DIAGNOSTIC_REPORT.md) and
+[network convergence notifications](docs/NETWORK_CONVERGENCE.md). These are unreleased;
+the [acceptance report](docs/testing/PEERS_REPORT_CONVERGENCE.md) records measured gains and limitations.
 
 Native actions retain the existing service/CLI API. The bridge uses physical
 installed entry points and preserves socket settings, so it does not rely on

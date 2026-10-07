@@ -319,7 +319,14 @@ func diagnosticExport(ctx context.Context, o Options) string {
 	prop := reportFile(o.Dir, "installed-module.prop")
 	values["module metadata"] = prop
 	values["build metadata"] = reportFile(o.Dir, "build-info.json")
-	version := kv(prop.Stdout)["version"]
+	version := ""
+	for _, line := range strings.Split(prop.Stdout, "\n") {
+		key, value, ok := strings.Cut(line, "=")
+		if ok && key == "version" {
+			version = strings.TrimSpace(value)
+			break
+		}
+	}
 	if version == "" {
 		version = "unknown"
 	}

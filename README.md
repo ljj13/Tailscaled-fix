@@ -61,6 +61,7 @@ Magisk WebUI 宿主。支持 WebUI 的管理器可从模块卡片打开界面。
 | 页面 | 内容 |
 |---|---|
 | 首页 | 连接状态、设备 / Tailnet / 账号信息、启动 / 停止 / 重启和登录。 |
+| 设备（main，未发布） | 在线 / 离线 Peers、路径、Exit/Subnet 能力、只读 ping、复制和详情。 |
 | 设置 | 接受子网路由、MagicDNS、Shields up、通告出口节点、设备名和登录 / 退出登录。 |
 | 网络详情 | 物理接口、Android VPN 底层网络、selftest 和高级诊断入口。 |
 | DNS 诊断 | DNS 来源、网络 / transport、选中与排除的接口、可达性和带 fwmark 的探测结果；保留全部 dnsfix.2 字段。 |
@@ -70,6 +71,9 @@ Magisk WebUI 宿主。支持 WebUI 的管理器可从模块卡片打开界面。
 
 WebUI 保留现有 service / CLI API。Bridge 使用实际安装路径调用命令，并保留自定义 socket
 设置，不依赖系统 overlay 中的命令查找。页面隐藏时暂停状态轮询。
+
+当前 main 还增加了[脱敏诊断报告](docs/DIAGNOSTIC_REPORT.md)和[切网收敛优化](docs/NETWORK_CONVERGENCE.md)，
+尚未发布到 Release；[三阶段验收](docs/testing/PEERS_REPORT_CONVERGENCE.md)包含实际切换数据及局限。
 
 以下截图使用**桌面浏览器 mock 数据**，不是手机实拍。
 截图保留中文界面，中英文 README 使用相同图片。

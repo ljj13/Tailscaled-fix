@@ -569,11 +569,49 @@ del_routes() {
   diag "routes: removed"
 }
 
+watchdog_cleanup() {
+  [ -z "${_wd_sleep}" ] || kill "${_wd_sleep}" 2>/dev/null
+  if [ -n "${_wd_observer}" ]; then
+    kill "${_wd_observer}" 2>/dev/null
+    wait "${_wd_observer}" 2>/dev/null
+  fi
+  _wd_sleep='' _wd_observer=''
+}
+
 route_watchdog() {
   _tick=0
+  _wd_event=0 _wd_sleep='' _wd_observer=''
+  # Notifications only interrupt the idle wait. Reconciliation stays serial;
+  # events received while it runs are coalesced into one subsequent pass.
+  trap '_wd_event=1; [ -z "${_wd_sleep}" ] || kill "${_wd_sleep}" 2>/dev/null' USR1
+  trap 'exit 0' TERM INT
+  trap 'watchdog_cleanup' EXIT
+  if [ -x "${tailscale_dir}/bin/android-netdiag" ]; then
+    "${tailscale_dir}/bin/android-netdiag" --watch-parent "$$" --dir "${tailscale_dir}" &
+    _wd_observer=$!
+  fi
+  # Monotonic uptime keeps wall-clock/NTP changes from delaying the fallback.
+  _wd_next=$(($(cut -d. -f1 /proc/uptime) + 15))
   while :; do
-    sleep 15
-    _tick=$((_tick + 1))
+    if [ "${_wd_event}" -eq 0 ]; then
+      _wd_delay=$((_wd_next - $(cut -d. -f1 /proc/uptime)))
+      if [ "${_wd_delay}" -gt 0 ]; then
+        sleep "${_wd_delay}" &
+        _wd_sleep=$!
+        # Close the signal-before-assignment race without another long wait.
+        [ "${_wd_event}" -eq 0 ] || kill "${_wd_sleep}" 2>/dev/null
+        wait "${_wd_sleep}" 2>/dev/null
+        _wd_sleep=''
+      fi
+    fi
+    _wd_poll=0
+    if [ "$(cut -d. -f1 /proc/uptime)" -ge "${_wd_next}" ]; then
+      _wd_poll=1
+      _tick=$((_tick + 1))
+      _wd_next=$(($(cut -d. -f1 /proc/uptime) + 15))
+    fi
+    [ "${_wd_event}" -eq 0 ] || diag 'watchdog: verified physical network event -> early reconciliation'
+    _wd_event=0
     if [ -z "$(daemon_pid)" ]; then
       if [ -f "${tailscaled_run_dir}/dns-start-pending" ] && [ ! -f "${module_dir}/disable" ]; then
         diag "watchdog: retrying startup after DNS was unavailable"
@@ -595,7 +633,7 @@ route_watchdog() {
     refresh_dns watchdog
     # Periodically pick up subnet routes that appeared or disappeared in the
     # tailnet. One status query per interval, so this stays cheap.
-    if [ "${sync_routes_auto}" = "1" ]; then
+    if [ "${_wd_poll}" -eq 1 ] && [ "${sync_routes_auto}" = "1" ]; then
       _every=${sync_every_ticks:-4}
       case "${_every}" in ''|*[!0-9]*|0) _every=4 ;; esac
       if [ "$((_tick % _every))" -eq 0 ]; then
@@ -604,7 +642,7 @@ route_watchdog() {
     fi
     # Cheap no-op after first success/manual intent; retry if boot-time Android
     # settings or the daemon's preference API were not ready yet.
-    init_android_hostname
+    [ "${_wd_poll}" -eq 0 ] || init_android_hostname
   done
 }
 

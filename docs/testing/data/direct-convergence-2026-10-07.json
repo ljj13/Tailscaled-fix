@@ -1,0 +1,1504 @@
+{
+  "schema": 1,
+  "device": "Redmi Note 8 Pro",
+  "peer": "EAIDK-310 / 100.72.239.86",
+  "method": "Untraced on-device monotonic sampling; Android ~400ms; rule ~250ms; ping about 1.5s. Exact restun invocation is not instrumented; existing outer-ipv6 log precedes bounded debug restun. Wi-Fi is IPv4-only, direct N/A.",
+  "runs": [
+    {
+      "name": "before-wifi-mobile",
+      "action": "wifi-off",
+      "utc": "2026-10-07T09:47:13.007022313Z",
+      "trigger_ms": 5024,
+      "android_selection_changed_ms": 6371,
+      "first_direct_after_selection_ms": 22886,
+      "action_to_direct_ms": 17862,
+      "selection_to_direct_ms": 16515,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 44ms",
+      "rule_updated_ms": 20611,
+      "netlink_event_count": 0,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 25,
+          "utc": "2026-10-07T09:47:08.007926005Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=107\nouter_ipv6_iface=wlan0\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 63,
+          "utc": "2026-10-07T09:47:08.046265467Z",
+          "value": [
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.56.31:11950",
+            "112.97.60.31:10056",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 90,
+          "utc": "2026-10-07T09:47:08.072928852Z",
+          "value": "dns_network=107\ndns_transport=WIFI\ndns_active_vpn=106\ndns_underlying=107\ndns_iface=wlan0"
+        },
+        {
+          "kind": "android_network",
+          "ms": 5823,
+          "utc": "2026-10-07T09:47:13.806170621Z",
+          "value": "dns_network=\ndns_transport=\ndns_active_vpn=106\ndns_underlying=none\ndns_iface="
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 6274,
+          "utc": "2026-10-07T09:47:14.257334929Z",
+          "value": "2026/10/07 09:47:14 magicsock: endpoints changed: 112.97.56.31:11950 (stun), 112.97.60.31:10056 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "android_network",
+          "ms": 6371,
+          "utc": "2026-10-07T09:47:14.354076237Z",
+          "value": "dns_network=108\ndns_transport=CELLULAR\ndns_active_vpn=106\ndns_underlying=108\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 6646,
+          "utc": "2026-10-07T09:47:14.629183006Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:10056",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 9291,
+          "utc": "2026-10-07T09:47:17.273421467Z",
+          "value": "2026/10/07 09:47:17 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 9291,
+          "utc": "2026-10-07T09:47:17.273522006Z",
+          "value": "2026/10/07 09:47:17 Rebind; defIf=\"\", ips=[]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 12304,
+          "utc": "2026-10-07T09:47:20.287103621Z",
+          "value": "2026/10/07 09:47:20 magicsock: endpoints changed: 112.97.56.31:11950 (stun), 112.97.60.31:10056 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 12304,
+          "utc": "2026-10-07T09:47:20.28734016Z",
+          "value": "2026/10/07 09:47:20 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 12305,
+          "utc": "2026-10-07T09:47:20.287640468Z",
+          "value": "2026/10/07 09:47:20 Rebind; defIf=\"\", ips=[]"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 12576,
+          "utc": "2026-10-07T09:47:20.559060775Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:10056",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 15321,
+          "utc": "2026-10-07T09:47:23.304258622Z",
+          "value": "2026/10/07 09:47:23 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 15322,
+          "utc": "2026-10-07T09:47:23.304403237Z",
+          "value": "2026/10/07 09:47:23 Rebind; defIf=\"\", ips=[]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 18337,
+          "utc": "2026-10-07T09:47:26.32020793Z",
+          "value": "2026/10/07 09:47:26 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 18338,
+          "utc": "2026-10-07T09:47:26.320362622Z",
+          "value": "2026/10/07 09:47:26 Rebind; defIf=\"\", ips=[]"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 18538,
+          "utc": "2026-10-07T09:47:26.521124468Z",
+          "value": "2026-10-07 17:47:26 watchdog: routes missing or stale -> re-asserting"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 19341,
+          "utc": "2026-10-07T09:47:27.32386116Z",
+          "value": "2026-10-07 17:47:27 main-default: set to via 10.33.240.107 dev ccmni3  (control plane needs this)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 19341,
+          "utc": "2026-10-07T09:47:27.324207622Z",
+          "value": "2026/10/07 09:47:27 LinkChange: major, rebinding: old: interfaces.State{defaultRoute= ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} diff: DefaultRoute: \"\"->\"ccmni3\" rebind-reason=[default-if-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 19342,
+          "utc": "2026-10-07T09:47:27.324393699Z",
+          "value": "2026/10/07 09:47:27 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "outer_status",
+          "ms": 20593,
+          "utc": "2026-10-07T09:47:28.576040468Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=108\nouter_ipv6_iface=ccmni3\nouter_ipv6_table=ccmni3\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 20611,
+          "utc": "2026-10-07T09:47:28.593788776Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni3 "
+        },
+        {
+          "kind": "diag.log",
+          "ms": 20752,
+          "utc": "2026-10-07T09:47:28.734810007Z",
+          "value": "2026-10-07 17:47:28 outer-ipv6: netId=108 iface=ccmni3 table=ccmni3 mark=0x10020000 pref=5209"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 21154,
+          "utc": "2026-10-07T09:47:29.136413391Z",
+          "value": "2026-10-07 17:47:29 DNS: dns_network=108 dns_transport=CELLULAR dns_active_vpn=106 dns_underlying=108 dns_iface=ccmni3 dns_excluded=106/tun0/CELLULAR|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=10.33.240.107 ccmni3 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 22767,
+          "utc": "2026-10-07T09:47:30.74942293Z",
+          "value": "2026/10/07 09:47:30 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 22767,
+          "utc": "2026-10-07T09:47:30.749565699Z",
+          "value": "2026/10/07 09:47:30 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        }
+      ]
+    },
+    {
+      "name": "baseline-mobile-wifi",
+      "action": "wifi-on",
+      "utc": "2026-10-07T09:53:51.131346722Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 8345,
+      "first_direct_after_selection_ms": null,
+      "action_to_direct_ms": null,
+      "selection_to_direct_ms": null,
+      "first_direct": null,
+      "rule_updated_ms": 18318,
+      "netlink_event_count": 73,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 2,
+          "utc": "2026-10-07T09:53:46.132057721Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=108\nouter_ipv6_iface=ccmni3\nouter_ipv6_table=ccmni3\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 19,
+          "utc": "2026-10-07T09:53:46.149348568Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni3 "
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 25,
+          "utc": "2026-10-07T09:53:46.155746414Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10056",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 71,
+          "utc": "2026-10-07T09:53:46.201758106Z",
+          "value": "dns_network=108\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=108\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 7842,
+          "utc": "2026-10-07T09:53:53.972730953Z",
+          "value": "2026/10/07 09:53:53 magicsock: endpoints changed: 112.97.56.31:11950 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.60.31:10056 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), 192.168.137.249:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 8143,
+          "utc": "2026-10-07T09:53:54.273741491Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10056",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 8345,
+          "utc": "2026-10-07T09:53:54.47499926Z",
+          "value": "dns_network=110\ndns_transport=WIFI\ndns_active_vpn=109\ndns_underlying=110\ndns_iface=wlan0"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8647,
+          "utc": "2026-10-07T09:53:54.77729803Z",
+          "value": "2026/10/07 09:53:54 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: ips wlan0: [fe80::ec66:87ff:fee3:1271/64]->[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8647,
+          "utc": "2026-10-07T09:53:54.77749503Z",
+          "value": "2026/10/07 09:53:54 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 15484,
+          "utc": "2026-10-07T09:54:01.614843876Z",
+          "value": "2026-10-07 17:54:01 watchdog: routes missing or stale -> re-asserting"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 16088,
+          "utc": "2026-10-07T09:54:02.218821722Z",
+          "value": "2026-10-07 17:54:02 main-default: set to via 192.168.137.1 dev wlan0  (control plane needs this)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 16089,
+          "utc": "2026-10-07T09:54:02.219040492Z",
+          "value": "2026/10/07 09:54:02 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=wlan0 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: DefaultRoute: \"ccmni3\"->\"wlan0\" rebind-reason=[default-if-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 16089,
+          "utc": "2026-10-07T09:54:02.219158953Z",
+          "value": "2026/10/07 09:54:02 Rebind; defIf=\"wlan0\", ips=[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64]"
+        },
+        {
+          "kind": "outer_status",
+          "ms": 18302,
+          "utc": "2026-10-07T09:54:04.432138338Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=110\nouter_ipv6_iface=wlan0\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 18318,
+          "utc": "2026-10-07T09:54:04.448649722Z",
+          "value": ""
+        },
+        {
+          "kind": "diag.log",
+          "ms": 18699,
+          "utc": "2026-10-07T09:54:04.829623953Z",
+          "value": "2026-10-07 17:54:04 DNS: dns_network=110 dns_transport=WIFI dns_active_vpn=109 dns_underlying=110 dns_iface=wlan0 dns_excluded=109/tun0/WIFI|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=192.168.137.1 wlan0 192.168.137.249 dns_source=android-linkproperties dns_servers=192.168.137.1 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=192.168.137.1 dev wlan0 src 192.168.137.249 mark 0x10020000 uid 0 cache dns_route_after=192.168.137.1 dev wlan0 src 192.168.137.249 mark 0x10020000 uid 0 cache"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 38199,
+          "utc": "2026-10-07T09:54:24.329393493Z",
+          "value": "2026/10/07 09:54:24 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=wlan0 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=wlan0 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: if ccmni3 flags: up|running->0; ips ccmni3: [10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]->[] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 38199,
+          "utc": "2026-10-07T09:54:24.329828262Z",
+          "value": "2026/10/07 09:54:24 Rebind; defIf=\"wlan0\", ips=[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64]"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 43194,
+          "utc": "2026-10-07T09:54:29.323946955Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:10056",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 43226,
+          "utc": "2026-10-07T09:54:29.356593801Z",
+          "value": "2026/10/07 09:54:29 magicsock: endpoints changed: 112.97.56.31:11950 (stun), 112.97.60.31:10056 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 172.19.0.1:45101 (local), 192.168.137.249:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        }
+      ]
+    },
+    {
+      "name": "before-clash-off",
+      "action": "clash-off",
+      "utc": "2026-10-07T09:48:12.280298932Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 5491,
+      "first_direct_after_selection_ms": 5855,
+      "action_to_direct_ms": 854,
+      "selection_to_direct_ms": 364,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 46ms",
+      "rule_updated_ms": null,
+      "netlink_event_count": 0,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 1,
+          "utc": "2026-10-07T09:48:07.280119317Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=108\nouter_ipv6_iface=ccmni3\nouter_ipv6_table=ccmni3\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 12,
+          "utc": "2026-10-07T09:48:07.290532855Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni3 "
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 38,
+          "utc": "2026-10-07T09:48:07.316405778Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:10056",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 74,
+          "utc": "2026-10-07T09:48:07.352406624Z",
+          "value": "dns_network=108\ndns_transport=CELLULAR\ndns_active_vpn=106\ndns_underlying=108\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 5228,
+          "utc": "2026-10-07T09:48:12.507139855Z",
+          "value": "2026/10/07 09:48:12 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6]} v4=true v6=true} diff: numInterfaces: 36->35; numInterfaceIPs: 36->35; if tun0: removed; ips tun0: [172.19.0.1/30 fe80::1831:50cb:cd11:f4d2/64]->[] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 5230,
+          "utc": "2026-10-07T09:48:12.508473394Z",
+          "value": "2026/10/07 09:48:12 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 5431,
+          "utc": "2026-10-07T09:48:12.709364778Z",
+          "value": "2026/10/07 09:48:12 magicsock: endpoints changed: 112.97.56.31:11950 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.60.31:10056 (stun), 10.33.240.107:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 5451,
+          "utc": "2026-10-07T09:48:12.730063317Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10056",
+            "10.33.240.107:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 5491,
+          "utc": "2026-10-07T09:48:12.770117471Z",
+          "value": "dns_network=108\ndns_transport=CELLULAR\ndns_active_vpn=\ndns_underlying=\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 13273,
+          "utc": "2026-10-07T09:48:20.551603625Z",
+          "value": "2026-10-07 17:48:20 DNS: dns_network=108 dns_transport=CELLULAR dns_active_vpn= dns_underlying= dns_iface=ccmni3 dns_excluded= dns_selection_reason=active-default-linkproperties dns_route_hint=ccmni3 dns_physical_route=10.33.240.107 ccmni3 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        }
+      ]
+    },
+    {
+      "name": "before-clash-on",
+      "action": "clash-on",
+      "utc": "2026-10-07T09:49:41.522648476Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 7013,
+      "first_direct_after_selection_ms": 7420,
+      "action_to_direct_ms": 2419,
+      "selection_to_direct_ms": 407,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 40ms",
+      "rule_updated_ms": null,
+      "netlink_event_count": 0,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 1,
+          "utc": "2026-10-07T09:49:36.522767322Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=108\nouter_ipv6_iface=ccmni3\nouter_ipv6_table=ccmni3\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 19,
+          "utc": "2026-10-07T09:49:36.540428553Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni3 "
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 35,
+          "utc": "2026-10-07T09:49:36.555980476Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10056",
+            "10.33.240.107:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 63,
+          "utc": "2026-10-07T09:49:36.584476168Z",
+          "value": "dns_network=108\ndns_transport=CELLULAR\ndns_active_vpn=\ndns_underlying=\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 6830,
+          "utc": "2026-10-07T09:49:43.351547553Z",
+          "value": "2026/10/07 09:49:43 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} diff: numInterfaces: 35->36; numInterfaceIPs: 35->36; if tun0: added; ips tun0: added [172.19.0.1/30 fe80::81b7:b2e1:b3cd:163c/64] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 6830,
+          "utc": "2026-10-07T09:49:43.351612476Z",
+          "value": "2026/10/07 09:49:43 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 7012,
+          "utc": "2026-10-07T09:49:43.533925092Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10056",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 7013,
+          "utc": "2026-10-07T09:49:43.534654938Z",
+          "value": "dns_network=108\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=108\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 7031,
+          "utc": "2026-10-07T09:49:43.552192245Z",
+          "value": "2026/10/07 09:49:43 magicsock: endpoints changed: 112.97.56.31:11950 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.60.31:10056 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 9039,
+          "utc": "2026-10-07T09:49:45.560485476Z",
+          "value": "2026-10-07 17:49:45 DNS: dns_network=108 dns_transport=CELLULAR dns_active_vpn=109 dns_underlying=108 dns_iface=ccmni3 dns_excluded=109/tun0/CELLULAR|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=10.33.240.107 ccmni3 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        }
+      ]
+    },
+    {
+      "name": "after-wifi-mobile",
+      "action": "wifi-off",
+      "utc": "2026-10-07T09:58:21.80358243Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 5953,
+      "first_direct_after_selection_ms": 13549,
+      "action_to_direct_ms": 8548,
+      "selection_to_direct_ms": 7596,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 32ms",
+      "rule_updated_ms": 12401,
+      "netlink_event_count": 63,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 3,
+          "utc": "2026-10-07T09:58:16.805096814Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=110\nouter_ipv6_iface=wlan0\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 34,
+          "utc": "2026-10-07T09:58:16.836073814Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 52,
+          "utc": "2026-10-07T09:58:16.853766968Z",
+          "value": "dns_network=110\ndns_transport=WIFI\ndns_active_vpn=109\ndns_underlying=110\ndns_iface=wlan0"
+        },
+        {
+          "kind": "android_network",
+          "ms": 5478,
+          "utc": "2026-10-07T09:58:22.279865815Z",
+          "value": "dns_network=\ndns_transport=\ndns_active_vpn=109\ndns_underlying=none\ndns_iface="
+        },
+        {
+          "kind": "android_network",
+          "ms": 5953,
+          "utc": "2026-10-07T09:58:22.755552892Z",
+          "value": "dns_network=111\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=111\ndns_iface=ccmni1"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 6234,
+          "utc": "2026-10-07T09:58:23.036031969Z",
+          "value": "2026/10/07 09:58:22 magicsock: endpoints changed: [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.56.31:11950 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 6588,
+          "utc": "2026-10-07T09:58:23.390502969Z",
+          "value": [
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.56.31:11950",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "diag.log",
+          "ms": 6637,
+          "utc": "2026-10-07T09:58:23.439279046Z",
+          "value": "2026-10-07 17:58:23 watchdog: verified physical network event -> early reconciliation"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 7038,
+          "utc": "2026-10-07T09:58:23.840368892Z",
+          "value": "2026-10-07 17:58:23 watchdog: routes missing or stale -> re-asserting"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 7640,
+          "utc": "2026-10-07T09:58:24.442468276Z",
+          "value": "2026-10-07 17:58:24 main-default: set to via 10.33.240.107 dev ccmni1  (control plane needs this)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 7641,
+          "utc": "2026-10-07T09:58:24.442884815Z",
+          "value": "2026/10/07 09:58:24 LinkChange: major, rebinding: old: interfaces.State{defaultRoute= ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} diff: DefaultRoute: \"\"->\"ccmni1\" rebind-reason=[default-if-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 7641,
+          "utc": "2026-10-07T09:58:24.443043892Z",
+          "value": "2026/10/07 09:58:24 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "outer_status",
+          "ms": 9443,
+          "utc": "2026-10-07T09:58:26.245091969Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=111\nouter_ipv6_iface=ccmni1\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 9648,
+          "utc": "2026-10-07T09:58:26.450659969Z",
+          "value": "2026/10/07 09:58:26 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} diff: ips ccmni1: [10.33.240.107/8 fe80::2:1:842c:2e52/64]->[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 9649,
+          "utc": "2026-10-07T09:58:26.450823353Z",
+          "value": "2026/10/07 09:58:26 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 9849,
+          "utc": "2026-10-07T09:58:26.651651892Z",
+          "value": "2026-10-07 17:58:26 DNS: dns_network=111 dns_transport=CELLULAR dns_active_vpn=109 dns_underlying=111 dns_iface=ccmni1 dns_excluded=109/tun0/CELLULAR|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=10.33.240.107 ccmni1 10.33.240.107 dns_source=android-linkproperties dns_servers=120.80.80.80,221.5.88.88 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10654,
+          "utc": "2026-10-07T09:58:27.455824507Z",
+          "value": "2026/10/07 09:58:27 magicsock: endpoints changed: [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.56.31:11950 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10654,
+          "utc": "2026-10-07T09:58:27.456030123Z",
+          "value": "2026/10/07 09:58:27 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10654,
+          "utc": "2026-10-07T09:58:27.456063661Z",
+          "value": "2026/10/07 09:58:27 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 10854,
+          "utc": "2026-10-07T09:58:27.656647661Z",
+          "value": "2026-10-07 17:58:27 watchdog: verified physical network event -> early reconciliation"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 10879,
+          "utc": "2026-10-07T09:58:27.681020892Z",
+          "value": [
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.56.31:11950",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "outer_status",
+          "ms": 12386,
+          "utc": "2026-10-07T09:58:29.187826969Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=111\nouter_ipv6_iface=ccmni1\nouter_ipv6_table=ccmni1\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 12401,
+          "utc": "2026-10-07T09:58:29.203503584Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni1 "
+        },
+        {
+          "kind": "diag.log",
+          "ms": 12461,
+          "utc": "2026-10-07T09:58:29.263532892Z",
+          "value": "2026-10-07 17:58:29 outer-ipv6: netId=111 iface=ccmni1 table=ccmni1 mark=0x10020000 pref=5209"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 13065,
+          "utc": "2026-10-07T09:58:29.866922969Z",
+          "value": "2026-10-07 17:58:29 DNS: dns_network=111 dns_transport=CELLULAR dns_active_vpn=109 dns_underlying=111 dns_iface=ccmni1 dns_excluded=109/tun0/CELLULAR|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=10.33.240.107 ccmni1 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        }
+      ]
+    },
+    {
+      "name": "after-mobile-wifi",
+      "action": "wifi-on",
+      "utc": "2026-10-07T09:59:25.002086972Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 8791,
+      "first_direct_after_selection_ms": null,
+      "action_to_direct_ms": null,
+      "selection_to_direct_ms": null,
+      "first_direct": null,
+      "rule_updated_ms": 12405,
+      "netlink_event_count": 73,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 1,
+          "utc": "2026-10-07T09:59:20.001747664Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=111\nouter_ipv6_iface=ccmni1\nouter_ipv6_table=ccmni1\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 17,
+          "utc": "2026-10-07T09:59:20.018190434Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni1 "
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 25,
+          "utc": "2026-10-07T09:59:20.025337511Z",
+          "value": [
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.56.31:11950",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 67,
+          "utc": "2026-10-07T09:59:20.068214049Z",
+          "value": "dns_network=111\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=111\ndns_iface=ccmni1"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8644,
+          "utc": "2026-10-07T09:59:28.64493228Z",
+          "value": "2026/10/07 09:59:28 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: ips wlan0: [fe80::ec66:87ff:fee3:1271/64]->[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8644,
+          "utc": "2026-10-07T09:59:28.645135896Z",
+          "value": "2026/10/07 09:59:28 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "android_network",
+          "ms": 8791,
+          "utc": "2026-10-07T09:59:28.791364203Z",
+          "value": "dns_network=112\ndns_transport=WIFI\ndns_active_vpn=109\ndns_underlying=112\ndns_iface=wlan0"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 9047,
+          "utc": "2026-10-07T09:59:29.047514742Z",
+          "value": "2026/10/07 09:59:28 magicsock: endpoints changed: 112.97.60.31:59417 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.56.31:11950 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), 192.168.137.249:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 9248,
+          "utc": "2026-10-07T09:59:29.248504896Z",
+          "value": [
+            "112.97.60.31:59417",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.56.31:11950",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "diag.log",
+          "ms": 9251,
+          "utc": "2026-10-07T09:59:29.252131665Z",
+          "value": "2026-10-07 17:59:29 watchdog: verified physical network event -> early reconciliation"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 9855,
+          "utc": "2026-10-07T09:59:29.855939357Z",
+          "value": "2026-10-07 17:59:29 watchdog: routes missing or stale -> re-asserting"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10452,
+          "utc": "2026-10-07T09:59:30.453237511Z",
+          "value": "2026/10/07 09:59:30 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=wlan0 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: DefaultRoute: \"ccmni1\"->\"wlan0\" rebind-reason=[default-if-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10453,
+          "utc": "2026-10-07T09:59:30.453341819Z",
+          "value": "2026/10/07 09:59:30 Rebind; defIf=\"wlan0\", ips=[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64]"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 10457,
+          "utc": "2026-10-07T09:59:30.457825127Z",
+          "value": "2026-10-07 17:59:30 main-default: set to via 192.168.137.1 dev wlan0  (control plane needs this)"
+        },
+        {
+          "kind": "outer_status",
+          "ms": 12389,
+          "utc": "2026-10-07T09:59:32.389412588Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=112\nouter_ipv6_iface=wlan0\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 12405,
+          "utc": "2026-10-07T09:59:32.405378742Z",
+          "value": ""
+        },
+        {
+          "kind": "diag.log",
+          "ms": 12867,
+          "utc": "2026-10-07T09:59:32.868065434Z",
+          "value": "2026-10-07 17:59:32 DNS: dns_network=112 dns_transport=WIFI dns_active_vpn=109 dns_underlying=112 dns_iface=wlan0 dns_excluded=109/tun0/WIFI|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=192.168.137.1 wlan0 192.168.137.249 dns_source=android-linkproperties dns_servers=192.168.137.1 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=192.168.137.1 dev wlan0 src 192.168.137.249 mark 0x10020000 uid 0 cache dns_route_after=192.168.137.1 dev wlan0 src 192.168.137.249 mark 0x10020000 uid 0 cache"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 38600,
+          "utc": "2026-10-07T09:59:58.601023897Z",
+          "value": "2026/10/07 09:59:58 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=wlan0 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=wlan0 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: if ccmni1 flags: up|running->0; ips ccmni1: [10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]->[] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 38601,
+          "utc": "2026-10-07T09:59:58.601840897Z",
+          "value": "2026/10/07 09:59:58 Rebind; defIf=\"wlan0\", ips=[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 43626,
+          "utc": "2026-10-07T10:00:03.627299975Z",
+          "value": "2026/10/07 10:00:03 magicsock: endpoints changed: 112.97.56.31:11950 (stun), 112.97.60.31:59417 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 172.19.0.1:45101 (local), 192.168.137.249:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 43822,
+          "utc": "2026-10-07T10:00:03.823173821Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:59417",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "after-wifi-mobile-repeat",
+      "action": "wifi-off",
+      "utc": "2026-10-07T10:00:39.329646977Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 5738,
+      "first_direct_after_selection_ms": 11928,
+      "action_to_direct_ms": 6927,
+      "selection_to_direct_ms": 6190,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 30ms",
+      "rule_updated_ms": 9458,
+      "netlink_event_count": 63,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 1,
+          "utc": "2026-10-07T10:00:34.329596207Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=112\nouter_ipv6_iface=wlan0\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 39,
+          "utc": "2026-10-07T10:00:34.367347053Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:59417",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 67,
+          "utc": "2026-10-07T10:00:34.395491977Z",
+          "value": "dns_network=112\ndns_transport=WIFI\ndns_active_vpn=109\ndns_underlying=112\ndns_iface=wlan0"
+        },
+        {
+          "kind": "android_network",
+          "ms": 5738,
+          "utc": "2026-10-07T10:00:40.065944208Z",
+          "value": "dns_network=113\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=113\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 7036,
+          "utc": "2026-10-07T10:00:41.364436823Z",
+          "value": "2026-10-07 18:00:41 watchdog: verified physical network event -> early reconciliation"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 7638,
+          "utc": "2026-10-07T10:00:41.9663969Z",
+          "value": "2026-10-07 18:00:41 watchdog: routes missing or stale -> re-asserting"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8242,
+          "utc": "2026-10-07T10:00:42.570593131Z",
+          "value": "2026/10/07 10:00:42 LinkChange: major, rebinding: old: interfaces.State{defaultRoute= ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} diff: DefaultRoute: \"\"->\"ccmni3\" rebind-reason=[default-if-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8243,
+          "utc": "2026-10-07T10:00:42.570766439Z",
+          "value": "2026/10/07 10:00:42 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 8443,
+          "utc": "2026-10-07T10:00:42.7712289Z",
+          "value": "2026-10-07 18:00:42 main-default: set to via 10.33.240.107 dev ccmni3  (control plane needs this)"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 9458,
+          "utc": "2026-10-07T10:00:43.786419362Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni3 "
+        },
+        {
+          "kind": "diag.log",
+          "ms": 9649,
+          "utc": "2026-10-07T10:00:43.976821823Z",
+          "value": "2026-10-07 18:00:43 outer-ipv6: netId=113 iface=ccmni3 table=ccmni3 mark=0x10020000 pref=5209"
+        },
+        {
+          "kind": "outer_status",
+          "ms": 9709,
+          "utc": "2026-10-07T10:00:44.037387977Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=113\nouter_ipv6_iface=ccmni3\nouter_ipv6_table=ccmni3\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 10252,
+          "utc": "2026-10-07T10:00:44.580309516Z",
+          "value": "2026-10-07 18:00:44 DNS: dns_network=113 dns_transport=CELLULAR dns_active_vpn=109 dns_underlying=113 dns_iface=ccmni3 dns_excluded=109/tun0/CELLULAR|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=10.33.240.107 ccmni3 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni3 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10252,
+          "utc": "2026-10-07T10:00:44.580570362Z",
+          "value": "2026/10/07 10:00:44 magicsock: endpoints changed: 112.97.56.31:11950 (stun), 112.97.60.31:59417 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10253,
+          "utc": "2026-10-07T10:00:44.580689439Z",
+          "value": "2026/10/07 10:00:44 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10253,
+          "utc": "2026-10-07T10:00:44.580730131Z",
+          "value": "2026/10/07 10:00:44 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 10278,
+          "utc": "2026-10-07T10:00:44.605729746Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:59417",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "final-mobile-wifi",
+      "action": "wifi-on",
+      "utc": "2026-10-07T10:02:28.977678753Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 19205,
+      "first_direct_after_selection_ms": null,
+      "action_to_direct_ms": null,
+      "selection_to_direct_ms": null,
+      "first_direct": null,
+      "rule_updated_ms": 31768,
+      "netlink_event_count": 55,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 2,
+          "utc": "2026-10-07T10:02:23.977832521Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=113\nouter_ipv6_iface=ccmni3\nouter_ipv6_table=ccmni3\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 20,
+          "utc": "2026-10-07T10:02:23.995577752Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni3 "
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 37,
+          "utc": "2026-10-07T10:02:24.013281752Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:59417",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 58,
+          "utc": "2026-10-07T10:02:24.033619906Z",
+          "value": "dns_network=113\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=113\ndns_iface=ccmni3"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 7842,
+          "utc": "2026-10-07T10:02:31.817840522Z",
+          "value": "2026/10/07 10:02:31 magicsock: endpoints changed: 112.97.56.31:11950 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.60.31:59417 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), 192.168.137.249:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 8145,
+          "utc": "2026-10-07T10:02:32.120563368Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:59417",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8445,
+          "utc": "2026-10-07T10:02:32.421181522Z",
+          "value": "2026/10/07 10:02:32 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: ips wlan0: [fe80::ec66:87ff:fee3:1271/64]->[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8445,
+          "utc": "2026-10-07T10:02:32.421437522Z",
+          "value": "2026/10/07 10:02:32 Rebind; defIf=\"ccmni3\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "android_network",
+          "ms": 19205,
+          "utc": "2026-10-07T10:02:43.181221446Z",
+          "value": "dns_network=114\ndns_transport=WIFI\ndns_active_vpn=109\ndns_underlying=114\ndns_iface=wlan0"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 28945,
+          "utc": "2026-10-07T10:02:52.920578369Z",
+          "value": "2026-10-07 18:02:52 watchdog: routes missing or stale -> re-asserting"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 29748,
+          "utc": "2026-10-07T10:02:53.724122985Z",
+          "value": "2026-10-07 18:02:53 main-default: set to via 192.168.137.1 dev wlan0  (control plane needs this)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 29748,
+          "utc": "2026-10-07T10:02:53.724292523Z",
+          "value": "2026/10/07 10:02:53 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni3 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=wlan0 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] ccmni3:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6] wlan0:[192.168.137.249/24 llu6]} v4=true v6=true} diff: DefaultRoute: \"ccmni3\"->\"wlan0\" rebind-reason=[default-if-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 29748,
+          "utc": "2026-10-07T10:02:53.724392908Z",
+          "value": "2026/10/07 10:02:53 Rebind; defIf=\"wlan0\", ips=[192.168.137.249/24 fe80::ec66:87ff:fee3:1271/64]"
+        },
+        {
+          "kind": "outer_status",
+          "ms": 31750,
+          "utc": "2026-10-07T10:02:55.726327908Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=114\nouter_ipv6_iface=wlan0\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 31768,
+          "utc": "2026-10-07T10:02:55.743915985Z",
+          "value": ""
+        },
+        {
+          "kind": "diag.log",
+          "ms": 32159,
+          "utc": "2026-10-07T10:02:56.135520523Z",
+          "value": "2026-10-07 18:02:56 DNS: dns_network=114 dns_transport=WIFI dns_active_vpn=109 dns_underlying=114 dns_iface=wlan0 dns_excluded=109/tun0/WIFI|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=192.168.137.1 wlan0 192.168.137.249 dns_source=android-linkproperties dns_servers=192.168.137.1 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=192.168.137.1 dev wlan0 src 192.168.137.249 mark 0x10020000 uid 0 cache dns_route_after=192.168.137.1 dev wlan0 src 192.168.137.249 mark 0x10020000 uid 0 cache"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 32360,
+          "utc": "2026-10-07T10:02:56.336521831Z",
+          "value": "2026-10-07 18:02:56 watchdog: verified physical network event -> early reconciliation"
+        }
+      ]
+    },
+    {
+      "name": "final-wifi-mobile",
+      "action": "wifi-off",
+      "utc": "2026-10-07T10:03:34.055892833Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 5973,
+      "first_direct_after_selection_ms": 11830,
+      "action_to_direct_ms": 6829,
+      "selection_to_direct_ms": 5857,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 34ms",
+      "rule_updated_ms": 9424,
+      "netlink_event_count": 63,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 1,
+          "utc": "2026-10-07T10:03:29.056343987Z",
+          "value": "outer_ipv6_state=unavailable\nouter_ipv6_network=114\nouter_ipv6_iface=wlan0\nouter_ipv6_table=\nouter_ipv6_reason=no-verified-physical-ipv6-table\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 26,
+          "utc": "2026-10-07T10:03:29.080990448Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:59417",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "172.19.0.1:45101",
+            "192.168.137.249:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 59,
+          "utc": "2026-10-07T10:03:29.113976602Z",
+          "value": "dns_network=114\ndns_transport=WIFI\ndns_active_vpn=109\ndns_underlying=114\ndns_iface=wlan0"
+        },
+        {
+          "kind": "android_network",
+          "ms": 5504,
+          "utc": "2026-10-07T10:03:34.55901168Z",
+          "value": "dns_network=\ndns_transport=\ndns_active_vpn=109\ndns_underlying=none\ndns_iface="
+        },
+        {
+          "kind": "android_network",
+          "ms": 5973,
+          "utc": "2026-10-07T10:03:35.028155372Z",
+          "value": "dns_network=115\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=115\ndns_iface=ccmni1"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 7040,
+          "utc": "2026-10-07T10:03:36.094975987Z",
+          "value": "2026-10-07 18:03:36 watchdog: verified physical network event -> early reconciliation"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 7644,
+          "utc": "2026-10-07T10:03:36.699330372Z",
+          "value": "2026-10-07 18:03:36 watchdog: routes missing or stale -> re-asserting"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8245,
+          "utc": "2026-10-07T10:03:37.29992091Z",
+          "value": "2026/10/07 10:03:37 LinkChange: major, rebinding: old: interfaces.State{defaultRoute= ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} diff: DefaultRoute: \"\"->\"ccmni1\" rebind-reason=[default-if-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 8245,
+          "utc": "2026-10-07T10:03:37.300168834Z",
+          "value": "2026/10/07 10:03:37 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 8447,
+          "utc": "2026-10-07T10:03:37.502316603Z",
+          "value": "2026-10-07 18:03:37 main-default: set to via 10.33.240.107 dev ccmni1  (control plane needs this)"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 9424,
+          "utc": "2026-10-07T10:03:38.478826064Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni1 "
+        },
+        {
+          "kind": "diag.log",
+          "ms": 9653,
+          "utc": "2026-10-07T10:03:38.707693526Z",
+          "value": "2026-10-07 18:03:38 outer-ipv6: netId=115 iface=ccmni1 table=ccmni1 mark=0x10020000 pref=5209"
+        },
+        {
+          "kind": "outer_status",
+          "ms": 9676,
+          "utc": "2026-10-07T10:03:38.730432603Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=115\nouter_ipv6_iface=ccmni1\nouter_ipv6_table=ccmni1\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 10054,
+          "utc": "2026-10-07T10:03:39.10926268Z",
+          "value": "2026-10-07 18:03:39 DNS: dns_network=115 dns_transport=CELLULAR dns_active_vpn=109 dns_underlying=115 dns_iface=ccmni1 dns_excluded=109/tun0/CELLULAR|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=10.33.240.107 ccmni1 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10253,
+          "utc": "2026-10-07T10:03:39.308097834Z",
+          "value": "2026/10/07 10:03:39 magicsock: endpoints changed: 112.97.56.31:11950 (stun), 112.97.60.31:59417 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10253,
+          "utc": "2026-10-07T10:03:39.308276526Z",
+          "value": "2026/10/07 10:03:39 magicsock: last netcheck reported send error. Rebinding."
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 10253,
+          "utc": "2026-10-07T10:03:39.308352526Z",
+          "value": "2026/10/07 10:03:39 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 10304,
+          "utc": "2026-10-07T10:03:39.358580834Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:59417",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "final-clash-off",
+      "action": "clash-off",
+      "utc": "2026-10-07T10:05:27.463021763Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 5671,
+      "first_direct_after_selection_ms": 5857,
+      "action_to_direct_ms": 856,
+      "selection_to_direct_ms": 186,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 41ms",
+      "rule_updated_ms": null,
+      "netlink_event_count": 13,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 2,
+          "utc": "2026-10-07T10:05:22.464016532Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=115\nouter_ipv6_iface=ccmni1\nouter_ipv6_table=ccmni1\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 13,
+          "utc": "2026-10-07T10:05:22.47446984Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni1 "
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 37,
+          "utc": "2026-10-07T10:05:22.49890184Z",
+          "value": [
+            "112.97.56.31:11950",
+            "112.97.60.31:10069",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 64,
+          "utc": "2026-10-07T10:05:22.52603284Z",
+          "value": "dns_network=115\ndns_transport=CELLULAR\ndns_active_vpn=109\ndns_underlying=115\ndns_iface=ccmni1"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 5229,
+          "utc": "2026-10-07T10:05:27.69026484Z",
+          "value": "2026/10/07 10:05:27 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6]} v4=true v6=true} diff: numInterfaces: 36->35; numInterfaceIPs: 36->35; if tun0: removed; ips tun0: [172.19.0.1/30 fe80::81b7:b2e1:b3cd:163c/64]->[] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 5229,
+          "utc": "2026-10-07T10:05:27.690587609Z",
+          "value": "2026/10/07 10:05:27 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 5517,
+          "utc": "2026-10-07T10:05:27.978647917Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10069",
+            "10.33.240.107:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 5631,
+          "utc": "2026-10-07T10:05:28.092286686Z",
+          "value": "2026/10/07 10:05:27 magicsock: endpoints changed: 112.97.56.31:11950 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.60.31:10069 (stun), 10.33.240.107:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "android_network",
+          "ms": 5671,
+          "utc": "2026-10-07T10:05:28.133105763Z",
+          "value": "dns_network=115\ndns_transport=CELLULAR\ndns_active_vpn=\ndns_underlying=\ndns_iface=ccmni1"
+        },
+        {
+          "kind": "diag.log",
+          "ms": 6034,
+          "utc": "2026-10-07T10:05:28.495466686Z",
+          "value": "2026-10-07 18:05:28 DNS: dns_network=115 dns_transport=CELLULAR dns_active_vpn= dns_underlying= dns_iface=ccmni1 dns_excluded= dns_selection_reason=active-default-linkproperties dns_route_hint=ccmni1 dns_physical_route=10.33.240.107 ccmni1 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        }
+      ]
+    },
+    {
+      "name": "final-clash-on",
+      "action": "clash-on",
+      "utc": "2026-10-07T10:06:37.666857152Z",
+      "trigger_ms": 5001,
+      "android_selection_changed_ms": 6240,
+      "first_direct_after_selection_ms": 7404,
+      "action_to_direct_ms": 2403,
+      "selection_to_direct_ms": 1164,
+      "first_direct": "pong from eaidk-310 (100.72.239.86) via [2001:250:3c00:3487:add3:4002:9c55:b820]:41641 in 39ms",
+      "rule_updated_ms": null,
+      "netlink_event_count": 27,
+      "events": [
+        {
+          "kind": "outer_status",
+          "ms": 2,
+          "utc": "2026-10-07T10:06:32.667979921Z",
+          "value": "outer_ipv6_state=active\nouter_ipv6_network=115\nouter_ipv6_iface=ccmni1\nouter_ipv6_table=ccmni1\nouter_ipv6_reason=verified-netd-physical-policy\nouter_ipv6_mark=0x10020000\nouter_ipv6_rule=5209\n"
+        },
+        {
+          "kind": "rule5209",
+          "ms": 23,
+          "utc": "2026-10-07T10:06:32.688433152Z",
+          "value": "5209:\tfrom all fwmark 0x10020000/0x1e020000 iif lo lookup ccmni1 "
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 26,
+          "utc": "2026-10-07T10:06:32.691602767Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10069",
+            "10.33.240.107:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "android_network",
+          "ms": 59,
+          "utc": "2026-10-07T10:06:32.725014075Z",
+          "value": "dns_network=115\ndns_transport=CELLULAR\ndns_active_vpn=\ndns_underlying=\ndns_iface=ccmni1"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 6231,
+          "utc": "2026-10-07T10:06:38.897119614Z",
+          "value": "2026/10/07 10:06:38 LinkChange: major, rebinding: old: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6]} v4=true v6=true} new: interfaces.State{defaultRoute=ccmni1 ifs={ccmni0:[240e:57e:3070:96c7:18dc:33e2:f232:c9ce/64 llu6] ccmni1:[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 llu6] ccmni2:[2408:8556:2c07:807a:2:1:842b:be04/64 llu6] tailscale0:[100.118.66.106/32 fd7a:115c:a1e0::ce2e:426b/128 llu6] tun0:[172.19.0.1/30 llu6]} v4=true v6=true} diff: numInterfaces: 35->36; numInterfaceIPs: 35->36; if tun0: added; ips tun0: added [172.19.0.1/30 fe80::b127:37fb:7941:7964/64] rebind-reason=[ips-changed]"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 6231,
+          "utc": "2026-10-07T10:06:38.897179998Z",
+          "value": "2026/10/07 10:06:38 Rebind; defIf=\"ccmni1\", ips=[10.33.240.107/8 2408:8456:3403:5463:2:1:842c:2e52/64 fe80::2:1:842c:2e52/64]"
+        },
+        {
+          "kind": "android_network",
+          "ms": 6240,
+          "utc": "2026-10-07T10:06:38.905639614Z",
+          "value": "dns_network=115\ndns_transport=CELLULAR\ndns_active_vpn=116\ndns_underlying=115\ndns_iface=ccmni1"
+        },
+        {
+          "kind": "tailscaled.log",
+          "ms": 6432,
+          "utc": "2026-10-07T10:06:39.097348229Z",
+          "value": "2026/10/07 10:06:39 magicsock: endpoints changed: 112.97.56.31:11950 (stun), [2408:8456:3403:5463:2:1:842c:2e52]:60616 (stun), 112.97.60.31:10069 (stun), 10.33.240.107:45101 (local), 172.19.0.1:45101 (local), [2408:8456:3403:5463:2:1:842c:2e52]:45101 (local), [2408:8556:2c07:807a:2:1:842b:be04]:45101 (local), [240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101 (local)"
+        },
+        {
+          "kind": "self_endpoints",
+          "ms": 6473,
+          "utc": "2026-10-07T10:06:39.139258691Z",
+          "value": [
+            "112.97.56.31:11950",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:60616",
+            "112.97.60.31:10069",
+            "10.33.240.107:45101",
+            "172.19.0.1:45101",
+            "[2408:8456:3403:5463:2:1:842c:2e52]:45101",
+            "[2408:8556:2c07:807a:2:1:842b:be04]:45101",
+            "[240e:57e:3070:96c7:18dc:33e2:f232:c9ce]:45101"
+          ]
+        },
+        {
+          "kind": "diag.log",
+          "ms": 10044,
+          "utc": "2026-10-07T10:06:42.709759075Z",
+          "value": "2026-10-07 18:06:42 DNS: dns_network=115 dns_transport=CELLULAR dns_active_vpn=116 dns_underlying=115 dns_iface=ccmni1 dns_excluded=116/tun0/CELLULAR|VPN,route-hint/tun0 dns_selection_reason=vpn-underlying-linkproperties dns_route_hint=tun0 dns_physical_route=10.33.240.107 ccmni1 10.33.240.107 dns_source=android-linkproperties dns_servers=2408:8888:0:8888::8,2408:8899:0:8899::8,120.80.80.80 dns_reachable=true dns_retained=false dns_probe=controlplane.tailscale.com dns_probe_mark=0x10020000 dns_route_before=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache dns_route_after=120.80.80.80 dev ccmni1 src 10.33.240.107 mark 0x10020000 uid 0 cache"
+        }
+      ]
+    }
+  ]
+}

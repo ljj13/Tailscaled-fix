@@ -314,7 +314,11 @@ else: sys.exit(9)
         text = (ROOT / 'tailscale/scripts/tailscaled.service').read_text()
         init = text[text.index('init_android_hostname()'):text.index('show_hostname_init()')]
         start = text[text.index('start_tailscaled()'):text.index('stop_tailscaled()')]
-        watchdog = text[text.index('route_watchdog()'):text.index('start_watchdog()')]
+        watchdog = text[text.index('watchdog_cleanup()'):text.index('start_watchdog()')]
+        # Run one periodic retry immediately in this fixture. The watchdog now
+        # waits in a child process, so a sleep-function counter is not shared.
+        watchdog = watchdog.replace('+ 15', '+ 0')
+        init = init.replace('\n}', '\n  [ "${_tick:-0}" -eq 0 ] || exit 0\n}')
         (self.root / 'read-fail').touch()
         fixture = f'. "{self.settings}"\ntailscaled_diag_log="{self.root}/diag.log"\n'
         fixture += '''
@@ -328,16 +332,12 @@ refresh_dns() { :; }
 start_watchdog() { :; }
 routes_ok() { return 0; }
 exempt_tunnel() { :; }
-ticks=0
-sleep() {
-  ticks=$((ticks+1))
-  [ "$ticks" = 1 ] || exit 0
-  rm -f "$FIXTURE/read-fail"
-}
+sync_outer_ipv6() { :; }
 '''
         program = fixture + init + start + watchdog + '''
 start_tailscaled || exit 10
 [ ! -f "$tailscale_dir/hostname-initialized" ] || exit 11
+rm -f "$FIXTURE/read-fail"
 route_watchdog
 '''
         result = subprocess.run(['sh'], input=program, env=self.env, text=True, capture_output=True, timeout=20)
