@@ -26,6 +26,8 @@
 | [Android 设备名](ANDROID_HOSTNAME.md) | 名称来源、规范化、手工命名保护和并发测试。 |
 | [网络诊断](NETWORK_DIAGNOSTICS.md) | endpoint、DERP、UDP、NAT 与 marked route 诊断。 |
 | [开发与目录说明](DEVELOPMENT.md) | 源码职责、构建入口、测试命令及本地产物约定。 |
+| [版本化备份](UPGRADE_BACKUPS.md) | 升级前快照、权限、保留数量与回滚辅助。 |
+| [Release CI](RELEASE_CI.md) | 固定构建、完整测试、草稿校验、发布与 feed 更新。 |
 
 ## 截图
 

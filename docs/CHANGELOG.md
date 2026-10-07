@@ -2,6 +2,13 @@
 
 完整功能说明和验证范围见 [发布说明](releases/README.md)。
 
+## main · 尚未发布
+
+- 增加升级前私有版本化配置/脚本快照，最多5份，不复制敏感 state，不改变升级身份保留语义。
+- 增加 tag Release CI：固定输入、完整测试、统一打包、草稿资产校验后发布，再更新 update.json；手动运行仅验证。
+
+[备份说明](UPGRADE_BACKUPS.md) · [Release CI](RELEASE_CI.md)
+
 ## v1.102.5-dnsfix.2-webui.2 · 2026-10-07
 
 - 修复 outer IPv6：按当前 physical netId 验证并引用真实 netd IPv6 表，保留原 fwmark 与 IPv4 路由；网络变化时自动撤销/更新规则和 Re-STUN。Redmi 移动数据 + FlClash OFF/ON 已恢复 IPv6 direct，见 [验收报告](testing/IPV6_MARKED_ROUTING.md)。

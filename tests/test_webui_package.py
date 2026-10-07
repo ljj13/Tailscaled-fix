@@ -20,8 +20,8 @@ class WebUIPackageTests(unittest.TestCase):
         data = b'id=tailscaled\nname=Tailscale\nversion=v1.102.5-dnsfix.2\nversionCode=110200502\nauthor=keweiya\ndescription=keep unchanged\n'
         metadata = getattr(packager, 'release_metadata', packager.author_metadata)
         result = metadata(data)
-        self.assertIn(b'version=v1.102.5-dnsfix.2-webui.2\n', result)
-        self.assertIn(b'versionCode=110200504\n', result)
+        self.assertIn(f'version={packager.RELEASE_TAG}\n'.encode(), result)
+        self.assertIn(f'versionCode={packager.RELEASE_VERSION_CODE}\n'.encode(), result)
         self.assertIn(b'author=FogPurification\n', result)
         self.assertIn(b'id=tailscaled\nname=Tailscale\n', result)
         self.assertIn(b'description=keep unchanged\n', result)
@@ -33,7 +33,7 @@ class WebUIPackageTests(unittest.TestCase):
             with zipfile.ZipFile(packager.DEFAULT_BASE) as old, zipfile.ZipFile(output) as new:
                 info = json.loads(new.read('webroot/ui-build.json'))
                 self.assertEqual(info['edition'], 'Miuix WebUI 2')
-                self.assertEqual(info['module_version'], 'v1.102.5-dnsfix.2-webui.2')
+                self.assertEqual(info['module_version'], packager.RELEASE_TAG)
                 self.assertEqual(new.read('module.prop'), (ROOT / 'module.prop').read_bytes().replace(b'\r\n', b'\n'))
                 for name in ('files/tailscale.combined', 'files/android-dns', 'files/build-info.json'):
                     self.assertEqual(new.read(name), old.read(name))

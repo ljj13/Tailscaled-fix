@@ -44,6 +44,7 @@ class AndroidShellTests(unittest.TestCase):
 abort() { echo "$*" >&2; exit 1; }
 pgrep() { return 1; }
 sleep() { :; }
+chown() { :; }  # Android installs run as root; this isolated fixture does not.
 set_perm() { chmod "$4" "$1"; }
 set_perm_recursive() { find "$1" -type d -exec chmod "$4" {} \\; ; find "$1" -type f -exec chmod "$5" {} \\; ; }
 '''

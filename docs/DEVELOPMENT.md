@@ -17,7 +17,7 @@
 | `patches/` | Tailscale / Go DNS 与 fwmark 构建补丁。 |
 | `scripts/` | 固定版本构建、测试准备和 ZIP 打包。 |
 | `tests/` | DNS、脚本、升级、hostname、WebUI 与打包测试。 |
-| `.github/workflows/` | 构建工作流，只上传 artifact，不自动发布 Release。 |
+| `.github/workflows/` | 分支构建上传 artifact；Release tag 工作流测试并发布，手动运行只验证。 |
 | `docs/dns/`、`docs/testing/`、`docs/releases/` | DNS 技术报告、测试记录与发布说明。 |
 | `docs/screenshots/webui/` | 已选入文档的截图和本地图库。 |
 
@@ -56,6 +56,9 @@ python3 scripts/package-webui.py --release
 
 打包器会验证基线 ZIP hash。输出 ZIP 与 `.zip.sha256` 位于 `dist/`。
 这些命令生成本地安装资产；正式发布另行执行。
+
+tag Release CI 使用同一正式打包器；固定输入、完整检查与手动验证步骤见
+[Release CI](RELEASE_CI.md)。安装器快照行为见[版本化备份](UPGRADE_BACKUPS.md)。
 
 ## 检查
 

@@ -10,12 +10,16 @@ import subprocess
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-ACCEPTED_SHA = 'c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae'
-DEFAULT_BASE = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-arm64.zip'
+CONFIG = json.loads((ROOT / 'scripts/release-config.json').read_text(encoding='utf-8'))
+ACCEPTED_SHA = CONFIG['base_sha256']
+DEFAULT_BASE = ROOT / 'dist' / CONFIG['base_asset']
 DEFAULT_OUTPUT = ROOT / 'dist/tailscaled-v1.102.5-dnsfix.2-webui-miuix-preview.4-arm64.zip'
 MODULE_AUTHOR = 'FogPurification'
-RELEASE_TAG = 'v1.102.5-dnsfix.2-webui.2'
-RELEASE_VERSION_CODE = '110200504'
+MODULE_FIELDS = dict(line.split('=', 1) for line in (ROOT / 'module.prop').read_text(encoding='utf-8').splitlines() if '=' in line)
+RELEASE_TAG = MODULE_FIELDS['version']
+RELEASE_VERSION_CODE = MODULE_FIELDS['versionCode']
+if not re.fullmatch(r'v1\.102\.5-[A-Za-z0-9._-]+', RELEASE_TAG) or not RELEASE_VERSION_CODE.isdecimal():
+    raise ValueError('Invalid release metadata or unsupported Tailscale base')
 RELEASE_OUTPUT = ROOT / f'dist/tailscaled-{RELEASE_TAG}-arm64.zip'
 SCRIPT_OVERLAYS = ('tailscale/scripts/tailscaled.service', 'system/bin/tailscale', 'customize.sh')
 
@@ -142,6 +146,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base', type=pathlib.Path, default=DEFAULT_BASE)
     parser.add_argument('--output', type=pathlib.Path)
-    parser.add_argument('--release', action='store_true', help='Package formal WebUI 1 with versioned module metadata')
+    parser.add_argument('--release', action='store_true', help='Package the formal module edition from module.prop')
     args = parser.parse_args()
     package(args.base, args.output or (RELEASE_OUTPUT if args.release else DEFAULT_OUTPUT), release=args.release)

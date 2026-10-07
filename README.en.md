@@ -27,6 +27,10 @@ See the [IPv6 device verification report](docs/testing/IPV6_MARKED_ROUTING.md).
 A self-contained module that runs `tailscaled` on a rooted Android device and
 lets browsers and apps reach the tailnet and a peer's advertised subnets.
 
+Unreleased main adds [private versioned upgrade snapshots](docs/UPGRADE_BACKUPS.md)
+(five retained, no state copy) and [tag Release CI](docs/RELEASE_CI.md).
+Manual workflow runs validate only; the published release is unchanged.
+
 It is built **`GOOS=linux`** on purpose — see below — and carries the three fixes
 that make a linux build survive Android.
 

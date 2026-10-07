@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "description": "Non-shipped, pinned WebUI test tooling",
+  "dependencies": {
+    "acorn": "8.15.0",
+    "playwright": "1.63.0"
+  }
+}

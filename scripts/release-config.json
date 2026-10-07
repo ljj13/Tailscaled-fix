@@ -1,0 +1,68 @@
+{
+  "repository": "ljj13/Tailscaled-fix",
+  "go": "1.26.6",
+  "tailscale_commit": "5fb2a81b065b0a0bbbfc67ab20a0d9c6a1108115",
+  "tailscale_source": "https://github.com/tailscale/tailscale.git",
+  "base_tag": "v1.102.5-dnsfix.2",
+  "base_asset": "tailscaled-v1.102.5-dnsfix.2-arm64.zip",
+  "base_sha256": "c848a47a8ebbcc3f03594c30583651e17b2013ee02bee77954a83317281ddfae",
+  "core_sha256": {
+    "files/tailscale.combined": "fd5f144dfc77c98a26aed836c1f01cbbca6a078e7d63c39b36ffe4803d34530e",
+    "files/android-dns": "30a661b8f49fa8c57549f6b014e88bbcec8cb180af461463a9a04821d84f5b2d",
+    "files/build-info.json": "3a760cd90f1d2e723470c267530278ae527d053678190ad7a01367d2473963d1"
+  },
+  "base_entries": {
+    "META-INF/com/google/android/update-binary": {
+      "sha256": "b4c882fffba5b85804f6212b1bdf9ca68437e5150dd3a50f869ef115f4af5380",
+      "external_attr": 2179792896
+    },
+    "META-INF/com/google/android/updater-script": {
+      "sha256": "4a566001b3058d48b95fb88f1e2352cf5193121ecef5a5d5f74ee5d193888b48",
+      "external_attr": 2175008768
+    },
+    "files/android-dns": {
+      "sha256": "30a661b8f49fa8c57549f6b014e88bbcec8cb180af461463a9a04821d84f5b2d",
+      "external_attr": 2179792896
+    },
+    "files/build-info.json": {
+      "sha256": "3a760cd90f1d2e723470c267530278ae527d053678190ad7a01367d2473963d1",
+      "external_attr": 2175008768
+    },
+    "files/tailscale.combined": {
+      "sha256": "fd5f144dfc77c98a26aed836c1f01cbbca6a078e7d63c39b36ffe4803d34530e",
+      "external_attr": 2179792896
+    },
+    "service.sh": {
+      "sha256": "2a59ee9c05759740975f425c6a77bf4ee8a03ff1a6fe337d0d548ecd0e34468c",
+      "external_attr": 2179792896
+    },
+    "system/bin/tailscaled": {
+      "sha256": "c709d2f1458818d7bb17ddd88cb3b303a6b1a3c4f0e63e99feea1e272f7daa0d",
+      "external_attr": 2179792896
+    },
+    "system/bin/tailscaled.service": {
+      "sha256": "8ec7a4fcb7d50ebdf00e3dc22dc8015c52d0446d1f520a3c6c707184a4f53226",
+      "external_attr": 2179792896
+    },
+    "tailscale/routes": {
+      "sha256": "96a2391d2a7d39dbf0f33139a5aede6598be9ade0c6e336bbd64773dc4c3a641",
+      "external_attr": 2175008768
+    },
+    "tailscale/scripts/start.sh": {
+      "sha256": "3ee3ba7bb367d85d8534b5988f14688f0c617d09c3d263400f87d9442cd13d39",
+      "external_attr": 2179792896
+    },
+    "tailscale/scripts/tailscaled.inotify": {
+      "sha256": "3171e6cc9c5af1902a9ebb895cb4b6f250a29c225f59cbeaf593c2e1b5fca47c",
+      "external_attr": 2179792896
+    },
+    "tailscale/settings.ini": {
+      "sha256": "233b560be35e0b330a48843529debc073dabda20fd9739b9f65622d51c5cd134",
+      "external_attr": 2175008768
+    },
+    "uninstall.sh": {
+      "sha256": "8dafb267e85575d4d44fd0beadea74e1af81f20821149c41c8ee568446b61bda",
+      "external_attr": 2179792896
+    }
+  }
+}

@@ -87,7 +87,12 @@ func TestAndroidBootstrapMissedRegistrationEvent(t *testing.T) {
 		bus := eventbustest.NewBus(t)
 		watcher := eventbustest.NewWatcher(t, bus)
 		m := newDirectManagerOnFS(t.Logf, nil, bus, fs)
-		defer m.Close()
+		defer func() {
+			m.Close()
+			// Drain watcher startup/shutdown before t.Cleanup restores the hook.
+			// Otherwise a late GetOk can race the SetForTest cleanup write.
+			synctest.Wait()
+		}()
 		<-ready
 		if err := eventbustest.Expect(watcher, eventbustest.Type[TrampleDNS]()); err != nil {
 			t.Fatal(err)

@@ -42,6 +42,9 @@ su -c 'tailscale login'
 升级时直接覆盖安装新 ZIP，再重启即可。安装器保留现有 Tailscale state、登录身份、
 `settings.ini`、手工路由和设备名保护标记，无需退出登录或删除节点。
 
+main 尚未发布的安装器另有[私有版本化升级备份](docs/UPGRADE_BACKUPS.md)，只保存配置和旧脚本，
+不复制 state，最多保留5份。[Release CI](docs/RELEASE_CI.md) 支持 tag 自动发布与手动只验证。
+
 WebUI 的 MagicDNS 开关用于调整 Tailscale DNS 偏好。Android DNS helper 会获取
 物理网络的 DNS，追溯 VPN 的底层网络，并排除 VPN / Tailscale 接口。
 它使用独立的 resolver 文件，因此 `/etc/resolv.conf` 缺失、`[::1]:53` 没有监听

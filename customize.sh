@@ -23,6 +23,94 @@ for f in tailscale.combined android-dns android-hostname android-netdiag; do
   [ -s "$MODPATH/files/$f" ] || abort "! Missing required binary: $f"
 done
 
+# Rollback assistance only: never snapshot state/keys, sockets, logs or binaries.
+# Complete this before stopping the daemon or overwriting any installed script.
+backup_upgrade() (
+  for _ub_check in settings.ini routes scripts hostname-initialized hostname-user-set installed-module.prop; do
+    [ ! -L "$INSTALL_DIR/$_ub_check" ] || exit 1
+  done
+  [ -e "$INSTALL_DIR/settings.ini" ] || [ -e "$INSTALL_DIR/routes" ] || [ -d "$INSTALL_DIR/scripts" ] || exit 0
+  umask 077
+  _ub_root="$INSTALL_DIR/backups"
+  [ ! -L "$INSTALL_DIR" ] && [ ! -L "$_ub_root" ] || exit 1
+  mkdir -p "$_ub_root" || exit 1
+  # No redirects through symlinks, including old metadata and lock files.
+  _ub_special=$(find "$_ub_root" ! -type f ! -type d -print) || exit 1
+  [ -z "$_ub_special" ] || exit 1
+  chmod 0700 "$_ub_root" || exit 1
+  chown 0:0 "$_ub_root" || exit 1
+  exec 9>"$_ub_root/.lock" || exit 1
+  command -v flock >/dev/null 2>&1 && flock -n 9 9<&9 || exit 1
+  chmod 0600 "$_ub_root/.lock" || exit 1
+  _ub_old=unknown
+  if [ -f "$INSTALL_DIR/installed-module.prop" ]; then
+    [ ! -L "$INSTALL_DIR/installed-module.prop" ] || exit 1
+    _ub_old=$(sed -n 's/^version=//p' "$INSTALL_DIR/installed-module.prop" | tr -d '\r')
+  fi
+  _ub_new=$(sed -n 's/^version=//p' "$MODPATH/module.prop" 2>/dev/null | tr -d '\r')
+  _ub_new=${_ub_new:-unknown}
+  for _ub_v in "$_ub_old" "$_ub_new"; do
+    case "$_ub_v" in ''|.|..|*[!a-zA-Z0-9._-]*) exit 1 ;; esac
+  done
+  _ub_seq=$(cat "$_ub_root/.sequence" 2>/dev/null)
+  _ub_seq=${_ub_seq:-0}
+  case "$_ub_seq" in *[!0-9]*|?????????*) exit 1 ;; esac
+  _ub_seq=$((_ub_seq + 1))
+  printf '%s\n' "$_ub_seq" > "$_ub_root/.sequence" || exit 1
+  chmod 0600 "$_ub_root/.sequence" || exit 1
+  mkdir -p "$_ub_root/$_ub_old" || exit 1
+  chmod 0700 "$_ub_root/$_ub_old" || exit 1
+  # A crashed writer's staging directories are safe to remove under this lock.
+  for _ub_pending in "$_ub_root"/*/.pending-*; do
+    [ -d "$_ub_pending" ] || continue
+    _ub_pid=${_ub_pending##*/.pending-}
+    case "$_ub_pid" in ''|*[!0-9]*) continue ;; esac
+    rm -rf "$_ub_pending" || exit 1
+  done
+  _ub_tmp="$_ub_root/$_ub_old/.pending-$$"
+  _ub_dest="$_ub_root/$_ub_old/$(printf '%08d' "$_ub_seq")"
+  [ ! -e "$_ub_dest" ] || exit 1
+  mkdir "$_ub_tmp" || exit 1
+  trap 'rm -rf "$_ub_tmp"' 0
+  trap 'exit 1' 1 2 15
+  for _ub_name in settings.ini routes hostname-initialized hostname-user-set scripts installed-module.prop build-info.json; do
+    _ub_src="$INSTALL_DIR/$_ub_name"
+    [ ! -L "$_ub_src" ] || exit 1
+    [ -e "$_ub_src" ] || continue
+    _ub_special=$(find "$_ub_src" ! -type f ! -type d -print) || exit 1
+    [ -z "$_ub_special" ] || exit 1
+    cp -R "$_ub_src" "$_ub_tmp/$_ub_name" || exit 1
+  done
+  if [ -e "$SERVICE_DIR/tailscaled_service.sh" ] || [ -L "$SERVICE_DIR/tailscaled_service.sh" ]; then
+    [ ! -L "$SERVICE_DIR" ] && [ ! -L "$SERVICE_DIR/tailscaled_service.sh" ] && [ -f "$SERVICE_DIR/tailscaled_service.sh" ] || exit 1
+    cp "$SERVICE_DIR/tailscaled_service.sh" "$_ub_tmp/boot-service.sh" || exit 1
+  fi
+  printf 'format=tailscaled-upgrade-backup-v1\nsource_version=%s\ntarget_version=%s\nsequence=%s\nstate_copied=false\n' \
+    "$_ub_old" "$_ub_new" "$_ub_seq" > "$_ub_tmp/snapshot.info" || exit 1
+  printf '%s\n' tailscaled-upgrade-backup-v1 > "$_ub_tmp/.complete" || exit 1
+  find "$_ub_tmp" -type d -exec chmod 0700 {} \; || exit 1
+  find "$_ub_tmp" -type f -exec chmod 0600 {} \; || exit 1
+  chown -R 0:0 "$_ub_tmp" || exit 1
+  mv "$_ub_tmp" "$_ub_dest" || exit 1
+  trap - 0 1 2 15
+  # Prune only completed, format-owned generations. Paths have no whitespace.
+  for _ub_version in "$_ub_root"/*; do
+    [ -d "$_ub_version" ] || continue
+    case "${_ub_version##*/}" in .|..|*[!a-zA-Z0-9._-]*) continue ;; esac
+    for _ub_snap in "$_ub_version"/*; do
+      [ -d "$_ub_snap" ] || continue
+      case "${_ub_snap##*/}" in ''|*[!0-9]*) continue ;; esac
+      [ "$(cat "$_ub_snap/.complete" 2>/dev/null)" = tailscaled-upgrade-backup-v1 ] || continue
+      printf '%s %s\n' "${_ub_snap##*/}" "$_ub_snap"
+    done
+  done | sort -rn | awk 'NR>5 {print $2}' | while IFS= read -r _ub_prune; do
+    rm -rf "$_ub_prune" || exit 1
+    rmdir "${_ub_prune%/*}" 2>/dev/null || :
+  done || exit 1
+  ui_print "- Private upgrade backup: $_ub_dest (latest 5 retained; no state copy)"
+)
+backup_upgrade || abort "! Upgrade backup failed; existing service/config were not replaced"
+
 if [ -f "$INSTALL_DIR/scripts/tailscaled.service" ]; then
   ui_print "- Stopping the running tailscaled service"
   "$INSTALL_DIR/scripts/tailscaled.service" stop >/dev/null 2>&1
@@ -79,6 +167,12 @@ for f in settings.ini routes; do
     cp -f "$MODPATH/tailscale/$f" "$INSTALL_DIR/$f" 2>/dev/null
   fi
 done
+
+# Track the installed module edition for the next upgrade's source-version label.
+if [ -f "$MODPATH/module.prop" ]; then
+  (umask 077; cp -f "$MODPATH/module.prop" "$INSTALL_DIR/installed-module.prop" && \
+    chmod 0600 "$INSTALL_DIR/installed-module.prop") || abort "! Could not record installed module version"
+fi
 
 rm -rf "$MODPATH/files" "$MODPATH/tailscale"
 
