@@ -2,6 +2,8 @@
 
 日期：2026-10-07。基于 main、GOOS=linux / osrouter、Android netd 与现有 Clash 共存设计。未新增 WebUI 开关，未启用任何设备的 exit node，未改变路由、DNS、身份或服务器角色。
 
+以上描述的是本轮只读审计。随后已执行 [Exit Node Client 真机闭环验收](testing/EXIT_NODE_CLIENT_ACCEPTANCE.md)：原生双栈转发、outer bypass 与恢复通过，但 Android DNS / FlClash Fake-IP 共存失败，尚不能宣布完整支持。
+
 ## 核心结论
 
 | 问题 | 源码与现有规则给出的结论 |

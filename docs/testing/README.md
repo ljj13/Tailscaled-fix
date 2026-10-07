@@ -11,6 +11,7 @@
 | 版本化备份、Release状态机与GitHub只验证运行 | [备份/CI验证](BACKUP_RELEASE_CI.md) |
 | 两次真实覆盖安装与首次tag发布/feed事务 | [真实事务验收](RELEASE_TRANSACTION.md) |
 | Peers、脱敏报告与切网收敛（main，未发布） | [三阶段验收](PEERS_REPORT_CONVERGENCE.md) |
+| Exit Node Client 原生闭环：转发/恢复通过，Android DNS与Fake-IP共存失败 | [Exit Node真机验收](EXIT_NODE_CLIENT_ACCEPTANCE.md) |
 
 报告分别注明本地测试、助手 ADB 观测和用户确认的真机验收。
 第一轮 P2P 报告保留未恢复时的证据；后续 IPv6 报告记录 ADB 实测的 direct 恢复与自动切换验收。
