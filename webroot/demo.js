@@ -148,6 +148,11 @@ export function createDemo(initial) {
       if (command === "tailscale status --json")
         return result(
           JSON.stringify({
+            Peer: status.backend === "Running" ? {
+              eaidk: {ID:"eaidk",HostName:"eaidk-310",OS:"linux",Online:true,Active:true,TailscaleIPs:["100.72.239.86","fd7a:115c:a1e0::201:efd1"],CurAddr:name==="cellular"?"[2001:db8::310]:41641":"",Relay:"hkg",ExitNodeOption:false,PrimaryRoutes:["192.168.50.0/24"],LastSeen:"2026-10-07T09:00:00Z"},
+              desktop: {ID:"desktop",HostName:"desktop",OS:"windows",Online:true,Active:false,TailscaleIPs:["100.79.33.7"],Relay:"hkg",ExitNodeOption:true},
+              offline: {ID:"offline",HostName:"travel-laptop",OS:"linux",Online:false,TailscaleIPs:["100.65.1.3"],LastSeen:"2026-10-06T09:00:00Z"}
+            } : {},
             Self: {
               HostName: prefs.hostname || "localhost",
               DNSName:
@@ -155,6 +160,8 @@ export function createDemo(initial) {
             },
           }),
         );
+      if (/^tailscale ping --timeout=3s --c=3 --until-direct=false (100\.[0-9.]+|fd7a:[0-9a-f:]+)$/i.test(command))
+        return status.backend === "Running" ? result(`pong from demo-peer via ${name === "cellular" ? "[2001:db8::310]:41641" : "DERP(hkg)"} in ${name === "cellular" ? "33ms" : "330ms"}\n`) : result("",1,"ping timeout");
       if (/^tailscaled\.service (start|stop|restart)$/.test(command)) {
         const stop = command.endsWith(" stop");
         Object.assign(status, {

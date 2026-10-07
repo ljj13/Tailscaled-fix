@@ -37,6 +37,8 @@ const ROOT = path.resolve(__dirname, "..");
   ].map((action) => "tailscaled.service " + action);
   commands.push("tailscale up --timeout=8s");
   commands.push("tailscale status --json");
+  commands.push("tailscale ping --timeout=3s --c=3 --until-direct=false 100.72.239.86");
+  commands.push("tailscale ping --timeout=3s --c=3 --until-direct=false fd7a:115c:a1e0::1");
   const input = JSON.stringify({
     root: ROOT.replace(/\\/g, "/"),
     commands: commands.map((logical) => ({

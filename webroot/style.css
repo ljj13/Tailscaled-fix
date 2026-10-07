@@ -769,3 +769,12 @@ body.modal-open {
 }
 
 #netdiag-notes { white-space: pre-line; }
+
+/* Peer cards reuse the page/card/action tokens and never require horizontal scroll. */
+.peer-card { padding: calc(var(--space-page) + 4px); margin-bottom: 12px; }
+.peer-card h3 { margin: 0 0 8px; font-size: 19px; overflow-wrap: anywhere; }
+.peer-card p { overflow-wrap: anywhere; }
+.peer-path { font-size: 14px; }
+.peer-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.peer-actions .button { flex: 1; min-width: 70px; min-height: 44px; padding: 10px 12px; }
+.empty-note { color: var(--secondary); font-size: 14px; padding: 0 12px; }

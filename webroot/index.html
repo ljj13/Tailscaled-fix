@@ -161,6 +161,11 @@
                 ></span
               ><svg class="icon chevron"><use href="#i-chevron" /></svg>
             </button>
+            <button class="preference navigation-row" data-nav="peers">
+              <span class="row-icon blue"><svg class="icon"><use href="#i-tailnet" /></svg></span>
+              <span class="preference-copy"><span class="preference-title">设备</span><span class="summary">在线节点、连接路径与 Ping</span></span>
+              <svg class="icon chevron"><use href="#i-chevron" /></svg>
+            </button>
             <button class="preference navigation-row" data-nav="logs">
               <span class="row-icon amber"
                 ><svg class="icon"><use href="#i-log" /></svg></span
@@ -180,6 +185,12 @@
               ><svg class="icon chevron"><use href="#i-chevron" /></svg>
             </button>
           </nav>
+        </section>
+        <section class="page" id="page-peers" data-page="peers" hidden>
+          <div class="toolbar"><p class="summary" id="peers-note" aria-live="polite">尚未读取设备</p><button class="button secondary root-action" id="peers-refresh">刷新设备</button></div>
+          <h2 class="group-title">在线</h2><p class="empty-note" id="peers-online-empty">暂无在线设备</p><div id="peers-online" class="peer-list"></div>
+          <h2 class="group-title">离线</h2><p class="empty-note" id="peers-offline-empty">暂无离线设备</p><div id="peers-offline" class="peer-list"></div>
+          <h2 class="group-title">状态未知</h2><p class="empty-note" id="peers-unknown-empty">暂无状态未知设备</p><div id="peers-unknown" class="peer-list"></div>
         </section>
         <section class="page" id="page-settings" data-page="settings" hidden>
           <h2 class="group-title first">连接选项</h2>

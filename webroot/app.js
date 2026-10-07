@@ -2,6 +2,7 @@ import { exec, toast as nativeToast, bridgeAvailable } from "./ksu.js";
 import { createDemo, scenarios } from "./demo.js";
 import { nativeCommand } from "./commands.js";
 import { diagnosticRows } from "./network.js";
+import { peerList, peerPingCommand, pingSummary } from "./peers.js";
 
 const SVC = "tailscaled.service";
 const DAEMON_LOG = "/data/adb/tailscale/run/tailscaled.log";
@@ -24,6 +25,9 @@ const state = {
   prefsRequest: null,
   logRequest: null,
   routeRequest: null,
+  peerRequest: null,
+  peers: [],
+  peerPings: {},
   networkRequest: null,
   networkReport: null,
   networkRaw: "",
@@ -35,6 +39,7 @@ const state = {
 };
 const PAGES = {
   home: ["Tailscale", "让设备之间的连接更简单"],
+  peers: ["设备", "Tailnet 中的设备与当前连接路径"],
   settings: ["设置", "让连接适合你的使用方式"],
   network: ["网络与诊断", "查看真实底层网络与连接详情"],
   dns: ["DNS", "解析来源、网络选择与实际可达性"],
@@ -127,7 +132,7 @@ function text(id, value) {
 }
 function updateDisabled() {
   document.querySelectorAll(".root-action").forEach((el) => {
-    el.disabled = state.busy;
+    el.disabled = state.busy || el.dataset.unavailable === "true";
   });
   Object.keys(SWITCHES).forEach((id) => {
     $(id).disabled =
@@ -474,6 +479,7 @@ async function refreshPage(announce = false) {
   if (state.page === "logs") await loadOutput();
   if (state.page === "routing") await loadRoutes();
   if (state.page === "network") await loadNetwork();
+  if (state.page === "peers") await loadPeers();
 }
 
 // Hash/history navigation with a modal entry, so Back dismisses overlays first.
@@ -495,6 +501,7 @@ function showPage(name, focus = true) {
   if (name === "logs") loadOutput();
   if (name === "routing") loadRoutes();
   if (name === "network") loadNetwork();
+  if (name === "peers") loadPeers();
 }
 function navigate(name) {
   if (state.modal || name === state.page) return;
@@ -726,6 +733,79 @@ async function probe(name) {
       failure,
     });
 }
+function peerDetails(peer) {
+ const yes = value => value === true ? "是" : value === false ? "否" : "未知";
+ return ["设备名称: " + peer.hostname, "OS: " + peer.os, "在线: " + yes(peer.online),
+  "IPv4: " + (peer.ipv4.join(", ") || "未提供"), "IPv6: " + (peer.ipv6.join(", ") || "未提供"),
+  "当前路径: " + peer.path, "Direct endpoint: " + (peer.endpoint || "未提供"),
+  "Home DERP: " + (peer.relay || "未提供") + "（不代表实际路径）", "Peer relay: " + (peer.peerRelay || "未提供"),
+  "最近活跃: " + (peer.lastSeen || "未提供"), "可作为 Exit Node: " + yes(peer.exitNode),
+  "通告 Subnet Routes: " + (peer.subnets.join(", ") || "未提供")].join("\n");
+}
+function renderPeers() {
+ [true, false, null].forEach((online, group) => {
+  const container = $("peers-" + ["online", "offline", "unknown"][group]);
+  container.textContent = "";
+  const items = state.peers.filter(peer => peer.online === online);
+  $(container.id + "-empty").hidden = items.length > 0;
+  items.forEach(peer => {
+   const card = document.createElement("article"); card.className = "card peer-card";
+   const title = document.createElement("h3"); title.textContent = peer.hostname;
+   const subtitle = document.createElement("p"); subtitle.className = "summary";
+   subtitle.textContent = [peer.os, ...peer.ipv4, ...peer.ipv6].join(" · ");
+   const path = document.createElement("p"); path.className = "peer-path";
+   path.textContent = peer.path + (peer.path === "Direct" ? " · " + peer.endpoint : peer.path === "DERP" ? " · " + peer.relay : " · 尚未确认活跃连接");
+   const ping = document.createElement("p"); ping.className = "summary peer-ping-result"; ping.setAttribute("aria-live", "polite");
+   ping.textContent = state.peerPings[peer.id] || "";
+   const actions = document.createElement("div"); actions.className = "peer-actions";
+   function button(label, fn) { const b=document.createElement("button"); b.className="button secondary root-action"; b.textContent=label; b.onclick=fn; actions.appendChild(b); return b; }
+   const ip=peer.ipv4[0] || peer.ipv6[0];
+   const probe=button("Ping",()=>pingPeer(peer,ip)); probe.dataset.unavailable=String(!ip); probe.disabled=state.busy || !ip;
+   button("详情",()=>openModal({title:peer.hostname,summary:"只读状态快照；未提供字段不代表未配置。",output:peerDetails(peer)}));
+   button("复制",async()=>{
+    const choices=[["hostname", "设备名称"], ...peer.ipv4.map(v=>[v,"IPv4 · "+v]), ...peer.ipv6.map(v=>[v,"IPv6 · "+v])];
+    const selected=await openModal({title:"复制设备信息",choices});
+    if(selected) await copyOutput(selected==="hostname"?peer.hostname:selected);
+   });
+   const capabilities=document.createElement("p");capabilities.className="summary";
+   capabilities.textContent=[peer.exitNode===true?"可作为 Exit Node":"",peer.subnets.length?"Subnet · "+peer.subnets.join(", "):"",peer.lastSeen?"最近活跃 · "+peer.lastSeen:""].filter(Boolean).join(" · ");
+   card.append(title,subtitle,path,capabilities,ping,actions);container.appendChild(card);
+  });
+ });
+}
+async function pingPeer(peer, ip) {
+ if(state.busy || !ip) return;
+ state.peerPings[peer.id]="正在探测，最多约 12 秒…"; renderPeers();
+ const epoch=state.epoch;
+ let output, failure;
+ await operation(async()=>{
+  const result=await run(peerPingCommand(ip),true);
+  if(epoch!==state.epoch)return;
+  output=rawOutput(result);failure=result.errno!==0;
+  const summary=pingSummary(output);
+  state.peerPings[peer.id]=failure ? "探测失败 / 超时 · "+errorText(result) : summary.path+" · "+summary.rtt;
+ });
+ renderPeers();
+ if(output) await openModal({title:"Ping · "+peer.hostname,summary:state.peerPings[peer.id],output,failure});
+}
+async function loadPeers() {
+ if(state.peerRequest)return state.peerRequest;
+ const epoch=state.epoch; text("peers-note","正在读取设备…");
+ state.peerRequest=(async()=>{
+  const result=await run("tailscale status --json",true);
+  if(epoch!==state.epoch)return;
+  try {
+   if(result.errno!==0)throw new Error(errorText(result));
+   const data=JSON.parse(result.stdout);
+   if(!data || typeof data!=="object" || Array.isArray(data))throw new Error("无效 status JSON");
+   state.peers=peerList(data);renderPeers();
+   text("peers-note",`${state.peers.length} 台设备 · ${new Date().toLocaleTimeString()} · 当前路径只表示活跃连接`);
+   $("peers-note").classList.remove("warning");
+  }catch(error){text("peers-note",`读取失败：${String(error).slice(0,180)}；已显示列表是上次快照。`);$("peers-note").classList.add("warning");}
+ })();
+ try{await state.peerRequest;}finally{state.peerRequest=null;}
+}
+
 async function loadNetwork() {
   if (state.networkRequest) return state.networkRequest;
   const epoch = state.epoch;
@@ -846,6 +926,9 @@ async function selectDemo() {
     state.status = {};
     state.prefs = {};
     state.nodeName = "";
+    state.peers = [];
+    state.peerPings = {};
+    renderPeers();
     state.networkReport = null;
     state.networkRaw = "";
     state.prefsReady = false;
@@ -882,6 +965,7 @@ function wire() {
   $("btn-logout").onclick = logout;
   $("btn-dns-refresh").onclick = () => probe("dns-refresh");
   $("routes-refresh").onclick = () => operation(loadRoutes);
+  $("peers-refresh").onclick = () => operation(loadPeers);
   $("netdiag-refresh").onclick = () => operation(loadNetwork);
   $("netdiag-raw").onclick = () => openModal({ title: "网络诊断原始输出", summary: "包含命令 stdout / stderr、错误与超时信息，可复制。", output: state.networkRaw || "尚未采集" });
   $("btn-src-daemon").onclick = () => setSource("daemon");

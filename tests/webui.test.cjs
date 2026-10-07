@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
 const ROOT = path.resolve(__dirname, "..");
+require("./peers-ui.test.cjs");
 const { chromium } = require(
   require.resolve("playwright", {
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
@@ -14,7 +15,7 @@ const acorn = require(
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
   }),
 );
-for (const name of ["app.js", "ksu.js", "demo.js", "commands.js", "network.js"])
+for (const name of ["app.js", "ksu.js", "demo.js", "commands.js", "network.js", "peers.js"])
   acorn.parse(fs.readFileSync(path.join(ROOT, "webroot", name), "utf8"), {
     ecmaVersion: 2019,
     sourceType: "module",
@@ -96,6 +97,7 @@ const server = http.createServer((req, res) => {
       for (const name of [
         "home",
         "settings",
+        "peers",
         "network",
         "dns",
         "routing",
@@ -341,6 +343,27 @@ const server = http.createServer((req, res) => {
       "PASS mock actions, five scenarios, seven pages, themes, diagnostics, dialogs/back, local resources",
     );
 
+    // Dedicated peers page: grouped rows, safe details/copy/ping, no list on home.
+    await page.goto(`${base}/?demo=cellular#peers`);
+    await page.locator("#peers-online .peer-card").first().waitFor();
+    assert.equal(await page.locator("#peers-online .peer-card").count(),2);
+    assert.equal(await page.locator("#peers-offline .peer-card").count(),1);
+    assert.equal(await page.locator("#page-home .peer-card").count(),0);
+    const eaidk=page.locator(".peer-card").filter({has:page.locator("h3",{hasText:"eaidk-310"})});
+    await eaidk.getByRole("button",{name:"详情",exact:true}).click();
+    await page.locator("#dialog-output").filter({hasText:"192.168.50.0/24"}).waitFor();
+    await page.locator("#dialog-cancel").click();await page.locator("#overlay").waitFor({state:"hidden"});
+    await eaidk.getByRole("button",{name:"Ping",exact:true}).click();await idle();
+    await page.locator("#dialog-output").filter({hasText:"33ms"}).waitFor();
+    await page.locator("#dialog-cancel").click();await page.locator("#overlay").waitFor({state:"hidden"});
+    assert.match(await eaidk.locator(".peer-ping-result").innerText(),/Direct.*33ms/);
+    await eaidk.getByRole("button",{name:"复制",exact:true}).click();
+    await page.locator("#dialog-choices button").filter({hasText:"IPv6"}).click();await page.locator("#overlay").waitFor({state:"hidden"});
+    await page.goto(`${base}/?demo=stopped#peers`);
+    await page.locator("#peers-note").filter({hasText:"0 台设备"}).waitFor();
+    assert.equal(await page.locator("#peers-online .peer-card").count(),0);
+    console.log("PASS peers page grouping, details/subnets, IPv6 copy, bounded ping/RTT and stopped empty state");
+
     // Independent fake native bridge: assert exact legacy commands and failed
     // writes/read failures. Demo fixtures are not used for this API contract.
     const native = await browser.newPage({
@@ -473,6 +496,8 @@ const server = http.createServer((req, res) => {
           } else if (command === "tailscaled.service logout") {
             window.fakeStatus.backend = "NeedsLogin";
             window.fakeStatus.user = "";
+          } else if (command.startsWith("tailscale ping --timeout=3s --c=3 --until-direct=false ")) {
+            errno=1;stderr="ping timeout";
           } else if (command === "tailscale up --timeout=8s") {
             errno = 1;
             stderr = "https://login.tailscale.com/a/native-fixture";
@@ -481,7 +506,7 @@ const server = http.createServer((req, res) => {
               ? "invalid status output"
               : JSON.stringify({
                   Self: window.fakeSelf,
-                  Peer: { other: { HostName: "other-device" } },
+                  Peer: window.fakePeers || { other: { HostName: "other-device" } },
                 });
           } else if (
             /^tailscaled.service (start|stop|restart)$/.test(command)
@@ -871,6 +896,26 @@ const server = http.createServer((req, res) => {
     await native.locator("#primary-action").click();
     await idle(native);
     assert.deepEqual(await native.evaluate(() => window.commands), []);
+    await native.goto(`${base}/`);
+    await native.locator("#status-main").filter({hasText:"已连接"}).waitFor();
+    await native.evaluate(()=>{
+      window.badStatusJSON=false;
+      window.fakePeers={self:{...window.fakeSelf,ID:"self",TailscaleIPs:["100.64.1.2"]},online:{HostName:"<script>peer</script>",Online:true,Active:true,TailscaleIPs:["100.72.239.86"],Relay:"hkg",ExitNodeOption:true},offline:{Online:false,CurAddr:"stale"},missing:{}};
+      window.fakeSelf.ID="self";window.fakeSelf.TailscaleIPs=["100.64.1.2"];
+    });
+    await native.locator('[data-nav="peers"]').click();
+    await native.locator("#peers-online .peer-card").waitFor();
+    assert.equal(await native.locator(".peer-card").count(),3);
+    assert.equal(await native.locator(".peer-card script").count(),0);
+    await native.locator("#peers-online").getByRole("button",{name:"Ping",exact:true}).click();
+    await native.locator("#dialog-output").filter({hasText:"ping timeout"}).waitFor();
+    await native.locator("#dialog-cancel").click();await native.locator("#overlay").waitFor({state:"hidden"});
+    await native.evaluate(()=>window.badStatusJSON=true);
+    await native.locator("#peers-refresh").click();
+    await native.locator("#peers-note").filter({hasText:"读取失败"}).waitFor();
+    assert.equal(await native.locator(".peer-card").count(),3);
+    assert.deepEqual(nativeErrors,[]);
+    console.log("PASS peers native timeout, invalid JSON/cache, self exclusion, missing fields and HTML safety");
     console.log(
       "PASS native bridge command contract, failure rollback, cached state, unknown DNS fields, HTML safety, demo isolation",
     );
