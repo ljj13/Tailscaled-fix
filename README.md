@@ -3,11 +3,11 @@
 **简体中文** | [English](README.en.md)
 
 由 **FogPurification** 维护。当前发布版本：
-[v1.102.5-dnsfix.2-webui.2](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.2)。
+[v1.102.5-dnsfix.2-webui.3](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.3)。
 基于 Tailscale `v1.102.5`，包含已通过 Redmi 真机验收的 Android DNS 修复、
 Miuix 风格 WebUI、网络诊断、Android 默认设备名初始化与 outer IPv6 路由修复。
 
-相关文档：[使用指南](docs/USAGE.md)、[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.2.md)、
+相关文档：[使用指南](docs/USAGE.md)、[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.3.md)、
 [DNS 审计与真机测试](docs/dns/DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
 [设备名初始化](docs/ANDROID_HOSTNAME.md)、[文档索引](docs/README.md)。
 
@@ -42,7 +42,7 @@ su -c 'tailscale login'
 升级时直接覆盖安装新 ZIP，再重启即可。安装器保留现有 Tailscale state、登录身份、
 `settings.ini`、手工路由和设备名保护标记，无需退出登录或删除节点。
 
-main 尚未发布的安装器另有[私有版本化升级备份](docs/UPGRADE_BACKUPS.md)，只保存配置和旧脚本，
+本版安装器提供[私有版本化升级备份](docs/UPGRADE_BACKUPS.md)，只保存配置和旧脚本，
 不复制 state，最多保留5份。[Release CI](docs/RELEASE_CI.md) 支持 tag 自动发布与手动只验证。
 
 WebUI 的 MagicDNS 开关用于调整 Tailscale DNS 偏好。Android DNS helper 会获取
@@ -304,7 +304,8 @@ uninstall.sh              停止 daemon 并移除模块路由
 
 在 Linux / WSL 中使用 Go 1.26.6 和 Python 3，运行 `sh scripts/build.sh`。
 构建固定使用 Tailscale `v1.102.5`，应用现有 fwmark 与 Android DNS 补丁，执行相关测试，
-并生成 `dist/tailscaled-v1.102.5-dnsfix.2-webui.2-arm64.zip`。
+正式 Release 使用 `python3 scripts/release-ci.py build --tag v1.102.5-dnsfix.2-webui.3`，
+按 module.prop 生成版本化 ZIP；本地与 tag CI 共用同一打包规则。
 分支构建工作流只生成 artifact，不会自动修改 main 或发布 Release。
 模块不接入上游自动更新，避免其他构建替换本模块的 DNS 修复。
 

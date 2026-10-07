@@ -3,11 +3,11 @@
 [简体中文](README.md) | **English**
 
 Maintained by **FogPurification**. Current release:
-[v1.102.5-dnsfix.2-webui.2](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.2).
+[v1.102.5-dnsfix.2-webui.3](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.3).
 It combines the Redmi-verified Android DNS fixes, a Miuix-inspired WebUI and
 one-time Android device-name initialization, network diagnostics and the outer IPv6
 routing fix on the pinned Tailscale `v1.102.5` base.
-See the [usage guide (Chinese)](docs/USAGE.md), [release notes](docs/releases/v1.102.5-dnsfix.2-webui.2.md),
+See the [usage guide (Chinese)](docs/USAGE.md), [release notes](docs/releases/v1.102.5-dnsfix.2-webui.3.md),
 [DNS audit and device tests](docs/dns/DNS_FIX.md),
 [WebUI design and tests](docs/WEBUI_MIUIX.md),
 [hostname initialization](docs/ANDROID_HOSTNAME.md) and
@@ -27,9 +27,9 @@ See the [IPv6 device verification report](docs/testing/IPV6_MARKED_ROUTING.md).
 A self-contained module that runs `tailscaled` on a rooted Android device and
 lets browsers and apps reach the tailnet and a peer's advertised subnets.
 
-Unreleased main adds [private versioned upgrade snapshots](docs/UPGRADE_BACKUPS.md)
+This release adds [private versioned upgrade snapshots](docs/UPGRADE_BACKUPS.md)
 (five retained, no state copy) and [tag Release CI](docs/RELEASE_CI.md).
-Manual workflow runs validate only; the published release is unchanged.
+Manual workflow runs validate only; tag pushes publish after asset verification.
 
 It is built **`GOOS=linux`** on purpose — see below — and carries the three fixes
 that make a linux build survive Android.
@@ -351,7 +351,9 @@ survive module updates.
 
 Run `sh scripts/build.sh` under Linux/WSL with Go 1.26.6 and Python 3. The build
 pins Tailscale v1.102.5, applies the existing fwmark patch and Android DNS patches,
-runs the relevant tests, and packages `dist/tailscaled-v1.102.5-dnsfix.2-webui.2-arm64.zip`.
+runs the relevant tests. Formal releases use
+`python3 scripts/release-ci.py build --tag v1.102.5-dnsfix.2-webui.3`, sharing the
+same versioned packaging rules locally and in tag CI.
 The branch workflow produces an artifact; it does not change main or publish a
 release automatically. The module does not subscribe to upstream's updater,
 which could replace this DNS fix with another build.
