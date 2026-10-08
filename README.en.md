@@ -2,12 +2,14 @@
 
 [简体中文](README.md) | **English**
 
+This release adds Peers, redacted diagnostic preview/copy/save, faster network-change synchronization and Android system theme following. Redmi/KernelSU device acceptance passed; APatch has not been device-tested. Exit Node Client and its selector are not included. Exit scoped-policy remains a separate DRAFT; its IPv4 TLS issue is unresolved.
+
 Maintained by **FogPurification**. Current release:
-[v1.102.5-dnsfix.2-webui.3](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.3).
+[v1.102.5-dnsfix.2-webui.4](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.4).
 It combines the Redmi-verified Android DNS fixes, a Miuix-inspired WebUI and
 one-time Android device-name initialization, network diagnostics and the outer IPv6
 routing fix on the pinned Tailscale `v1.102.5` base.
-See the [usage guide (Chinese)](docs/USAGE.md), [release notes](docs/releases/v1.102.5-dnsfix.2-webui.3.md),
+See the [usage guide (Chinese)](docs/USAGE.md), [release notes](docs/releases/v1.102.5-dnsfix.2-webui.4.md),
 [DNS audit and device tests](docs/dns/DNS_FIX.md),
 [WebUI design and tests](docs/WEBUI_MIUIX.md),
 [hostname initialization](docs/ANDROID_HOSTNAME.md) and
@@ -175,15 +177,15 @@ safe areas and uses local resources and system fonts.
 |---|---|
 | **Home / 首页** | Connection state, device/Tailnet/account information, start/stop/restart and login. |
 | **Settings / 设置** | Accept routes, MagicDNS, Shields up, advertised exit node, hostname and login/logout. |
-| **Devices / 设备 (main, unreleased)** | Grouped peers, paths, Exit/Subnet capabilities, bounded ping, copy and details. |
+| **Devices / 设备** | Grouped peers, paths, Exit/Subnet capabilities, bounded ping, copy and details. |
 | **Network / 网络详情** | Physical interface, Android VPN underlying network, selftest and links to advanced details. |
 | **DNS diagnostics** | Resolver source, network/transport, selected/excluded interfaces, reachability and marked probes; all dnsfix.2 fields retained. |
 | **Routing details** | Main route, table 52, discovered/manual routes and proxy exemptions. |
 | **Logs / 日志** | Daemon and diagnostic output, refresh/copy/clear. |
 | **About / 关于** | Module version, author, build information and supported capabilities. |
 
-Main also includes [redacted diagnostic export](docs/DIAGNOSTIC_REPORT.md) and
-[network convergence notifications](docs/NETWORK_CONVERGENCE.md). These are unreleased;
+This release also includes [redacted diagnostic export](docs/DIAGNOSTIC_REPORT.md) and
+[network convergence notifications](docs/NETWORK_CONVERGENCE.md).
 the [acceptance report](docs/testing/PEERS_REPORT_CONVERGENCE.md) records measured gains and limitations.
 
 Native actions retain the existing service/CLI API. The bridge uses physical
@@ -357,7 +359,7 @@ survive module updates.
 Run `sh scripts/build.sh` under Linux/WSL with Go 1.26.6 and Python 3. The build
 pins Tailscale v1.102.5, applies the existing fwmark patch and Android DNS patches,
 runs the relevant tests. Formal releases use
-`python3 scripts/release-ci.py build --tag v1.102.5-dnsfix.2-webui.3`, sharing the
+`python3 scripts/release-ci.py build --tag v1.102.5-dnsfix.2-webui.4`, sharing the
 same versioned packaging rules locally and in tag CI.
 The branch workflow produces an artifact; it does not change main or publish a
 release automatically. The module does not subscribe to upstream's updater,

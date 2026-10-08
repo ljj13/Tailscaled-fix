@@ -1,9 +1,10 @@
 # 发布说明
 
-当前发布版本：[v1.102.5-dnsfix.2-webui.3](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.3)。
+当前发布版本：[v1.102.5-dnsfix.2-webui.4](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.4)。
 
 | 版本 | 说明 |
 |---|---|
+| v1.102.5-dnsfix.2-webui.4 | [Peers、脱敏报告、网络收敛与系统主题](v1.102.5-dnsfix.2-webui.4.md) |
 | v1.102.5-dnsfix.2-webui.3 | [真实升级备份与 Release CI 发布事务](v1.102.5-dnsfix.2-webui.3.md) |
 | v1.102.5-dnsfix.2-webui.2 | [网络诊断、outer IPv6 路由与 direct P2P 修复](v1.102.5-dnsfix.2-webui.2.md) |
 | v1.102.5-dnsfix.2-webui.1 | [Miuix WebUI、bridge 修复与 Android 默认设备名](v1.102.5-dnsfix.2-webui.1.md) |

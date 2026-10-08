@@ -237,5 +237,30 @@ class BundleValidationTests(unittest.TestCase):
             self.tool.verify_bundle(ROOT, self.bundle, self.tag)
 
 
+
+class TestStableWebUISuites(unittest.TestCase):
+    def test_release_runs_all_stable_webui_suites(self):
+        tool = load_tool()
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            with mock.patch.object(tool.subprocess, 'run') as execute, mock.patch.object(tool, 'run', return_value='/browser'):
+                tool.test(root)
+            names = [call.args[0][1] for call in execute.call_args_list if call.args[0][0] == 'node']
+            self.assertEqual(names, ['tests/' + name + '.test.cjs' for name in
+                ('webui-command', 'network-ui', 'peers-ui', 'report-ui', 'theme-ui', 'webui')])
+            self.assertTrue(all(call.kwargs['check'] for call in execute.call_args_list))
+
+    def test_theme_failure_stops_release_test_entry(self):
+        tool = load_tool()
+        def execute(args, **kwargs):
+            if args == ['node', 'tests/theme-ui.test.cjs']:
+                raise tool.subprocess.CalledProcessError(1, args)
+        with tempfile.TemporaryDirectory() as directory:
+            with mock.patch.object(tool.subprocess, 'run', side_effect=execute) as calls, mock.patch.object(tool, 'run', return_value='/browser'):
+                with self.assertRaises(tool.subprocess.CalledProcessError):
+                    tool.test(pathlib.Path(directory))
+                self.assertFalse(any(call.args[0] == ['node', 'tests/webui.test.cjs'] for call in calls.call_args_list))
+
+
 if __name__ == '__main__':
     unittest.main()

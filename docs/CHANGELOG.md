@@ -2,6 +2,14 @@
 
 完整功能说明和验证范围见 [发布说明](releases/README.md)。
 
+## v1.102.5-dnsfix.2-webui.4 · 2026-10-08
+
+- 发布 Peers、脱敏报告、网络变化同步优化及 Android 系统主题修复。
+- KernelSU 真机验收 PASS；APatch 未真机验收，不包含 Exit Node Client。
+- CI 显式覆盖 Peers/Report/Theme；固定 core payload 不变。
+
+[发布说明](releases/v1.102.5-dnsfix.2-webui.4.md)
+
 ## v1.102.5-dnsfix.2-webui.3 · 2026-10-07
 
 - 增加升级前私有版本化配置/脚本快照，最多5份，不复制敏感 state，不改变升级身份保留语义。

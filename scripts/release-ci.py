@@ -110,7 +110,7 @@ def test(root):
     scripts += sorted((root / 'tailscale/scripts').glob('*')) + sorted((root / 'system/bin').glob('*'))
     subprocess.run(['shellcheck', '-s', 'sh', '-S', 'warning', '-e', 'SC1090,SC1091,SC2034,SC2086,SC2154', *map(str, scripts)], check=True)
     browser = run(['node', '-e', "console.log(require('./build/browser-tools/node_modules/playwright').chromium.executablePath())"], root)
-    for name in ('webui-command', 'network-ui', 'webui'):
+    for name in ('webui-command', 'network-ui', 'peers-ui', 'report-ui', 'theme-ui', 'webui'):
         subprocess.run(['node', f'tests/{name}.test.cjs'], cwd=root,
                        env={**os.environ, 'WEBUI_BROWSER': os.environ.get('WEBUI_BROWSER', browser)}, check=True)
     run(['git', 'diff', '--check'], root)

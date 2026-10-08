@@ -3,11 +3,11 @@
 **简体中文** | [English](README.en.md)
 
 由 **FogPurification** 维护。当前发布版本：
-[v1.102.5-dnsfix.2-webui.3](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.3)。
+[v1.102.5-dnsfix.2-webui.4](https://github.com/ljj13/Tailscaled-fix/releases/tag/v1.102.5-dnsfix.2-webui.4)。
 基于 Tailscale `v1.102.5`，包含已通过 Redmi 真机验收的 Android DNS 修复、
 Miuix 风格 WebUI、网络诊断、Android 默认设备名初始化与 outer IPv6 路由修复。
 
-相关文档：[使用指南](docs/USAGE.md)、[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.3.md)、
+相关文档：[使用指南](docs/USAGE.md)、[发布说明](docs/releases/v1.102.5-dnsfix.2-webui.4.md)、
 [DNS 审计与真机测试](docs/dns/DNS_FIX.md)、[WebUI 设计与测试](docs/WEBUI_MIUIX.md)、
 [设备名初始化](docs/ANDROID_HOSTNAME.md)、[文档索引](docs/README.md)。
 
@@ -27,6 +27,10 @@ Wi-Fi/移动数据切换由 watchdog 自动更新物理网络策略；测试中�
 项目沿用 [mgksu/tailscaled](https://github.com/mgksu/tailscaled) 的模块实现；
 该项目源自 [anasfanani/Magisk-Tailscaled](https://github.com/anasfanani/Magisk-Tailscaled)。
 本仓库使用的 `v1.102.5` 基线来自 [keweiya/tailscaled](https://github.com/keweiya/tailscaled)。
+
+本版新增 Peers 页面、脱敏诊断报告预览/复制/保存、网络变化同步优化，以及 Android 系统主题跟随修复。KernelSU 已通过 Redmi 真机验收；APatch 尚未真机验收。
+
+本次不包含 Exit Node Client 或选择器；Exit scoped-policy 保持独立 DRAFT，IPv4 TLS 故障仍 unresolved。
 
 ## 安装与升级
 
@@ -61,7 +65,7 @@ Magisk WebUI 宿主。支持 WebUI 的管理器可从模块卡片打开界面。
 | 页面 | 内容 |
 |---|---|
 | 首页 | 连接状态、设备 / Tailnet / 账号信息、启动 / 停止 / 重启和登录。 |
-| 设备（main，未发布） | 在线 / 离线 Peers、路径、Exit/Subnet 能力、只读 ping、复制和详情。 |
+| 设备 | 在线 / 离线 Peers、路径、Exit/Subnet 能力、只读 ping、复制和详情。 |
 | 设置 | 接受子网路由、MagicDNS、Shields up、通告出口节点、设备名和登录 / 退出登录。 |
 | 网络详情 | 物理接口、Android VPN 底层网络、selftest 和高级诊断入口。 |
 | DNS 诊断 | DNS 来源、网络 / transport、选中与排除的接口、可达性和带 fwmark 的探测结果；保留全部 dnsfix.2 字段。 |
@@ -72,8 +76,8 @@ Magisk WebUI 宿主。支持 WebUI 的管理器可从模块卡片打开界面。
 WebUI 保留现有 service / CLI API。Bridge 使用实际安装路径调用命令，并保留自定义 socket
 设置，不依赖系统 overlay 中的命令查找。页面隐藏时暂停状态轮询。
 
-当前 main 还增加了[脱敏诊断报告](docs/DIAGNOSTIC_REPORT.md)和[切网收敛优化](docs/NETWORK_CONVERGENCE.md)，
-尚未发布到 Release；[三阶段验收](docs/testing/PEERS_REPORT_CONVERGENCE.md)包含实际切换数据及局限。
+本版还包含[脱敏诊断报告](docs/DIAGNOSTIC_REPORT.md)和[切网收敛优化](docs/NETWORK_CONVERGENCE.md)，
+[三阶段验收](docs/testing/PEERS_REPORT_CONVERGENCE.md)包含实际切换数据及局限。
 
 以下截图使用**桌面浏览器 mock 数据**，不是手机实拍。
 截图保留中文界面，中英文 README 使用相同图片。
@@ -308,7 +312,7 @@ uninstall.sh              停止 daemon 并移除模块路由
 
 在 Linux / WSL 中使用 Go 1.26.6 和 Python 3，运行 `sh scripts/build.sh`。
 构建固定使用 Tailscale `v1.102.5`，应用现有 fwmark 与 Android DNS 补丁，执行相关测试，
-正式 Release 使用 `python3 scripts/release-ci.py build --tag v1.102.5-dnsfix.2-webui.3`，
+正式 Release 使用 `python3 scripts/release-ci.py build --tag v1.102.5-dnsfix.2-webui.4`，
 按 module.prop 生成版本化 ZIP；本地与 tag CI 共用同一打包规则。
 分支构建工作流只生成 artifact，不会自动修改 main 或发布 Release。
 模块不接入上游自动更新，避免其他构建替换本模块的 DNS 修复。
