@@ -2,7 +2,7 @@
 
 日期：2026-10-08。设备：Redmi Note 8 Pro；KernelSU v3.3.0，真实模块 WebView。
 
-**发布门槛：PENDING。** 稳定功能、安装和网络回归通过；系统设置实际切换深色模式后，WebView 跟随主题这一项仍待人工补验。本轮没有 tag、Release 或 update.json 修改。
+**发布门槛：已收口，RELEASE_READY=YES。** 本文记录初轮稳定功能、安装和网络验收；当时待验的系统主题已在后续真机验收中完成，并增加仅限主题的修复。详见 [Android 系统主题验收](ANDROID_THEME_ACCEPTANCE.md)。没有 tag、Release 或 update.json 修改。
 
 ## 代码范围与实验隔离
 
@@ -65,7 +65,7 @@ tools/android-netdiag/watch.go
 | 停止 / 启动 / 重启 | PASS：停止后 daemon 消失，启动恢复 Running；重启 PID 21405→23568，身份不变 |
 | 浅色 | PASS：真实 KernelSU WebView |
 | 深色 CSS / WebView 渲染 | PASS：真实 WebView 经 CDP 模拟 prefers-color-scheme: dark；桌面浅/深主题浏览器测试通过 |
-| 实际系统主题跟随 | PENDING：cmd uimode night yes 返回开启，但此 ROM 的 WebView 仍报告浅色；不能用模拟结果替代真实系统设置切换 |
+| 实际系统主题跟随 | 初轮 PENDING；后续真实系统设置/打开状态/冷启动已 PASS，见 [主题收口报告](ANDROID_THEME_ACCEPTANCE.md)。初轮 CDP 模拟仍不算真实系统切换 |
 
 报告导出先检查 redaction/header，再分块 base64 传入既有 exec；私有暂存目录 0700，不读取 tailscaled.state。固定导出目录与受限文件名，避免原始报告进入 shell 语法。公有 Download 文件是用户明确选择保存的脱敏报告；仍保留排障所需的 IP、hostname、接口和 DERP 信息。
 
@@ -134,4 +134,4 @@ tools/android-netdiag/watch.go
 
 USB 保持亮屏恢复为用户要求的永久值2；系统夜间模式恢复原值no；KernelSU 临时 WebView debugging 配置已逐字节恢复原件，专用9223转发撤销。手机最终移动数据、FlClash OFF、Exit OFF，服务 Running；Fog AdvertiseRoutes=null，保持原角色。
 
-Exit DRAFT 没有合入；主题补验前发布门槛保留 PENDING，之后仍等待用户确认发布。
+Exit DRAFT 没有合入；后续主题补验已完成，发布门槛通过，仍等待用户确认发布。
