@@ -4,6 +4,7 @@ import { nativeCommand } from "./commands.js";
 import { diagnosticRows } from "./network.js";
 import { peerList, peerPingCommand, pingSummary } from "./peers.js";
 import { exportText, saveNativeReport } from "./report.js";
+import { ANDROID_THEME_COMMAND, createThemeSync } from "./theme.js";
 
 const SVC = "tailscaled.service";
 const DAEMON_LOG = "/data/adb/tailscale/run/tailscaled.log";
@@ -101,6 +102,17 @@ async function run(command, quiet = false) {
   if (result.errno !== 0 && !quiet) toast(errorText(result));
   return result;
 }
+const themeSync = createThemeSync({
+  media: () => matchMedia("(prefers-color-scheme: dark)").matches,
+  // Isolate this read-only UI query from the service queue: a lost optional
+  // callback must never block status, logs, preferences or service actions.
+  readSystem: demo ? null : () => exec(nativeCommand(ANDROID_THEME_COMMAND)),
+  apply: (theme) => {
+    document.documentElement.dataset.theme = theme;
+    renderStatus();
+  },
+});
+
 function errorText(result) {
   return (
     result.stderr ||
@@ -380,7 +392,7 @@ function renderStatus() {
     [
       "主题",
       "prefers-color-scheme",
-      matchMedia("(prefers-color-scheme: dark)").matches
+      document.documentElement.dataset.theme === "dark"
         ? "深色 · 跟随系统"
         : "浅色 · 跟随系统",
     ],
@@ -1083,10 +1095,15 @@ function wire() {
     $("page-title").focus();
   };
   const theme = matchMedia("(prefers-color-scheme: dark)");
-  if (theme.addEventListener) theme.addEventListener("change", renderStatus);
-  else theme.addListener(renderStatus);
+  if (theme.addEventListener) theme.addEventListener("change", themeSync.refresh);
+  else theme.addListener(themeSync.refresh);
+  window.addEventListener("focus", themeSync.refresh);
+  window.addEventListener("pageshow", themeSync.refresh);
   document.addEventListener("visibilitychange", () => {
-    if (!state.busy && document.visibilityState === "visible") refreshPage();
+    if (!state.busy && document.visibilityState === "visible") {
+      themeSync.refresh();
+      refreshPage();
+    }
   });
 }
 
@@ -1122,4 +1139,11 @@ setInterval(() => {
     document.visibilityState === "visible"
   )
     loadOutput();
+}, 5000);
+
+// Only a bounded, read-only theme query while visible. Existing network/status
+// and log polling retain their cadence; no daemon/network action is triggered.
+themeSync.refresh();
+setInterval(() => {
+  if (!demo && !state.busy && document.visibilityState === "visible") themeSync.refresh();
 }, 5000);

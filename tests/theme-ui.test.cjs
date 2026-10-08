@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+(async()=>{const source=fs.readFileSync(path.join(__dirname,'../webroot/theme.js'),'utf8');const {parseAndroidTheme,createThemeSync,ANDROID_THEME_COMMAND}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+assert.equal(ANDROID_THEME_COMMAND,'/system/bin/timeout 2 /system/bin/dumpsys uimode');
+for(const [stdout,expected] of [['mNightMode=2 (yes) mComputedNightMode=true',true],['mNightMode=0 (auto) mComputedNightMode=false',false],['mComputedNightMode=false mComputedNightMode=true',null],['mNightMode=2 (yes)',null],['mComputedNightMode=trueish',null],['',null]])assert.equal(parseAndroidTheme({errno:0,stdout}),expected);
+assert.equal(parseAndroidTheme({errno:1,stdout:'mComputedNightMode=true'}),null);
+const applied=[];let dark=false,result={errno:0,stdout:'mComputedNightMode=true'},calls=0;
+const sync=createThemeSync({media:()=>dark,readSystem:async()=>{calls++;return result},apply:v=>applied.push(v),timeoutMs:20});
+assert.equal(sync.current(),false);await sync.refresh();assert.equal(sync.current(),true,'Android dark overrides light-only host');dark=true;result={errno:0,stdout:'mComputedNightMode=false'};await sync.refresh();assert.equal(sync.current(),false,'Android light overrides stale host dark');result={errno:1,stdout:''};await sync.refresh();assert.equal(sync.current(),false,'failed read retains verified theme');assert.deepEqual(applied,['light','dark','light']);
+const fallback=createThemeSync({media:()=>dark,readSystem:null,apply:()=>{}});assert.equal(fallback.current(),true);dark=false;await fallback.refresh();assert.equal(fallback.current(),false,'desktop follows media without root commands');
+let resolve,reads=0;const slow=createThemeSync({media:()=>false,readSystem:()=>{reads++;return new Promise(r=>{resolve=r})},apply:()=>{},timeoutMs:5});const first=slow.refresh();await slow.refresh();await first;await slow.refresh();assert.equal(reads,1,'hung bridge never accumulates polls');resolve({errno:0,stdout:'mComputedNightMode=true'});await new Promise(r=>setTimeout(r,0));assert.equal(slow.current(),false,'late timed-out response cannot change theme');
+console.log('PASS Android theme parser, host mismatch, live/reopen decisions, failure fallback, timeout/coalescing and demo isolation');
+})().catch(e=>{console.error(e);process.exit(1)});

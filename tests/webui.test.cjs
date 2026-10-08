@@ -6,6 +6,7 @@ const http = require("node:http");
 const ROOT = path.resolve(__dirname, "..");
 require("./peers-ui.test.cjs");
 require("./report-ui.test.cjs");
+require("./theme-ui.test.cjs");
 const { chromium } = require(
   require.resolve("playwright", {
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
@@ -16,7 +17,7 @@ const acorn = require(
     paths: [path.join(ROOT, "build/browser-tools"), ROOT],
   }),
 );
-for (const name of ["app.js", "ksu.js", "demo.js", "commands.js", "network.js", "peers.js", "report.js"])
+for (const name of ["app.js", "ksu.js", "demo.js", "commands.js", "network.js", "peers.js", "report.js", "theme.js"])
   acorn.parse(fs.readFileSync(path.join(ROOT, "webroot", name), "utf8"), {
     ecmaVersion: 2019,
     sourceType: "module",
@@ -485,7 +486,10 @@ const server = http.createServer((req, res) => {
           let stdout = "",
             errno = 0,
             stderr = "";
-          if (command === "tailscaled.service webstatus") {
+          if (command === "/system/bin/timeout 2 /system/bin/dumpsys uimode") {
+            if (window.hangTheme) { window.hungThemeCallback = callback; return; }
+            stdout = "mComputedNightMode=" + Boolean(window.fakeNight);
+          } else if (command === "tailscaled.service webstatus") {
             stdout = kv(window.fakeStatus);
             if (window.failStatus) {
               errno = 1;
@@ -571,6 +575,25 @@ const server = http.createServer((req, res) => {
       .waitFor();
     await idle(native);
     assert.equal(await native.locator("#demo-bar").isVisible(), false);
+    // A light-only host must still follow the computed Android system theme.
+    await native.evaluate(() => { window.fakeNight = true; window.dispatchEvent(new Event("focus")); });
+    await native.waitForFunction(() => document.documentElement.dataset.theme === "dark");
+    assert.equal(await native.locator(".violet").first().evaluate(el => getComputedStyle(el).backgroundColor), "rgb(48, 40, 62)");
+    assert.equal(await native.locator(".switch:not(:checked)").first().evaluate(el => getComputedStyle(el).backgroundColor), "rgb(85, 86, 92)");
+    await native.evaluate(() => { window.fakeNight = false; window.dispatchEvent(new Event("focus")); });
+    await native.waitForFunction(() => document.documentElement.dataset.theme === "light");
+    assert.equal(await native.locator(".violet").first().evaluate(el => getComputedStyle(el).backgroundColor), "rgb(238, 233, 250)");
+    console.log("PASS computed Android theme overrides light-only host; live palette/icons/switches and restoration");
+    await native.evaluate(() => { window.hangTheme = true; window.dispatchEvent(new Event("focus")); });
+    await native.waitForFunction(() => Boolean(window.hungThemeCallback));
+    const statusesBeforeThemeHang = await native.evaluate(() => window.commands.filter(c => c === "tailscaled.service webstatus").length);
+    await native.locator("#refresh").click();
+    await native.waitForFunction(n => window.commands.filter(c => c === "tailscaled.service webstatus").length > n, statusesBeforeThemeHang, { timeout: 5000 });
+    await idle(native);
+    await native.evaluate(() => { window.hangTheme = false; window[window.hungThemeCallback](0, "mComputedNightMode=false", ""); });
+    console.log("PASS missing theme callback does not block service/status command queue");
+
+
     await native.locator('[data-nav="settings"]').click();
     await idle(native);
     await native.evaluate(() => {
