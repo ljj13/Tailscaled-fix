@@ -2,6 +2,8 @@
 
 | 范围 | 报告 |
 |---|---|
+| 稳定 main 真机 WebUI、网络回归与 Exit DRAFT 安全封存 | [稳定 WebUI 验收](STABLE_WEBUI_ACCEPTANCE.md) |
+| 暂停中的 Exit IPv4 TLS 缺段/握手停顿 | [独立 unresolved 记录](EXIT_NODE_IPV4_TLS_UNRESOLVED.md) |
 | dnsfix.1 / dnsfix.2 本地验证和 Redmi Note 8 Pro 真机验收 | [DNS 测试报告](DNS_TEST_RESULTS.md) |
 | Miuix WebUI 页面、交互、bridge 和 mock 检查 | [WebUI 设计与测试](../WEBUI_MIUIX.md) |
 | Android 默认设备名、并发保护与升级保留 | [设备名初始化](../ANDROID_HOSTNAME.md) |
