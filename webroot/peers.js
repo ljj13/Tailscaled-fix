@@ -3,6 +3,10 @@ const obj = v => v && typeof v === "object" && !Array.isArray(v) ? v : {};
 const str = v => typeof v === "string" ? v : "";
 const arr = v => Array.isArray(v) ? v.filter(x => typeof x === "string") : [];
 const bool = v => v === true ? true : v === false ? false : null;
+function activityTime(value) {
+ const time=str(value);
+ return /^\d{4}-/.test(time) && !/^000[01]-/.test(time) && Number.isFinite(Date.parse(time)) ? time : "";
+}
 function ipFamily(ip) {
  if (/^100\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip) && ip.split('.').every(x=>Number(x)<=255) && Number(ip.split('.')[1])>=64 && Number(ip.split('.')[1])<=127) return 4;
  if (/^fd7a:[0-9a-f:]+$/i.test(ip) && ip.length<=39) {
@@ -29,7 +33,7 @@ export function peerList(input) {
   return {id:str(p.ID)||String(index),hostname:str(p.HostName)||str(p.DNSName).replace(/\.$/,'')||'未知设备',os:str(p.OS)||'未知',online,
    ipv4:addresses.filter(ip=>ipFamily(ip)===4),ipv6:addresses.filter(ip=>ipFamily(ip)===6),
    path:active && endpoint ? 'Direct' : active && relay && !p.PeerRelay ? 'DERP' : 'Unknown',endpoint:active?endpoint:'',relay,
-   peerRelay:str(p.PeerRelay),lastSeen:str(p.LastSeen)||str(p.LastWrite)||str(p.LastHandshake),
+   peerRelay:str(p.PeerRelay),lastSeen:activityTime(p.LastSeen)||activityTime(p.LastWrite)||activityTime(p.LastHandshake),
    exitNode:bool(p.ExitNodeOption),subnets};
  }).sort((a,b)=>a.hostname.localeCompare(b.hostname));
 }

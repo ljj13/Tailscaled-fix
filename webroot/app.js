@@ -3,7 +3,7 @@ import { createDemo, scenarios } from "./demo.js";
 import { nativeCommand } from "./commands.js";
 import { diagnosticRows } from "./network.js";
 import { peerList, peerPingCommand, pingSummary } from "./peers.js";
-import { exportText } from "./report.js";
+import { exportText, saveNativeReport } from "./report.js";
 
 const SVC = "tailscaled.service";
 const DAEMON_LOG = "/data/adb/tailscale/run/tailscaled.log";
@@ -821,8 +821,15 @@ async function exportReport() {
  });
  if(report) await openModal({title:"脱敏诊断报告",summary:"已隐藏已识别的秘密字段；IP、hostname 与网络信息保留。分享前仍可检查全文。",output:report,report:true});
 }
-function saveReport() {
+async function saveReport() {
  if(!state.modal || !state.modal.options.report)return;
+ if(!demo){
+  const report=state.modal.options.output;
+  await operation(async()=>{
+   try{const file=await saveNativeReport(report,command=>run(command,true),new Date().toISOString().replace(/[-:.]/g,""));toast("已保存到 "+file);}
+   catch(error){toast(String(error.message || error));}
+  });return;
+ }
  const url=URL.createObjectURL(new Blob([state.modal.options.output],{type:"text/plain;charset=utf-8"}));
  const a=document.createElement("a");a.href=url;a.download="tailscaled-diagnostic-"+new Date().toISOString().replace(/[:.]/g,"-")+".txt";
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
